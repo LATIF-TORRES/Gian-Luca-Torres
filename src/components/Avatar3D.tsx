@@ -20,7 +20,7 @@ export function Avatar3D({
 }: {
   avatarUrl?: string | null;
   fallbackName: string;
-  fallbackColor?: string;
+  fallbackColor?: string | null;
   size?: number;
   style?: ViewStyle;
 }) {

@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { Chip } from './Chip';
+import { TeamAvatarPair } from './TeamAvatarPair';
 import type { Match, Team } from '../types';
 
 function teamLabel(team?: Team) {
@@ -30,16 +31,14 @@ export function MatchCard({
       style={({ pressed }) => [styles.card, pressed && canPlay ? styles.pressed : null]}
     >
       <Row
-        label={teamLabel(teamA)}
-        placeholder={!teamA}
+        team={teamA}
         winner={isDone && match.winnerId === match.teamAId}
         scores={match.scoreA}
         opponentScores={match.scoreB}
       />
       <View style={styles.divider} />
       <Row
-        label={teamLabel(teamB)}
-        placeholder={!teamB}
+        team={teamB}
         winner={isDone && match.winnerId === match.teamBId}
         scores={match.scoreB}
         opponentScores={match.scoreA}
@@ -54,26 +53,24 @@ export function MatchCard({
 }
 
 function Row({
-  label,
-  placeholder,
+  team,
   winner,
   scores,
   opponentScores,
 }: {
-  label: string;
-  placeholder: boolean;
+  team?: Team;
   winner: boolean;
   scores: number[] | null;
   opponentScores: number[] | null;
 }) {
   return (
     <View style={styles.row}>
-      <Text
-        numberOfLines={1}
-        style={[styles.name, placeholder && styles.placeholder, winner && styles.winnerName]}
-      >
-        {label}
-      </Text>
+      <View style={styles.nameGroup}>
+        {team && <TeamAvatarPair team={team} size={24} />}
+        <Text numberOfLines={1} style={[styles.name, !team && styles.placeholder, winner && styles.winnerName]}>
+          {teamLabel(team)}
+        </Text>
+      </View>
       {scores && opponentScores ? (
         <View style={styles.sets}>
           {scores.map((s, i) => (
@@ -99,7 +96,8 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.7 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
-  name: { color: colors.white, fontSize: 14, fontWeight: '600', flexShrink: 1, paddingRight: 8 },
+  nameGroup: { flexDirection: 'row', alignItems: 'center', flexShrink: 1, gap: 8, paddingRight: 8 },
+  name: { color: colors.white, fontSize: 14, fontWeight: '600', flexShrink: 1 },
   placeholder: { color: colors.mist, fontStyle: 'italic' },
   winnerName: { color: colors.court, fontWeight: '800' },
   divider: { height: 1, backgroundColor: colors.cardBorder, marginVertical: 2 },

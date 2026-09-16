@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { computeStandings } from '../utils/tournamentEngine';
+import { TeamAvatarPair } from './TeamAvatarPair';
 import type { Group, Team } from '../types';
 
 export function GroupStandingsTable({
@@ -30,9 +31,12 @@ export function GroupStandingsTable({
         const qualifies = index < qualifySlots;
         return (
           <View key={row.teamId} style={[styles.dataRow, qualifies && styles.qualifiedRow]}>
-            <Text numberOfLines={1} style={[styles.cell, styles.teamCol, styles.teamName]}>
-              {index + 1}. {team ? `${team.playerA} / ${team.playerB}` : '—'}
-            </Text>
+            <View style={[styles.teamCol, styles.teamCell]}>
+              {team && <TeamAvatarPair team={team} size={20} />}
+              <Text numberOfLines={1} style={[styles.cell, styles.teamName]}>
+                {index + 1}. {team ? `${team.playerA} / ${team.playerB}` : '—'}
+              </Text>
+            </View>
             <Text style={styles.cell}>{row.played}</Text>
             <Text style={styles.cell}>{row.wins}</Text>
             <Text style={styles.cell}>{row.losses}</Text>
@@ -51,7 +55,8 @@ const styles = StyleSheet.create({
   wrapper: { marginTop: 8 },
   headerRow: { flexDirection: 'row', paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: colors.cardBorder },
   headerCell: { flex: 1, color: colors.mist, fontSize: 11, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
-  teamCol: { flex: 3, textAlign: 'left' },
+  teamCol: { flex: 3 },
+  teamCell: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dataRow: {
     flexDirection: 'row',
     alignItems: 'center',

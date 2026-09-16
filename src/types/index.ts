@@ -22,6 +22,11 @@ export interface Team {
   name: string;
   playerA: string;
   playerB: string;
+  /** Populated at creation time when a player name matches a registered username. */
+  playerAAvatarColor?: string | null;
+  playerAAvatarUrl?: string | null;
+  playerBAvatarColor?: string | null;
+  playerBAvatarUrl?: string | null;
 }
 
 export interface Match {

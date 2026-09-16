@@ -41,6 +41,20 @@ async function findUidByUsername(name: string): Promise<string | null> {
   return snap.exists() ? ((snap.data().uid as string) ?? null) : null;
 }
 
+/**
+ * If `name` matches a registered username, returns that player's real avatar so their
+ * teams show their actual profile color/3D avatar instead of a generic placeholder.
+ */
+async function resolvePlayerAvatar(name: string): Promise<{ avatarColor?: string; avatarUrl?: string | null }> {
+  const database = assertDb();
+  const uid = await findUidByUsername(name);
+  if (!uid) return {};
+  const snap = await getDoc(doc(database, 'users', uid));
+  if (!snap.exists()) return {};
+  const data = snap.data();
+  return { avatarColor: data.avatarColor, avatarUrl: data.avatarUrl ?? null };
+}
+
 async function bumpStats(playerNames: string[], field: 'matchesWon' | 'matchesLost' | 'tournamentsWon', amount = 1) {
   const database = assertDb();
   await Promise.allSettled(
@@ -68,7 +82,19 @@ export interface CreateTournamentInput {
 
 export async function createTournament(input: CreateTournamentInput): Promise<string> {
   const database = assertDb();
-  const teams: Team[] = input.teams.map((t) => ({ id: generateId('team'), ...t }));
+  const teams: Team[] = await Promise.all(
+    input.teams.map(async (t) => {
+      const [avatarA, avatarB] = await Promise.all([resolvePlayerAvatar(t.playerA), resolvePlayerAvatar(t.playerB)]);
+      return {
+        id: generateId('team'),
+        ...t,
+        playerAAvatarColor: avatarA.avatarColor ?? null,
+        playerAAvatarUrl: avatarA.avatarUrl ?? null,
+        playerBAvatarColor: avatarB.avatarColor ?? null,
+        playerBAvatarUrl: avatarB.avatarUrl ?? null,
+      };
+    })
+  );
   const groups = createGroups(teams, input.numGroups);
   const code = generateTournamentCode();
 
