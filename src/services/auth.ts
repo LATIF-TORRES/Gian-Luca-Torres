@@ -70,6 +70,7 @@ export async function registerWithUsername(username: string, password: string): 
     username,
     usernameLower,
     avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+    avatarUrl: null,
     createdAt: Date.now(),
     stats: { tournamentsPlayed: 0, tournamentsWon: 0, matchesWon: 0, matchesLost: 0 },
   };
@@ -103,4 +104,9 @@ export async function fetchUserProfile(uid: string): Promise<UserProfile | null>
   assertConfigured();
   const snap = await getDoc(doc(db!, 'users', uid));
   return snap.exists() ? (snap.data() as UserProfile) : null;
+}
+
+export async function updateAvatarUrl(uid: string, avatarUrl: string): Promise<void> {
+  assertConfigured();
+  await setDoc(doc(db!, 'users', uid), { avatarUrl }, { merge: true });
 }

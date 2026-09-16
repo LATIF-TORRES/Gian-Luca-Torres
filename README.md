@@ -20,6 +20,8 @@ Gebaut mit **React Native (Expo)** + **Firebase** (Auth & Firestore).
   sofort)
 - Globale Rangliste (Turniersiege, Matchsiege/-niederlagen)
 - Profil mit Statistiken
+- **Realistischer 3D-Avatar** (siehe unten): eigener, fotorealistischer,
+  animierter 3D-Charakter statt Farbkreis mit Initialen
 
 **Noch nicht enthalten (nächste Ausbaustufe):** Echtzeit-Online-Matchmaking
 gegen fremde Spieler:innen (aktuell werden Turniere/Teams manuell angelegt,
@@ -75,6 +77,46 @@ Veröffentlichung durch Dritte für dich):
 
 Für Android läuft der Weg über die Google Play Console analog und ist
 günstiger (einmalig 25 $).
+
+## 3D-Avatare (realistische Charaktere)
+
+Statt eines Farbkreises mit Initialen kann sich jede:r Spieler:in im Profil
+einen **fotorealistischen, animierten 3D-Charakter** erstellen — über
+[Ready Player Me](https://readyplayer.me), einem kostenlosen Avatar-Studio,
+das direkt in der App eingebettet ist (Foto hochladen oder Charakter frei
+gestalten). Der fertige Avatar dreht sich als Turntable-Showcase im Profil,
+in den Top-3 der Rangliste und im App-Header — wie ein Spielerkarten-Modell
+in einem Sport-Videospiel.
+
+**Technischer Hinweis:** Für "AAA-Videospiel"-Echtzeitgrafik gibt es zwei
+grundsätzlich unterschiedliche Wege:
+
+1. **Diesen Weg (umgesetzt):** 3D-Avatare als GLB-Modell, dargestellt über
+   Googles `<model-viewer>` in einer eingebetteten WebView
+   ([`src/components/Avatar3D.tsx`](./src/components/Avatar3D.tsx)). Das
+   liefert echte, realistische 3D-Charaktere direkt in der bestehenden App,
+   ohne Build-Komplexität. Wir nutzen bewusst **keine** three.js/expo-gl-
+   Lösung, da `expo-gl` die von Expo SDK 55+ verpflichtende "New
+   Architecture" aktuell nicht unterstützt und dort nur einen schwarzen
+   Bildschirm zeigt (bekanntes, offenes Problem im Expo/Three.js-Ökosystem).
+2. **Volle Spiel-Engine (nicht umgesetzt):** Für Unreal-Engine/MetaHuman-Level
+   an Realismus (Hautstruktur, Mimik, echtzeit-simulierte Kleidung) bräuchte
+   es ein separates natives Spiel-Modul (z.B. Unreal oder Unity) statt einer
+   React-Native-App — deutlich aufwändiger, größer und nicht mehr
+   "einfach im App Store" verteilbar. Das ist bewusst nicht der eingeschlagene
+   Weg, kann aber bei Bedarf als eigenständiges Zusatzmodul nachgerüstet werden.
+
+Die aktuelle Lösung ist damit **"echte 3D-Charaktere, wie im Spiel", aber kein
+fotorealistisches AAA-Cutscene-Rendering** — das ist auf einem normalen Handy
+in Echtzeit ohnehin nicht realistisch, selbst native Spiele erreichen das nur
+in aufwändigen Zwischensequenzen.
+
+**Für den Produktivbetrieb:** Aktuell wird Ready Player Me's öffentliche
+Test-Subdomain (`demo.readyplayer.me`) verwendet. Für eine echte
+Veröffentlichung solltest du kostenlos eine eigene Subdomain unter
+[studio.readyplayer.me](https://studio.readyplayer.me) registrieren und sie in
+[`src/screens/AvatarCreatorScreen.tsx`](./src/screens/AvatarCreatorScreen.tsx)
+(`AVATAR_CREATOR_URL`) eintragen.
 
 ## Projektstruktur
 

@@ -235,6 +235,7 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
       uid: data.uid,
       username: data.username,
       avatarColor: data.avatarColor,
+      avatarUrl: data.avatarUrl ?? null,
       tournamentsWon: data.stats?.tournamentsWon ?? 0,
       matchesWon: data.stats?.matchesWon ?? 0,
       matchesLost: data.stats?.matchesLost ?? 0,

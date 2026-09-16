@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { GradientBackground } from '../components/GradientBackground';
 import { Card } from '../components/Card';
 import { Avatar } from '../components/Avatar';
+import { Avatar3D } from '../components/Avatar3D';
 import { colors } from '../theme/colors';
 import { fetchLeaderboard } from '../services/tournaments';
 import type { LeaderboardEntry } from '../types';
@@ -56,7 +57,11 @@ export default function LeaderboardScreen() {
           entries.map((entry, index) => (
             <Card key={entry.uid} style={styles.row}>
               <Text style={styles.rank}>{MEDALS[index] ?? `${index + 1}.`}</Text>
-              <Avatar name={entry.username} color={entry.avatarColor} size={40} />
+              {index < 3 ? (
+                <Avatar3D avatarUrl={entry.avatarUrl} fallbackName={entry.username} fallbackColor={entry.avatarColor} size={40} />
+              ) : (
+                <Avatar name={entry.username} color={entry.avatarColor} size={40} />
+              )}
               <View style={styles.info}>
                 <Text style={styles.username}>{entry.username}</Text>
                 <Text style={styles.stats}>

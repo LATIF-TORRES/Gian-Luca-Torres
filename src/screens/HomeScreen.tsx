@@ -6,7 +6,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { GradientBackground } from '../components/GradientBackground';
 import { Card } from '../components/Card';
 import { Chip } from '../components/Chip';
-import { Avatar } from '../components/Avatar';
+import { Avatar3D } from '../components/Avatar3D';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { colors } from '../theme/colors';
 import { useAuthStore } from '../store/useAuthStore';
@@ -54,7 +54,12 @@ export default function HomeScreen({ navigation }: Props) {
             <Text style={styles.greeting}>Willkommen zurück,</Text>
             <Text style={styles.username}>{profile?.username ?? '...'}</Text>
           </View>
-          <Avatar name={profile?.username ?? '?'} color={profile?.avatarColor} size={52} />
+          <Avatar3D
+            avatarUrl={profile?.avatarUrl}
+            fallbackName={profile?.username ?? '?'}
+            fallbackColor={profile?.avatarColor}
+            size={52}
+          />
         </View>
 
         <View style={styles.actions}>

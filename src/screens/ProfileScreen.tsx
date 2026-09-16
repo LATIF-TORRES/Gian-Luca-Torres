@@ -1,21 +1,41 @@
 import React from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { GradientBackground } from '../components/GradientBackground';
 import { Card } from '../components/Card';
-import { Avatar } from '../components/Avatar';
+import { Avatar3D } from '../components/Avatar3D';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { colors } from '../theme/colors';
 import { useAuthStore } from '../store/useAuthStore';
-import { signOut } from '../services/auth';
+import { signOut, updateAvatarUrl } from '../services/auth';
+import type { MainTabParamList, RootStackParamList } from '../navigation/types';
 
-export default function ProfileScreen() {
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, 'Profile'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+
+export default function ProfileScreen({ navigation }: Props) {
   const profile = useAuthStore((s) => s.profile);
+  const setProfile = useAuthStore((s) => s.setProfile);
 
   async function handleSignOut() {
     try {
       await signOut();
     } catch (e: any) {
       Alert.alert('Fehler', e?.message ?? 'Abmelden fehlgeschlagen.');
+    }
+  }
+
+  async function handleAvatarReady(avatarUrl: string) {
+    if (!profile) return;
+    try {
+      await updateAvatarUrl(profile.uid, avatarUrl);
+      setProfile({ ...profile, avatarUrl });
+    } catch (e: any) {
+      Alert.alert('Fehler', e?.message ?? 'Avatar konnte nicht gespeichert werden.');
     }
   }
 
@@ -30,8 +50,19 @@ export default function ProfileScreen() {
     <GradientBackground>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Avatar name={profile.username} color={profile.avatarColor} size={84} />
+          <Avatar3D
+            avatarUrl={profile.avatarUrl}
+            fallbackName={profile.username}
+            fallbackColor={profile.avatarColor}
+            size={140}
+          />
           <Text style={styles.username}>{profile.username}</Text>
+          <PrimaryButton
+            label={profile.avatarUrl ? '3D-Avatar bearbeiten' : '✨ Realistischen 3D-Avatar erstellen'}
+            variant={profile.avatarUrl ? 'ghost' : 'accent'}
+            onPress={() => navigation.navigate('AvatarCreator', { onAvatarReady: handleAvatarReady })}
+            style={styles.avatarButton}
+          />
         </View>
 
         <View style={styles.statsGrid}>
@@ -61,6 +92,7 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingTop: 60, paddingBottom: 40 },
   header: { alignItems: 'center', marginBottom: 32 },
   username: { color: colors.white, fontSize: 22, fontWeight: '900', marginTop: 14 },
+  avatarButton: { marginTop: 16, alignSelf: 'stretch' },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   statCard: { width: '47%', alignItems: 'center', paddingVertical: 20 },
   statValue: { fontSize: 26, fontWeight: '900' },

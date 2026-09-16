@@ -3,6 +3,7 @@ export interface UserProfile {
   username: string;
   usernameLower: string;
   avatarColor: string;
+  avatarUrl: string | null;
   createdAt: number;
   stats: {
     tournamentsPlayed: number;
@@ -77,6 +78,7 @@ export interface LeaderboardEntry {
   uid: string;
   username: string;
   avatarColor: string;
+  avatarUrl: string | null;
   tournamentsWon: number;
   matchesWon: number;
   matchesLost: number;
