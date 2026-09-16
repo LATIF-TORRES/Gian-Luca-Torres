@@ -22,6 +22,8 @@ Gebaut mit **React Native (Expo)** + **Firebase** (Auth & Firestore).
 - Profil mit Statistiken
 - **Realistischer 3D-Avatar** (siehe unten): eigener, fotorealistischer,
   animierter 3D-Charakter statt Farbkreis mit Initialen
+- **Training gegen Bots**: 4 Schwierigkeitsstufen, echtes Tennis/Padel-Scoring
+  (Spiele, Einstand/Vorteil, Tiebreak), Punktgewinn über ein Timing-Minispiel
 
 **Noch nicht enthalten (nächste Ausbaustufe):** Echtzeit-Online-Matchmaking
 gegen fremde Spieler:innen (aktuell werden Turniere/Teams manuell angelegt,
