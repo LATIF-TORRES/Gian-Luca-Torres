@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Padel Arena",
+    "slug": "padel-arena",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#060F20",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.padelarena.mobile"
+    },
+    "android": {
+      "package": "app.padelarena.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#060F20",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
