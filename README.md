@@ -68,6 +68,28 @@ npm start
 Danach den QR-Code mit der **Expo Go**-App (iOS/Android) scannen — die App
 läuft sofort auf deinem Handy, ganz ohne Build oder App-Store-Account.
 
+### Web-Version zum schnellen Testen im Browser
+
+Am schnellsten zu testen, ganz ohne Handy/Expo Go:
+
+```bash
+npm install
+npm run web
+```
+
+Öffnet die App unter `http://localhost:8081` im Browser. Nützlich zum
+schnellen Durchklicken (Turnier anlegen, Bot-Training, UI-Check), bevor du
+sie auf dem Handy testest.
+
+**Unterschied zur Handy-Version:** Die 3D-Avatare laufen auf dem Handy in
+einer eingebetteten WebView (siehe Abschnitt "3D-Avatare" unten); im Browser
+gibt es diese Einschränkung nicht — dort wird `<model-viewer>` direkt im
+DOM gerendert, läuft also nativ und sogar unkomplizierter. Alles andere
+(Turniere, Firebase, Bot-Training) verhält sich identisch zur Handy-App.
+Ohne ausgefüllte `.env` zeigt die Web-Version wie die App auch nur den
+Login-Screen mit einem Hinweis, dass Firebase noch fehlt — zum reinen
+UI-Testen brauchst du also nicht zwingend sofort ein Firebase-Projekt.
+
 ## 3. Später im App Store veröffentlichen
 
 Das ist der Teil, den nur du selbst machen kannst (Apple erlaubt keine
@@ -105,6 +127,13 @@ grundsätzlich unterschiedliche Wege:
    Lösung, da `expo-gl` die von Expo SDK 55+ verpflichtende "New
    Architecture" aktuell nicht unterstützt und dort nur einen schwarzen
    Bildschirm zeigt (bekanntes, offenes Problem im Expo/Three.js-Ökosystem).
+   Auf **Web** gibt es diese WebView-Einschränkung nicht (`react-native-webview`
+   unterstützt die Web-Plattform gar nicht) — dort übernimmt
+   [`src/components/Avatar3D.web.tsx`](./src/components/Avatar3D.web.tsx)
+   automatisch (Expo/Metro wählt `.web.tsx`-Dateien selbst aus) und rendert
+   `<model-viewer>` direkt als echtes DOM-Element, genauso für den
+   Avatar-Creator ([`AvatarCreatorScreen.web.tsx`](./src/screens/AvatarCreatorScreen.web.tsx),
+   dort per `<iframe>` statt WebView).
 2. **Volle Spiel-Engine (nicht umgesetzt):** Für Unreal-Engine/MetaHuman-Level
    an Realismus (Hautstruktur, Mimik, echtzeit-simulierte Kleidung) bräuchte
    es ein separates natives Spiel-Modul (z.B. Unreal oder Unity) statt einer
