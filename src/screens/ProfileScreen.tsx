@@ -72,6 +72,15 @@ export default function ProfileScreen({ navigation }: Props) {
           <StatCard label="Winrate" value={`${winRate}%`} accent="accent" />
         </View>
 
+        {profile.training && (profile.training.wins > 0 || profile.training.losses > 0) && (
+          <Card style={styles.trainingCard}>
+            <Text style={styles.trainingLabel}>🤖 Trainingsbilanz gegen Bots</Text>
+            <Text style={styles.trainingValue}>
+              {profile.training.wins} Siege · {profile.training.losses} Niederlagen
+            </Text>
+          </Card>
+        )}
+
         <PrimaryButton label="Abmelden" variant="ghost" onPress={handleSignOut} style={styles.signOut} />
       </ScrollView>
     </GradientBackground>
@@ -97,5 +106,8 @@ const styles = StyleSheet.create({
   statCard: { width: '47%', alignItems: 'center', paddingVertical: 20 },
   statValue: { fontSize: 26, fontWeight: '900' },
   statLabel: { color: colors.mist, fontSize: 12, marginTop: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  trainingCard: { alignItems: 'center', marginBottom: 24, paddingVertical: 16 },
+  trainingLabel: { color: colors.mist, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  trainingValue: { color: colors.white, fontSize: 16, fontWeight: '800', marginTop: 6 },
   signOut: { marginTop: 8 },
 });

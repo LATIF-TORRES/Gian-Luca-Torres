@@ -16,4 +16,5 @@ export type RootStackParamList = {
   TournamentDetail: { tournamentId: string };
   MatchScore: { tournamentId: string; matchId: string; scope: 'group' | 'knockout'; groupId?: string };
   AvatarCreator: { onAvatarReady?: (avatarUrl: string) => void } | undefined;
+  Training: undefined;
 };

@@ -6,6 +6,7 @@ import JoinTournamentScreen from '../screens/JoinTournamentScreen';
 import TournamentDetailScreen from '../screens/TournamentDetailScreen';
 import MatchScoreScreen from '../screens/MatchScoreScreen';
 import AvatarCreatorScreen from '../screens/AvatarCreatorScreen';
+import TrainingScreen from '../screens/TrainingScreen';
 import { colors } from '../theme/colors';
 import type { RootStackParamList } from './types';
 
@@ -27,6 +28,7 @@ export function RootNavigator() {
       <Stack.Screen name="TournamentDetail" component={TournamentDetailScreen} options={modalHeaderOptions} />
       <Stack.Screen name="MatchScore" component={MatchScoreScreen} options={modalHeaderOptions} />
       <Stack.Screen name="AvatarCreator" component={AvatarCreatorScreen} options={modalHeaderOptions} />
+      <Stack.Screen name="Training" component={TrainingScreen} options={modalHeaderOptions} />
     </Stack.Navigator>
   );
 }

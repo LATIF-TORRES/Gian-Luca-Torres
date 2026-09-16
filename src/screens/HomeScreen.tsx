@@ -76,6 +76,17 @@ export default function HomeScreen({ navigation }: Props) {
           />
         </View>
 
+        <Pressable onPress={() => navigation.navigate('Training')}>
+          <Card style={styles.trainingCard}>
+            <Text style={styles.trainingEmoji}>🤖</Text>
+            <View style={styles.trainingInfo}>
+              <Text style={styles.trainingTitle}>Training gegen Bots</Text>
+              <Text style={styles.trainingSubtitle}>Timing-Minispiel · 4 Schwierigkeitsstufen</Text>
+            </View>
+            <Chip label="Los geht's" tone="accent" />
+          </Card>
+        </Pressable>
+
         <Text style={styles.sectionTitle}>Meine Turniere</Text>
 
         {loading ? (
@@ -112,8 +123,13 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   greeting: { color: colors.mist, fontSize: 14 },
   username: { color: colors.white, fontSize: 24, fontWeight: '800' },
-  actions: { flexDirection: 'row', gap: 12, marginBottom: 32 },
+  actions: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   actionButton: { flex: 1 },
+  trainingCard: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 32 },
+  trainingEmoji: { fontSize: 32 },
+  trainingInfo: { flex: 1 },
+  trainingTitle: { color: colors.white, fontWeight: '800', fontSize: 15 },
+  trainingSubtitle: { color: colors.mist, fontSize: 12, marginTop: 2 },
   sectionTitle: { color: colors.white, fontSize: 18, fontWeight: '800', marginBottom: 14 },
   empty: { color: colors.mist, lineHeight: 20 },
   tournamentCard: { marginBottom: 12 },

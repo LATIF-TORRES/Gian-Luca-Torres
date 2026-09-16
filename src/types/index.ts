@@ -11,6 +11,10 @@ export interface UserProfile {
     matchesWon: number;
     matchesLost: number;
   };
+  training?: {
+    wins: number;
+    losses: number;
+  };
 }
 
 export interface Team {

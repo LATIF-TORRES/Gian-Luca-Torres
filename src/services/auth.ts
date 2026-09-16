@@ -6,7 +6,7 @@ import {
   signOut as firebaseSignOut,
   updateProfile,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, increment, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import type { UserProfile } from '../types';
 
@@ -109,4 +109,11 @@ export async function fetchUserProfile(uid: string): Promise<UserProfile | null>
 export async function updateAvatarUrl(uid: string, avatarUrl: string): Promise<void> {
   assertConfigured();
   await setDoc(doc(db!, 'users', uid), { avatarUrl }, { merge: true });
+}
+
+export async function recordTrainingResult(uid: string, won: boolean): Promise<void> {
+  assertConfigured();
+  await updateDoc(doc(db!, 'users', uid), {
+    [`training.${won ? 'wins' : 'losses'}`]: increment(1),
+  });
 }
