@@ -90,6 +90,28 @@ Ohne ausgefüllte `.env` zeigt die Web-Version wie die App auch nur den
 Login-Screen mit einem Hinweis, dass Firebase noch fehlt — zum reinen
 UI-Testen brauchst du also nicht zwingend sofort ein Firebase-Projekt.
 
+### Öffentlicher Link (GitHub Pages)
+
+Bei jedem Push auf `claude/padel-app-tournament-xiewej` baut
+[`.github/workflows/deploy-web.yml`](./.github/workflows/deploy-web.yml)
+automatisch die Web-Version und veröffentlicht sie unter:
+
+```
+https://latif-torres.github.io/Gian-Luca-Torres/
+```
+
+**Einmaliger manueller Schritt (falls der Link nicht sofort lädt):** GitHub
+Pages muss beim allerersten Mal in den Repo-Einstellungen aktiviert werden —
+**Settings → Pages → Source → "GitHub Actions"** auswählen. Danach läuft
+jedes künftige Deployment automatisch, ganz ohne diesen Schritt erneut zu
+tun.
+
+Solange kein Firebase-Projekt hinterlegt ist (siehe oben), zeigt der Link nur
+den Login-Screen mit Hinweis — sobald du die `firebaseConfig`-Werte
+hinterlegst (z.B. direkt im Workflow als `env:`, da diese Werte laut
+Firebase nicht geheim sind), funktioniert der Link vollständig inklusive
+Registrierung, Turnieren und Bot-Training.
+
 ## 3. Später im App Store veröffentlichen
 
 Das ist der Teil, den nur du selbst machen kannst (Apple erlaubt keine
