@@ -28,9 +28,19 @@ jobs:
       # GH_PAGES_BASE_URL makes the exported bundle reference /<repo-name>/... instead of
       # root-absolute paths, since a GitHub Pages project site is served from a subpath.
       # See app.config.js - this only affects this CI export, never local dev or native builds.
+      #
+      # The Firebase values below are the public web-app config from the Firebase console,
+      # not secrets - Firebase's own docs confirm these are safe to expose client-side
+      # (access is controlled by Firestore security rules, not by hiding this config).
       - run: npx expo export --platform web
         env:
           GH_PAGES_BASE_URL: /${{ github.event.repository.name }}
+          EXPO_PUBLIC_FIREBASE_API_KEY: AIzaSyB3v9BW_irkDtZVcm7lR3eyNssvM3js7pM
+          EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: padel-area.firebaseapp.com
+          EXPO_PUBLIC_FIREBASE_PROJECT_ID: padel-area
+          EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: padel-area.firebasestorage.app
+          EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "713243233423"
+          EXPO_PUBLIC_FIREBASE_APP_ID: "1:713243233423:web:8c7fb2c6a3de5c3f2df4fa"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
