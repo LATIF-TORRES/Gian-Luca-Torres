@@ -41,6 +41,15 @@ jobs:
           EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: padel-area.firebasestorage.app
           EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "713243233423"
           EXPO_PUBLIC_FIREBASE_APP_ID: "1:713243233423:web:8c7fb2c6a3de5c3f2df4fa"
+      # Padel Arena 3D (padel3d/) is a separate Vite/Three.js project, published at the
+      # /game/ subpath alongside the main app on the same Pages site.
+      - run: npm ci
+        working-directory: padel3d
+      - run: npm run build
+        working-directory: padel3d
+        env:
+          GH_PAGES_BASE: /${{ github.event.repository.name }}/game/
+      - run: mkdir -p dist/game && cp -r padel3d/dist/. dist/game/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

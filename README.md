@@ -7,6 +7,11 @@ globalen Rangliste.
 
 Gebaut mit **React Native (Expo)** + **Firebase** (Auth & Firestore).
 
+> 🎮 **Neu:** Ein eigenständiges 3D-Browserspiel — wähle einen Charakter
+> (Tier oder Mensch) und spiele gegen einen Bot in einer 3D-Padel-Halle.
+> Läuft unter `/game/` auf demselben Link. Details siehe
+> [`padel3d/README.md`](./padel3d/README.md).
+
 ## Funktionsumfang (aktueller Stand — Kern-App)
 
 - **Gastmodus**: komplett ohne Konto, ohne Internet, ohne Firebase-Projekt
