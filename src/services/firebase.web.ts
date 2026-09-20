@@ -1,6 +1,11 @@
 import { type FirebaseApp, getApps, initializeApp } from 'firebase/app';
 import { type Auth, getAuth } from 'firebase/auth';
-import { type Firestore, initializeFirestore } from 'firebase/firestore';
+import {
+  type Firestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager,
+} from 'firebase/firestore';
 
 // Web counterpart to firebase.ts. On web, Metro resolves 'firebase/auth' via the
 // "browser" export condition, which doesn't include getReactNativePersistence (that only
@@ -8,11 +13,11 @@ import { type Firestore, initializeFirestore } from 'firebase/firestore';
 // runtime. Plain getAuth() is the standard web approach and already persists sessions to
 // the browser's indexedDB/localStorage automatically.
 //
-// Firestore's default WebChannel/streaming transport gets silently blocked on some
-// networks and carriers (surfaced as "Failed to get document because the client is
-// offline", even with a working internet connection) - experimentalAutoDetectLongPolling
-// makes the SDK detect that and fall back to plain long-polling, which is Firebase's own
-// documented fix for this exact error.
+// Firestore's default WebChannel/streaming transport gets blocked on some networks
+// (surfaced as "Failed to get document because the client is offline"). Auto-detecting
+// long-polling didn't clear it up for this project, so we force long-polling outright
+// (skips the failing detection probe) and add a persistent IndexedDB cache so reads that
+// *have* been fetched before still work while genuinely offline.
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -31,7 +36,10 @@ let db: Firestore | undefined;
 if (isFirebaseConfigured) {
   app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+  db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }),
+  });
 }
 
 export { app, auth, db };
