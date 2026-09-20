@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, increment, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { GUEST_UID, loadGuestProfile, saveGuestProfile } from './guestAuth';
 import type { UserProfile } from '../types';
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
@@ -107,11 +108,27 @@ export async function fetchUserProfile(uid: string): Promise<UserProfile | null>
 }
 
 export async function updateAvatarUrl(uid: string, avatarUrl: string): Promise<void> {
+  if (uid === GUEST_UID) {
+    const profile = await loadGuestProfile();
+    if (profile) await saveGuestProfile({ ...profile, avatarUrl });
+    return;
+  }
   assertConfigured();
   await setDoc(doc(db!, 'users', uid), { avatarUrl }, { merge: true });
 }
 
 export async function recordTrainingResult(uid: string, won: boolean): Promise<void> {
+  if (uid === GUEST_UID) {
+    const profile = await loadGuestProfile();
+    if (profile) {
+      const training = profile.training ?? { wins: 0, losses: 0 };
+      await saveGuestProfile({
+        ...profile,
+        training: won ? { ...training, wins: training.wins + 1 } : { ...training, losses: training.losses + 1 },
+      });
+    }
+    return;
+  }
   assertConfigured();
   await updateDoc(doc(db!, 'users', uid), {
     [`training.${won ? 'wins' : 'losses'}`]: increment(1),

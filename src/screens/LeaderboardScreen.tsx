@@ -5,17 +5,24 @@ import { Card } from '../components/Card';
 import { Avatar } from '../components/Avatar';
 import { Avatar3D } from '../components/Avatar3D';
 import { colors } from '../theme/colors';
-import { fetchLeaderboard } from '../services/tournaments';
+import { fetchLeaderboard } from '../services/dataLayer';
+import { useAuthStore } from '../store/useAuthStore';
 import type { LeaderboardEntry } from '../types';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 export default function LeaderboardScreen() {
+  const isGuest = useAuthStore((s) => s.isGuest);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
+    if (isGuest) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const data = await fetchLeaderboard();
       setEntries(data);
@@ -23,7 +30,7 @@ export default function LeaderboardScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [isGuest]);
 
   useEffect(() => {
     load();
@@ -47,7 +54,15 @@ export default function LeaderboardScreen() {
         <Text style={styles.title}>Rangliste</Text>
         <Text style={styles.subtitle}>Die erfolgreichsten Spieler:innen der Padel Arena</Text>
 
-        {loading ? (
+        {isGuest ? (
+          <Card>
+            <Text style={styles.empty}>
+              🔒 Die Rangliste ist ein Online-Feature und vergleicht registrierte Konten. Im Gastmodus gibt es
+              keine anderen Spieler:innen zum Vergleichen – lege dir jederzeit ein kostenloses Online-Konto an,
+              um mitzumachen.
+            </Text>
+          </Card>
+        ) : loading ? (
           <Text style={styles.empty}>Lade Rangliste…</Text>
         ) : entries.length === 0 ? (
           <Card>

@@ -7,7 +7,7 @@ import { TextField } from '../components/TextField';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { colors } from '../theme/colors';
 import { useAuthStore } from '../store/useAuthStore';
-import { createTournament } from '../services/tournaments';
+import { createTournament } from '../services/dataLayer';
 import { TOURNAMENT_PRESETS } from '../utils/tournamentPresets';
 import type { RootStackParamList } from '../navigation/types';
 

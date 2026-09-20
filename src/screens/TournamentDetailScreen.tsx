@@ -10,7 +10,8 @@ import { MatchCard } from '../components/MatchCard';
 import { BracketView } from '../components/BracketView';
 import { MedalPodium } from '../components/MedalPodium';
 import { colors } from '../theme/colors';
-import { listenTournament, startKnockoutStage } from '../services/tournaments';
+import { listenTournament, startKnockoutStage } from '../services/dataLayer';
+import { isGuestTournamentId } from '../services/localTournaments';
 import { allGroupsComplete } from '../utils/tournamentEngine';
 import type { RootStackParamList } from '../navigation/types';
 import type { Match, Tournament } from '../types';
@@ -82,7 +83,11 @@ export default function TournamentDetailScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>{tournament.name}</Text>
         <View style={styles.metaRow}>
-          <Chip label={`Code: ${tournament.code}`} tone="neutral" />
+          {isGuestTournamentId(tournament.id) ? (
+            <Chip label="🔒 Nur auf diesem Gerät" tone="neutral" />
+          ) : (
+            <Chip label={`Code: ${tournament.code}`} tone="neutral" />
+          )}
           <Chip
             label={tournament.status === 'groups' ? 'Gruppenphase' : tournament.status === 'knockout' ? 'K.o.-Runde' : 'Abgeschlossen'}
             tone={tournament.status === 'completed' ? 'success' : 'accent'}

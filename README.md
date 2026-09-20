@@ -9,6 +9,9 @@ Gebaut mit **React Native (Expo)** + **Firebase** (Auth & Firestore).
 
 ## Funktionsumfang (aktueller Stand — Kern-App)
 
+- **Gastmodus**: komplett ohne Konto, ohne Internet, ohne Firebase-Projekt
+  nutzbar — Turniere und Bot-Training laufen dann rein lokal auf dem Gerät
+  (siehe Abschnitt "Gastmodus" unten)
 - Registrierung/Login mit einzigartigem Online-Benutzernamen
 - Turniere erstellen (4/6/8/12/16 Teams) mit automatischer Gruppeneinteilung
 - Olympisches Turniersystem: Round-Robin-Gruppenphase, danach automatisch
@@ -33,7 +36,36 @@ Gebaut mit **React Native (Expo)** + **Firebase** (Auth & Firestore).
 gegen fremde Spieler:innen (aktuell werden Turniere/Teams manuell angelegt,
 aber vollständig online synchronisiert).
 
-## Voraussetzungen
+## Gastmodus (ohne Firebase-Projekt nutzbar)
+
+Auf dem Login-Screen gibt es einen Button **"Gastmodus starten"** — einfach
+einen Namen eingeben und sofort loslegen, ganz ohne Firebase-Projekt,
+Internetverbindung oder Zahlungsdaten:
+
+- Turniere anlegen, Gruppenphase spielen, K.o.-Runde, Podium — alles läuft
+  identisch zur Online-Version
+- Training gegen Bots funktioniert vollständig
+- 3D-Avatar-Erstellung funktioniert (braucht nur eine Internetverbindung für
+  das Ready-Player-Me-Studio selbst, keine eigene Firebase-Konfiguration)
+
+**Die Einschränkung, ehrlich gesagt:** Alle Daten bleiben ausschließlich auf
+diesem einen Gerät (gespeichert über `AsyncStorage`/`localStorage`) — kein
+Turnierbeitritt per Code, keine globale Rangliste (die vergleicht ja
+registrierte Online-Konten), keine Synchronisation zwischen Geräten. Das ist
+der bewusste Kompromiss, um die App ganz ohne Google-Cloud-Setup nutzbar zu
+machen. Wer später ein Firebase-Projekt einrichtet, kann sich jederzeit
+zusätzlich ein echtes Online-Konto anlegen (Gastmodus und Online-Konto laufen
+komplett unabhängig nebeneinander).
+
+Technisch: [`src/services/localTournaments.ts`](./src/services/localTournaments.ts)
+spiegelt exakt die gleichen Funktionen wie
+[`src/services/tournaments.ts`](./src/services/tournaments.ts), nur auf
+Basis von `AsyncStorage` statt Firestore.
+[`src/services/dataLayer.ts`](./src/services/dataLayer.ts) entscheidet pro
+Aufruf anhand der Turnier-ID/Nutzer-ID automatisch, welche der beiden
+Implementierungen greift — die Screens selbst wissen davon nichts.
+
+## Voraussetzungen (nur für den Online-Modus mit eigenem Konto nötig)
 
 - Node.js 18+
 - Ein kostenloses [Firebase](https://console.firebase.google.com)-Projekt

@@ -25,7 +25,7 @@ const navigationTheme = {
 };
 
 export default function App() {
-  const { initializing, firebaseUser, setInitializing, setFirebaseUser, setProfile } = useAuthStore();
+  const { initializing, firebaseUser, isGuest, setInitializing, setFirebaseUser, setProfile } = useAuthStore();
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges(async (user) => {
@@ -33,7 +33,9 @@ export default function App() {
       if (user) {
         const profile = await fetchUserProfile(user.uid);
         setProfile(profile);
-      } else {
+      } else if (!useAuthStore.getState().isGuest) {
+        // A stray Firebase "signed out" event (e.g. a background token refresh) should
+        // never kick an active local guest session back to the login screen.
         setProfile(null);
       }
       setInitializing(false);
@@ -57,7 +59,7 @@ export default function App() {
     <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
         <NavigationContainer theme={navigationTheme}>
-          {firebaseUser ? <RootNavigator /> : <AuthNavigator />}
+          {firebaseUser || isGuest ? <RootNavigator /> : <AuthNavigator />}
         </NavigationContainer>
         <StatusBar style="light" />
       </SafeAreaProvider>

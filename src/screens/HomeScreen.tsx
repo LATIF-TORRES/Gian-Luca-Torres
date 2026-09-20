@@ -11,7 +11,8 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { colors } from '../theme/colors';
 import { useAuthStore } from '../store/useAuthStore';
 import { useTournamentStore } from '../store/useTournamentStore';
-import { listenMyTournaments } from '../services/tournaments';
+import { listenMyTournaments } from '../services/dataLayer';
+import { isGuestTournamentId } from '../services/localTournaments';
 import type { MainTabParamList, RootStackParamList } from '../navigation/types';
 import type { Tournament } from '../types';
 
@@ -34,6 +35,7 @@ const STATUS_TONE: Record<Tournament['status'], 'accent' | 'warning' | 'success'
 
 export default function HomeScreen({ navigation }: Props) {
   const profile = useAuthStore((s) => s.profile);
+  const isGuest = useAuthStore((s) => s.isGuest);
   const { myTournaments, loading, setMyTournaments, setLoading } = useTournamentStore();
 
   useEffect(() => {
@@ -68,13 +70,21 @@ export default function HomeScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('CreateTournament')}
             style={styles.actionButton}
           />
-          <PrimaryButton
-            label="Mit Code beitreten"
-            variant="ghost"
-            onPress={() => navigation.navigate('JoinTournament')}
-            style={styles.actionButton}
-          />
+          {!isGuest && (
+            <PrimaryButton
+              label="Mit Code beitreten"
+              variant="ghost"
+              onPress={() => navigation.navigate('JoinTournament')}
+              style={styles.actionButton}
+            />
+          )}
         </View>
+
+        {isGuest && (
+          <Text style={styles.guestNote}>
+            🔒 Gastmodus: Deine Turniere bleiben nur auf diesem Gerät gespeichert.
+          </Text>
+        )}
 
         <Pressable onPress={() => navigation.navigate('Training')}>
           <Card style={styles.trainingCard}>
@@ -107,7 +117,7 @@ export default function HomeScreen({ navigation }: Props) {
                   <Chip label={STATUS_LABEL[t.status]} tone={STATUS_TONE[t.status]} />
                 </View>
                 <Text style={styles.tournamentMeta}>
-                  {t.teams.length} Teams · Code {t.code}
+                  {t.teams.length} Teams{isGuestTournamentId(t.id) ? '' : ` · Code ${t.code}`}
                 </Text>
               </Card>
             </Pressable>
@@ -125,6 +135,7 @@ const styles = StyleSheet.create({
   username: { color: colors.white, fontSize: 24, fontWeight: '800' },
   actions: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   actionButton: { flex: 1 },
+  guestNote: { color: colors.mist, fontSize: 12, marginBottom: 20 },
   trainingCard: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 32 },
   trainingEmoji: { fontSize: 32 },
   trainingInfo: { flex: 1 },

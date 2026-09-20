@@ -20,8 +20,16 @@ type Props = CompositeScreenProps<
 export default function ProfileScreen({ navigation }: Props) {
   const profile = useAuthStore((s) => s.profile);
   const setProfile = useAuthStore((s) => s.setProfile);
+  const isGuest = useAuthStore((s) => s.isGuest);
+  const setGuest = useAuthStore((s) => s.setGuest);
 
   async function handleSignOut() {
+    if (isGuest) {
+      // Local guest data stays on the device (AsyncStorage) - this just leaves the session.
+      setGuest(false);
+      setProfile(null);
+      return;
+    }
     try {
       await signOut();
     } catch (e: any) {
@@ -57,6 +65,7 @@ export default function ProfileScreen({ navigation }: Props) {
             size={140}
           />
           <Text style={styles.username}>{profile.username}</Text>
+          {isGuest && <Text style={styles.guestBadge}>🔒 Gastmodus – Daten nur auf diesem Gerät</Text>}
           <PrimaryButton
             label={profile.avatarUrl ? '3D-Avatar bearbeiten' : '✨ Realistischen 3D-Avatar erstellen'}
             variant={profile.avatarUrl ? 'ghost' : 'accent'}
@@ -81,7 +90,12 @@ export default function ProfileScreen({ navigation }: Props) {
           </Card>
         )}
 
-        <PrimaryButton label="Abmelden" variant="ghost" onPress={handleSignOut} style={styles.signOut} />
+        <PrimaryButton
+          label={isGuest ? 'Gastmodus verlassen' : 'Abmelden'}
+          variant="ghost"
+          onPress={handleSignOut}
+          style={styles.signOut}
+        />
       </ScrollView>
     </GradientBackground>
   );
@@ -101,6 +115,7 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingTop: 60, paddingBottom: 40 },
   header: { alignItems: 'center', marginBottom: 32 },
   username: { color: colors.white, fontSize: 22, fontWeight: '900', marginTop: 14 },
+  guestBadge: { color: colors.gold, fontSize: 12, marginTop: 6, textAlign: 'center' },
   avatarButton: { marginTop: 16, alignSelf: 'stretch' },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
   statCard: { width: '47%', alignItems: 'center', paddingVertical: 20 },

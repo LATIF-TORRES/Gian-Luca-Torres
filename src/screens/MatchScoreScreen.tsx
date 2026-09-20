@@ -6,7 +6,7 @@ import { Card } from '../components/Card';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { NumberStepper } from '../components/NumberStepper';
 import { colors } from '../theme/colors';
-import { listenTournament, updateGroupMatchScore, updateKnockoutMatchScore } from '../services/tournaments';
+import { listenTournament, updateGroupMatchScore, updateKnockoutMatchScore } from '../services/dataLayer';
 import { decideWinner } from '../utils/tournamentEngine';
 import type { RootStackParamList } from '../navigation/types';
 import type { Match, Tournament } from '../types';
