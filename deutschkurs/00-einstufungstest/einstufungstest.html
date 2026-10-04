@@ -1,0 +1,653 @@
+<title>Deutsch Einstufungstest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Lexend:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column, one test part per screen, big tap targets for phones; owner gets a second tab with results. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #18202e;
+  --muted: #5b6577;
+  --line: #d6dce6;
+  --accent: #c8281c;      /* Schweizer Rot, sparsam */
+  --accent-soft: #fbe7e5;
+  --pick: #1f4fd1;
+  --pick-soft: #e6ecff;
+  --good: #11815f;
+  --good-soft: #dff3ea;
+  --bad: #b93a22;
+  --bad-soft: #fbe6e1;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Lexend", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151d; --surface: #1a202b; --ink: #e9edf4; --muted: #9ba6b8; --line: #2d3545;
+    --accent: #ff6b5c; --accent-soft: #3a1f1d; --pick: #8fa9ff; --pick-soft: #232d4d;
+    --good: #4fd1a5; --good-soft: #173a30; --bad: #ff8a73; --bad-soft: #3d2019;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151d; --surface: #1a202b; --ink: #e9edf4; --muted: #9ba6b8; --line: #2d3545;
+  --accent: #ff6b5c; --accent-soft: #3a1f1d; --pick: #8fa9ff; --pick-soft: #232d4d;
+  --good: #4fd1a5; --good-soft: #173a30; --bad: #ff8a73; --bad-soft: #3d2019;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 720px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 64px; display: grid; gap: 18px; }
+
+.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mark { position: relative; width: 34px; height: 34px; border-radius: 8px; background: var(--accent); flex: none; }
+.mark::before, .mark::after { content: ""; position: absolute; left: 50%; top: 50%; background: #fff; transform: translate(-50%, -50%); }
+.mark::before { width: 18px; height: 6px; }
+.mark::after { width: 6px; height: 18px; }
+.brand { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; }
+.tabs { margin-left: auto; display: flex; gap: 6px; }
+.tab { font: 600 0.85rem var(--font-body); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.9rem, 6vw, 2.6rem); font-weight: 800; letter-spacing: -0.015em; }
+h2 { font-size: 1.5rem; font-weight: 800; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; }
+.en { color: var(--muted); font-size: 0.85rem; }
+.muted { color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+
+.progress { display: grid; gap: 6px; }
+.bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .3s; }
+.steps { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); }
+.steps b { color: var(--ink); }
+
+label.field { display: grid; gap: 6px; font-weight: 600; }
+label.field span.en { font-weight: 400; }
+input[type="text"], textarea {
+  font: 400 1rem var(--font-body); color: var(--ink); background: var(--bg);
+  border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+}
+textarea { min-height: 140px; resize: vertical; }
+input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--pick); }
+
+.q { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; min-width: 0; }
+.q legend { font-weight: 600; padding: 0; margin-bottom: 4px; display: flex; gap: 10px; }
+.q legend .n { font-family: var(--font-display); color: var(--accent); min-width: 1.6em; font-variant-numeric: tabular-nums; }
+.q.missing legend { color: var(--bad); }
+.reading { background: var(--bg); border-left: 4px solid var(--accent); border-radius: 4px 10px 10px 4px; padding: 12px 14px; font-size: 0.98rem; white-space: pre-line; }
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.opt { position: relative; }
+.opt input { position: absolute; opacity: 0; pointer-events: none; }
+.opt label {
+  display: block; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px;
+  cursor: pointer; background: var(--surface); min-height: 48px;
+}
+.opt label:hover { border-color: var(--pick); }
+.opt input:checked + label { border-color: var(--pick); background: var(--pick-soft); font-weight: 600; }
+.opt input:focus-visible + label { outline: 3px solid var(--pick); outline-offset: 2px; }
+.opt.idk label { color: var(--muted); border-style: dashed; }
+.sep { height: 1px; background: var(--line); }
+
+.nav { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; align-items: center; }
+.btn {
+  font: 600 1rem var(--font-body); padding: 12px 20px; border-radius: 12px; cursor: pointer;
+  border: 1.5px solid var(--ink); background: var(--ink); color: var(--bg); min-height: 48px;
+}
+.btn.accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.small { font-size: 0.85rem; padding: 7px 12px; min-height: 0; border-radius: 9px; }
+.btn:focus-visible, .tab:focus-visible { outline: 3px solid var(--pick); outline-offset: 2px; }
+.btn[disabled] { opacity: .5; cursor: default; }
+.warn { color: var(--bad); font-weight: 600; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-size: 0.85rem; padding: 4px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
+
+.ok-box { background: var(--good-soft); border: 1.5px solid var(--good); border-radius: 12px; padding: 14px; display: grid; gap: 6px; }
+.code-box { background: var(--accent-soft); border: 1.5px solid var(--accent); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.75rem; word-break: break-all; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px; max-height: 120px; overflow: auto; user-select: all; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* teacher */
+.list { display: grid; gap: 8px; }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; text-align: left; width: 100%;
+  font: inherit; color: inherit; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; }
+.item[aria-current="true"] { border-color: var(--ink); }
+.item .who { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.item .when { color: var(--muted); font-size: 0.82rem; grid-column: 1; }
+.lvl { font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; padding: 3px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); grid-row: 1 / span 2; grid-column: 2; }
+.scores { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.score { background: var(--bg); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
+.score b { font-family: var(--font-display); font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.score span { font-size: 0.78rem; color: var(--muted); }
+.meter { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--good); }
+.ans { display: grid; gap: 6px; }
+.ans-row { display: grid; grid-template-columns: 2.2em 1fr; gap: 2px 8px; padding: 8px 10px; border-radius: 10px; font-size: 0.92rem; }
+.ans-row.r { background: var(--good-soft); }
+.ans-row.f { background: var(--bad-soft); }
+.ans-row.s { background: var(--bg); }
+.ans-row .k { font-weight: 700; font-variant-numeric: tabular-nums; }
+.ans-row .d { grid-column: 2; color: var(--muted); }
+.written { white-space: pre-wrap; background: var(--bg); border-radius: 10px; padding: 12px; overflow-wrap: anywhere; }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+@media (max-width: 520px) { .scores { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="mark" aria-hidden="true"></div>
+    <div class="brand">Deutsch-Test</div>
+    <div class="tabs" id="tabs" hidden>
+      <button class="tab" type="button" id="tab-test" aria-selected="true">Test</button>
+      <button class="tab" type="button" id="tab-results" aria-selected="false">Ergebnisse</button>
+    </div>
+  </div>
+
+  <main id="view-test"></main>
+  <main id="view-results" hidden></main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Inhalt ----------
+  var PARTS = [
+    { id: "a1", level: "A1", title: "Teil 1: Grundlagen", en: "Part 1: Basics", questions: [
+      { q: "Woher ___ du?", o: ["komme", "kommst", "kommt", "kommen"], c: 1, topic: "Verb im Präsens" },
+      { q: "Wir ___ Hunger.", o: ["habt", "haben", "hat", "habe"], c: 1, topic: "haben" },
+      { q: "Ihr ___ sehr nett.", o: ["seid", "sind", "ist", "bist"], c: 0, topic: "sein" },
+      { q: "Das ist ___ Lampe.", o: ["ein", "eine", "einen", "einem"], c: 1, topic: "Artikel" },
+      { q: "___ wohnen Sie? – In Zürich.", o: ["Wer", "Was", "Wo", "Wie"], c: 2, topic: "W-Fragen" },
+      { q: "Ich habe ___ Auto.", o: ["keine", "nicht", "kein", "keinen"], c: 2, topic: "Verneinung" },
+      { q: "Das Brot kostet CHF 4.50. Wie sagt man das?", o: ["vier Franken fünfzig", "fünf Franken vierzig", "vierzehn Franken fünfzig", "vier Franken fünfzehn"], c: 0, topic: "Zahlen und Preise" },
+      { q: "Es ist 7:30 Uhr. Man sagt auch: Es ist …", o: ["halb sieben", "halb acht", "sieben Uhr drei", "acht Uhr dreissig"], c: 1, topic: "Uhrzeit" },
+      { q: "Wie heissen Sie?", o: ["Ich bin 35.", "Ich wohne in Bern.", "Gut, danke.", "Ich heisse Ali."], c: 3, topic: "Sich vorstellen" },
+      { text: "Hallo, ich bin Maria. Ich komme aus Portugal und wohne in Luzern. Ich arbeite im Spital. Am Wochenende gehe ich gern in die Berge.",
+        q: "Wo arbeitet Maria?", o: ["in den Bergen", "im Spital", "in Portugal", "in einer Schule"], c: 1, topic: "Lesen" }
+    ]},
+    { id: "a2", level: "A2", title: "Teil 2: Alltag", en: "Part 2: Everyday life", questions: [
+      { q: "Gestern ___ ich nach Basel gefahren.", o: ["habe", "bin", "war", "hat"], c: 1, topic: "Perfekt mit sein" },
+      { q: "Ich habe Pizza ___.", o: ["esst", "isst", "gegessen", "geessen"], c: 2, topic: "Partizip II" },
+      { q: "Hier ___ man nicht rauchen. Das ist verboten.", o: ["darf", "muss", "möchte", "will"], c: 0, topic: "Modalverben" },
+      { q: "Ich fahre mit ___ Bus zur Arbeit.", o: ["der", "den", "dem", "des"], c: 2, topic: "Dativ" },
+      { q: "Ich lege das Buch auf ___ Tisch.", o: ["dem", "den", "der", "des"], c: 1, topic: "Akkusativ (Wohin?)" },
+      { q: "Der Zug ___ um 8 Uhr ___.", o: ["abfährt … –", "fährt … ab", "fahrt … ab", "ab … fährt"], c: 1, topic: "Trennbare Verben" },
+      { q: "Zürich ist ___ als Bern.", o: ["grösser", "grosser", "am grössten", "mehr gross"], c: 0, topic: "Komparativ" },
+      { q: "Das ist Anna und das ist ___ Mann.", o: ["sein", "ihre", "ihr", "seine"], c: 2, topic: "Possessivartikel" },
+      { text: "Liebe Mieterinnen und Mieter\nAm Dienstag, 14. Oktober, gibt es von 8 bis 12 Uhr kein Wasser. Grund: Reparatur.\nBitte füllen Sie vorher Wasser in Flaschen.\nFreundliche Grüsse, Ihre Hausverwaltung",
+        q: "Was passiert am Dienstag?", o: ["Den ganzen Tag gibt es kein Wasser.", "Die Mieter müssen die Reparatur machen.", "Am Morgen gibt es kein Wasser.", "Man bekommt Wasser in Flaschen."], c: 2, topic: "Lesen" },
+      { sameText: true, q: "Was sollen die Mieter tun?", o: ["Die Hausverwaltung anrufen.", "Vorher Wasser in Flaschen füllen.", "Am Dienstag zu Hause bleiben.", "Neue Flaschen kaufen."], c: 1, topic: "Lesen" }
+    ]},
+    { id: "b1", level: "B1", title: "Teil 3: Fortgeschritten", en: "Part 3: Advanced", questions: [
+      { q: "Ich lerne Deutsch, weil ich in der Schweiz ___.", o: ["möchte arbeiten", "arbeiten möchte", "arbeite möchte", "möchten arbeiten"], c: 1, topic: "Nebensatz mit weil" },
+      { q: "Ich glaube, dass ___.", o: ["er kommt morgen", "morgen er kommt", "kommt er morgen", "er morgen kommt"], c: 3, topic: "Nebensatz mit dass" },
+      { q: "Als Kind ___ ich in einem kleinen Dorf.", o: ["wohnte", "wohnt", "gewohnt", "wohnen"], c: 0, topic: "Präteritum" },
+      { q: "Wenn ich mehr Zeit hätte, ___ ich mehr Sport machen.", o: ["werde", "wurde", "würde", "wäre"], c: 2, topic: "Konjunktiv II" },
+      { q: "Das Paket ___ morgen geliefert.", o: ["hat", "wird", "würde", "ist"], c: 1, topic: "Passiv" },
+      { q: "Das ist der Mann, ___ ich gestern gesehen habe.", o: ["der", "dem", "den", "dessen"], c: 2, topic: "Relativsatz" },
+      { q: "Ich interessiere ___ für Politik.", o: ["mich", "mir", "sich", "dich"], c: 0, topic: "Reflexive Verben" },
+      { q: "Es regnet. ___ gehen wir spazieren.", o: ["Deshalb", "Weil", "Obwohl", "Trotzdem"], c: 3, topic: "Konnektoren" },
+      { text: "Wer in eine neue Gemeinde zieht, muss sich innerhalb von 14 Tagen bei der Einwohnerkontrolle anmelden. Mitbringen muss man einen Pass oder eine ID, den Mietvertrag und – falls vorhanden – die Aufenthaltsbewilligung. Wer sich zu spät anmeldet, muss unter Umständen eine Busse bezahlen.",
+        q: "Was stimmt?", o: ["Man kann sich jederzeit anmelden.", "Man muss sich in den ersten zwei Wochen anmelden.", "Ohne Mietvertrag bekommt man eine Busse.", "Man kann sich nur mit Aufenthaltsbewilligung anmelden."], c: 1, topic: "Lesen" },
+      { sameText: true, q: "Was bedeutet „Busse“ in diesem Text?", o: ["ein Verkehrsmittel", "eine Strafe, die man bezahlen muss", "eine Bestätigung", "ein Formular"], c: 1, topic: "Wortschatz im Kontext" }
+    ]}
+  ];
+  var WRITING = [
+    { id: "w1", q: "Stell dich vor: Name, Land, Wohnort, Arbeit, Familie. Schreib 3 bis 5 Sätze.", en: "Introduce yourself in 3–5 sentences." },
+    { id: "w2", q: "Was hast du letztes Wochenende gemacht? Schreib 3 bis 5 Sätze.", en: "What did you do last weekend? 3–5 sentences." }
+  ];
+  var ALL_Q = [];
+  PARTS.forEach(function (p) {
+    var lastText = "";
+    p.questions.forEach(function (q) {
+      if (q.text) lastText = q.text;
+      if (q.sameText) q.text = lastText;
+      q.part = p.id;
+      ALL_Q.push(q);
+    });
+  });
+  var STEPS = ["Start", "Teil 1", "Teil 2", "Teil 3", "Schreiben"];
+  var DRAFT_KEY = "deutschtest-draft-v1";
+
+  // ---------- Hilfen ----------
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (k === "text") e.textContent = attrs[k];
+      else if (k === "class") e.className = attrs[k];
+      else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== false && attrs[k] != null) e.setAttribute(k, attrs[k] === true ? "" : attrs[k]);
+    });
+    (children || []).forEach(function (c) { if (c != null) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return e;
+  }
+  function storeGet() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (e) { return null; } }
+  function storeSet(v) { try { if (v) localStorage.setItem(DRAFT_KEY, JSON.stringify(v)); else localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+
+  function evaluate(answers) {
+    var parts = {};
+    PARTS.forEach(function (p) { parts[p.id] = { correct: 0, total: p.questions.length, idk: 0 }; });
+    ALL_Q.forEach(function (q, i) {
+      var a = answers[i];
+      if (a === q.c) parts[q.part].correct++;
+      if (a === -1 || a == null) parts[q.part].idk++;
+    });
+    var a1 = parts.a1.correct, a2 = parts.a2.correct, b1 = parts.b1.correct, level, note;
+    if (a1 < 5) { level = "unter A1"; note = "Anfänger: Die Grundlagen fehlen noch. Start mit A1 (Begrüssung, Zahlen, sein/haben, einfache Sätze)."; }
+    else if (a1 < 8 || a2 < 6) { level = "A1"; note = "Grundlagen teilweise vorhanden. Ziel: A1 festigen, dann A2 (Perfekt, Dativ, Modalverben)."; }
+    else if (b1 < 6) { level = "A2"; note = "Alltagsdeutsch geht schon gut. Nächster Schritt: B1 (Nebensätze, Präteritum, Konjunktiv II)."; }
+    else { level = "B1"; note = "Sicher im Alltag. Die Schreibaufgaben zeigen, ob B1 auch beim freien Schreiben passt."; }
+    return { parts: parts, level: level, note: note };
+  }
+
+  function encodeResult(r) {
+    var bytes = new TextEncoder().encode(JSON.stringify(r)), s = "";
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return "DTEST-" + btoa(s);
+  }
+  function decodeResult(code) {
+    var m = String(code).replace(/\s+/g, "").match(/DTEST-([A-Za-z0-9+/=]+)/);
+    if (!m) throw new Error("Kein Ergebnis-Code gefunden. Der Code beginnt mit DTEST-.");
+    var bin = atob(m[1]), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    var r = JSON.parse(new TextDecoder().decode(bytes));
+    if (!r || r.v !== 1 || !Array.isArray(r.answers)) throw new Error("Der Code ist unvollständig. Bitte den ganzen Code einfügen.");
+    return r;
+  }
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleString("de-CH", { dateStyle: "medium", timeStyle: "short" }); } catch (e) { return iso || ""; }
+  }
+  function fmtDur(sec) {
+    sec = Math.max(0, Math.round(sec || 0));
+    return Math.floor(sec / 60) + " Min. " + (sec % 60) + " Sek.";
+  }
+
+  // ---------- Plattform ----------
+  var cap = { db: null, user: null, uid: null, owner: false };
+  var capReady = (async function () {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      var res = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      cap.db = res[0]; cap.user = res[1];
+      if (cap.user) {
+        cap.owner = await cap.user.isOwner();
+        cap.uid = await cap.user.id();
+      }
+    } catch (e) {}
+  })();
+
+  // ---------- Test ----------
+  var state = storeGet() || { step: 0, info: { name: "", lang: "", since: "" }, answers: new Array(ALL_Q.length).fill(null), writing: { w1: "", w2: "" }, startedAt: null, result: null };
+  var viewTest = document.getElementById("view-test");
+
+  function save() { storeSet(state); }
+
+  function progress() {
+    var pct = Math.round(Math.min(state.step, STEPS.length) / STEPS.length * 100);
+    return el("div", { class: "progress" }, [
+      el("div", { class: "bar", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(pct) }, [el("i", { style: "width:" + pct + "%" })]),
+      el("div", { class: "steps" }, STEPS.map(function (s, i) { return i === state.step ? el("b", { text: s }) : el("span", { text: s }); }))
+    ]);
+  }
+
+  function renderTest() {
+    viewTest.innerHTML = "";
+    var box = el("div", { class: "wrap", style: "padding:0" });
+    if (state.step === 0) box.appendChild(renderStart());
+    else if (state.step >= 1 && state.step <= 3) { box.appendChild(progress()); box.appendChild(renderPart(PARTS[state.step - 1])); }
+    else if (state.step === 4) { box.appendChild(progress()); box.appendChild(renderWriting()); }
+    else box.appendChild(renderDone());
+    viewTest.appendChild(box);
+  }
+
+  function renderStart() {
+    var name = el("input", { type: "text", id: "f-name", value: state.info.name, autocomplete: "given-name" });
+    var lang = el("input", { type: "text", id: "f-lang", value: state.info.lang });
+    var since = el("input", { type: "text", id: "f-since", value: state.info.since, placeholder: "z. B. 6 Monate" });
+    var warn = el("p", { class: "warn", hidden: true, text: "Bitte schreib deinen Namen." });
+    return el("div", { class: "wrap", style: "padding:0" }, [
+      el("div", { class: "card" }, [
+        el("h1", { text: "Wie gut ist dein Deutsch?" }),
+        el("p", { text: "Dieser Test zeigt, wo du stehst. Er dauert etwa 20 bis 30 Minuten." }),
+        el("p", { class: "en", text: "This test shows your German level. It takes about 20–30 minutes." }),
+        el("div", { class: "facts" }, [
+          el("span", { class: "chip", text: "30 Fragen" }),
+          el("span", { class: "chip", text: "2 kurze Texte schreiben" }),
+          el("span", { class: "chip", text: "kein Wörterbuch" })
+        ]),
+        el("p", { text: "Kennst du eine Antwort nicht? Kein Problem. Wähle „Ich weiss es nicht“. Bitte nicht raten." }),
+        el("p", { class: "en", text: "Don't know an answer? Choose „Ich weiss es nicht“ (I don't know). Please don't guess." })
+      ]),
+      el("div", { class: "card" }, [
+        el("label", { class: "field", for: "f-name" }, ["Wie heisst du?", el("span", { class: "en", text: "Your name" }), name]),
+        el("label", { class: "field", for: "f-lang" }, ["Was ist deine Muttersprache?", el("span", { class: "en", text: "Your first language" }), lang]),
+        el("label", { class: "field", for: "f-since" }, ["Seit wann bist du in der Schweiz?", el("span", { class: "en", text: "How long have you been in Switzerland?" }), since]),
+        warn,
+        el("div", { class: "nav" }, [el("span"), el("button", { class: "btn accent", type: "button", text: "Test starten", onclick: function () {
+          state.info = { name: name.value.trim(), lang: lang.value.trim(), since: since.value.trim() };
+          if (!state.info.name) { warn.hidden = false; name.focus(); return; }
+          if (!state.startedAt) state.startedAt = new Date().toISOString();
+          state.step = 1; save(); renderTest(); window.scrollTo(0, 0);
+        } })])
+      ])
+    ]);
+  }
+
+  function renderPart(part) {
+    var card = el("div", { class: "card" }, [
+      el("div", {}, [el("h2", { text: part.title }), el("p", { class: "en", text: part.en })])
+    ]);
+    var warn = el("p", { class: "warn", hidden: true });
+    var shownText = "";
+    part.questions.forEach(function (q) {
+      var gi = ALL_Q.indexOf(q);
+      card.appendChild(el("div", { class: "sep" }));
+      var fs = el("fieldset", { class: "q", id: "q-" + gi });
+      fs.appendChild(el("legend", {}, [el("span", { class: "n", text: (gi + 1) + "." }), el("span", { text: q.q })]));
+      if (q.text && q.text !== shownText) {
+        fs.insertBefore(el("div", { class: "reading", text: q.text }), null);
+        shownText = q.text;
+      } else if (q.text) {
+        fs.appendChild(el("p", { class: "muted", text: "(Text oben)" }));
+      }
+      var opts = el("div", { class: "opts" });
+      q.o.concat(["Ich weiss es nicht"]).forEach(function (txt, oi) {
+        var val = oi < q.o.length ? oi : -1;
+        var id = "a-" + gi + "-" + oi;
+        var input = el("input", { type: "radio", name: "a-" + gi, id: id, value: String(val), checked: state.answers[gi] === val });
+        input.addEventListener("change", function () { state.answers[gi] = val; fs.classList.remove("missing"); save(); });
+        opts.appendChild(el("div", { class: "opt" + (val === -1 ? " idk" : "") }, [input, el("label", { for: id, text: txt })]));
+      });
+      fs.appendChild(opts);
+      card.appendChild(fs);
+    });
+    card.appendChild(warn);
+    card.appendChild(el("div", { class: "nav" }, [
+      el("button", { class: "btn ghost", type: "button", text: "Zurück", onclick: function () { state.step--; save(); renderTest(); window.scrollTo(0, 0); } }),
+      el("button", { class: "btn accent", type: "button", text: "Weiter", onclick: function () {
+        var missing = part.questions.map(function (q) { return ALL_Q.indexOf(q); }).filter(function (gi) { return state.answers[gi] == null; });
+        if (missing.length) {
+          missing.forEach(function (gi) { document.getElementById("q-" + gi).classList.add("missing"); });
+          warn.textContent = "Bitte beantworte noch Frage " + missing.map(function (g) { return g + 1; }).join(", ") + ". Du kannst auch „Ich weiss es nicht“ wählen.";
+          warn.hidden = false;
+          document.getElementById("q-" + missing[0]).scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+        state.step++; save(); renderTest(); window.scrollTo(0, 0);
+      } })
+    ]));
+    return card;
+  }
+
+  function renderWriting() {
+    var card = el("div", { class: "card" }, [
+      el("div", {}, [el("h2", { text: "Teil 4: Schreiben" }), el("p", { class: "en", text: "Part 4: Writing" })]),
+      el("p", { text: "Schreib so gut du kannst. Fehler sind okay. Bitte kein Übersetzungsprogramm benutzen." }),
+      el("p", { class: "en", text: "Write as well as you can. Mistakes are okay. Please don't use a translator." })
+    ]);
+    WRITING.forEach(function (w) {
+      var ta = el("textarea", { id: "f-" + w.id });
+      ta.value = state.writing[w.id] || "";
+      ta.addEventListener("input", function () { state.writing[w.id] = ta.value; save(); });
+      card.appendChild(el("div", { class: "sep" }));
+      card.appendChild(el("label", { class: "field", for: "f-" + w.id }, [w.q, el("span", { class: "en", text: w.en }), ta]));
+    });
+    var sending = el("p", { class: "muted", hidden: true, text: "Wird gespeichert …" });
+    var sendBtn = el("button", { class: "btn accent", type: "button", text: "Test abgeben", onclick: async function () {
+      sendBtn.disabled = true; sending.hidden = false;
+      await submit();
+    } });
+    card.appendChild(sending);
+    card.appendChild(el("div", { class: "nav" }, [
+      el("button", { class: "btn ghost", type: "button", text: "Zurück", onclick: function () { state.step--; save(); renderTest(); window.scrollTo(0, 0); } }),
+      sendBtn
+    ]));
+    return card;
+  }
+
+  async function submit() {
+    var now = new Date();
+    var r = {
+      v: 1, name: state.info.name, lang: state.info.lang, since: state.info.since,
+      answers: state.answers.map(function (a) { return a == null ? -1 : a; }),
+      w1: state.writing.w1 || "", w2: state.writing.w2 || "",
+      seconds: state.startedAt ? Math.round((now - new Date(state.startedAt)) / 1000) : 0,
+      submittedAt: now.toISOString()
+    };
+    var saved = false;
+    await capReady;
+    if (cap.db) {
+      try {
+        var body = Object.assign({ source: "online" }, r);
+        if (cap.uid) await cap.db.doc("results/" + cap.uid).set(body);
+        else await cap.db.collection("results").add(body);
+        saved = true;
+      } catch (e) { saved = false; }
+    }
+    state.result = { code: encodeResult(r), saved: saved };
+    state.step = 5; save(); renderTest(); window.scrollTo(0, 0);
+  }
+
+  function renderDone() {
+    var res = state.result || {};
+    var parts = [
+      el("h1", { text: "Danke, " + (state.info.name || "") + "!" }),
+      el("p", { text: "Du hast den Test fertig gemacht. Das hast du gut gemacht." }),
+      el("p", { class: "en", text: "You finished the test. Well done." })
+    ];
+    var card = el("div", { class: "card" }, parts);
+    var wrap = el("div", { class: "wrap", style: "padding:0" }, [card]);
+
+    var codeText = el("div", { class: "code", text: res.code || "" });
+    var copied = el("span", { class: "muted", "aria-live": "polite" });
+    var copyBtn = el("button", { class: "btn small", type: "button", text: "Code kopieren", onclick: function () {
+      var done = function () { copied.textContent = "Kopiert ✓"; };
+      try {
+        navigator.clipboard.writeText(res.code).then(done, function () { selectText(codeText); copied.textContent = "Code markiert. Jetzt kopieren."; });
+      } catch (e) { selectText(codeText); copied.textContent = "Code markiert. Jetzt kopieren."; }
+    } });
+    var wa = el("a", { class: "btn small accent", href: "https://wa.me/?text=" + encodeURIComponent("Mein Deutsch-Test:\n" + (res.code || "")), target: "_blank", rel: "noopener", text: "Per WhatsApp senden" });
+
+    if (res.saved) {
+      wrap.appendChild(el("div", { class: "ok-box" }, [
+        el("h3", { text: "Dein Ergebnis ist gespeichert ✓" }),
+        el("p", { text: "Dein Lehrer sieht es jetzt. Du musst nichts mehr machen." }),
+        el("p", { class: "en", text: "Your result is saved. Your teacher can see it now." })
+      ]));
+      wrap.appendChild(el("details", { class: "card" }, [
+        el("summary", { text: "Ergebnis-Code (nur falls dein Lehrer danach fragt)" }),
+        codeText, el("div", { class: "row" }, [copyBtn, wa, copied])
+      ]));
+    } else {
+      wrap.appendChild(el("div", { class: "code-box" }, [
+        el("h3", { text: "Bitte schick diesen Code an deinen Lehrer" }),
+        el("p", { text: "Tippe auf „Per WhatsApp senden“ oder kopiere den Code und schick ihn per Nachricht." }),
+        el("p", { class: "en", text: "Please send this code to your teacher (WhatsApp or any message)." }),
+        codeText, el("div", { class: "row" }, [wa, copyBtn, copied])
+      ]));
+    }
+    wrap.appendChild(el("div", { class: "nav" }, [el("span"), el("button", { class: "btn ghost small", type: "button", text: "Test neu beginnen", onclick: function () {
+      storeSet(null);
+      state = { step: 0, info: { name: "", lang: "", since: "" }, answers: new Array(ALL_Q.length).fill(null), writing: { w1: "", w2: "" }, startedAt: null, result: null };
+      renderTest(); window.scrollTo(0, 0);
+    } })]));
+    return wrap;
+  }
+
+  function selectText(node) {
+    try { var r = document.createRange(); r.selectNodeContents(node); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+  }
+
+  // ---------- Lehrer-Ansicht ----------
+  var viewResults = document.getElementById("view-results");
+  var results = [];       // aus db
+  var pasted = [];        // nur in dieser Sitzung, falls db fehlt
+  var selectedKey = null;
+  var listBox, detailBox, dbNote;
+
+  function buildResultsView() {
+    viewResults.innerHTML = "";
+    listBox = el("div", { class: "list" });
+    detailBox = el("div");
+    dbNote = el("p", { class: "muted" });
+    var ta = el("textarea", { id: "f-code", placeholder: "DTEST-…", style: "min-height:90px" });
+    var err = el("p", { class: "warn", hidden: true });
+    var addBtn = el("button", { class: "btn small", type: "button", text: "Code auswerten", onclick: async function () {
+      err.hidden = true;
+      var r;
+      try { r = decodeResult(ta.value); } catch (e) { err.textContent = e.message; err.hidden = false; return; }
+      var key = "code-" + hashStr(r.submittedAt + r.name);
+      var body = Object.assign({ source: "code" }, r);
+      if (cap.db) {
+        try { await cap.db.doc("results/" + key).set(body); }
+        catch (e) { pasted.push({ key: key, data: body }); renderList(); }
+      } else { pasted.push({ key: key, data: body }); renderList(); }
+      selectedKey = key; ta.value = ""; renderList(); renderDetail();
+    } });
+    viewResults.appendChild(el("div", { class: "wrap", style: "padding:0" }, [
+      el("div", { class: "card" }, [
+        el("h1", { text: "Ergebnisse" }),
+        el("p", { class: "muted", text: "Diese Ansicht siehst nur du. Gespeicherte Tests erscheinen hier automatisch." }),
+        dbNote,
+        listBox
+      ]),
+      el("div", { class: "card" }, [
+        el("h3", { text: "Ergebnis-Code einfügen" }),
+        el("p", { class: "muted", text: "Hat er dir einen Code per WhatsApp geschickt? Hier einfügen und auswerten." }),
+        ta, err, el("div", { class: "row" }, [addBtn])
+      ]),
+      detailBox
+    ]));
+    renderList();
+  }
+
+  function hashStr(s) {
+    var h = 0; s = String(s);
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+  }
+
+  function allResults() {
+    var seen = {}, out = [];
+    results.concat(pasted).forEach(function (x) { if (!seen[x.key]) { seen[x.key] = 1; out.push(x); } });
+    return out.sort(function (a, b) { return String(b.data.submittedAt).localeCompare(String(a.data.submittedAt)); });
+  }
+
+  function renderList() {
+    if (!listBox) return;
+    listBox.innerHTML = "";
+    var all = allResults();
+    if (!all.length) {
+      listBox.appendChild(el("p", { class: "muted", text: "Noch kein Test abgegeben. Schick ihm den Link zu dieser Seite. Sobald er fertig ist, erscheint sein Ergebnis hier, oder er schickt dir einen Code." }));
+      return;
+    }
+    all.forEach(function (x) {
+      var ev = evaluate(x.data.answers || []);
+      listBox.appendChild(el("button", { class: "item", type: "button", "aria-current": x.key === selectedKey ? "true" : "false", onclick: function () { selectedKey = x.key; renderList(); renderDetail(); detailBox.scrollIntoView({ behavior: "smooth", block: "start" }); } }, [
+        el("span", { class: "who", text: x.data.name || "Ohne Namen" }),
+        el("span", { class: "lvl", text: ev.level }),
+        el("span", { class: "when", text: fmtDate(x.data.submittedAt) + " · " + (x.data.source === "code" ? "per Code" : "online gespeichert") })
+      ]));
+    });
+  }
+
+  function renderDetail() {
+    detailBox.innerHTML = "";
+    var x = allResults().filter(function (r) { return r.key === selectedKey; })[0];
+    if (!x) return;
+    var d = x.data, ev = evaluate(d.answers || []);
+    var card = el("div", { class: "card" }, [
+      el("div", { class: "row", style: "justify-content:space-between" }, [el("h2", { text: d.name || "Ohne Namen" }), el("span", { class: "lvl", style: "grid-row:auto", text: "ca. " + ev.level })]),
+      el("div", { class: "facts" }, [
+        el("span", { class: "chip", text: "Muttersprache: " + (d.lang || "–") }),
+        el("span", { class: "chip", text: "In der Schweiz seit: " + (d.since || "–") }),
+        el("span", { class: "chip", text: "Dauer: " + fmtDur(d.seconds) }),
+        el("span", { class: "chip", text: fmtDate(d.submittedAt) })
+      ]),
+      el("p", { text: ev.note }),
+      el("div", { class: "scores" }, PARTS.map(function (p) {
+        var s = ev.parts[p.id];
+        return el("div", { class: "score" }, [
+          el("span", { text: p.level + " · " + p.title.replace(/^Teil \d: /, "") }),
+          el("b", { text: s.correct + " / " + s.total }),
+          el("div", { class: "meter" }, [el("i", { style: "width:" + Math.round(s.correct / s.total * 100) + "%" })]),
+          el("span", { text: s.idk + "× „weiss nicht“" })
+        ]);
+      }))
+    ]);
+    WRITING.forEach(function (w) {
+      card.appendChild(el("div", { class: "sep" }));
+      card.appendChild(el("h3", { text: w.q }));
+      card.appendChild(el("div", { class: "written", text: (d[w.id] || "").trim() || "(nichts geschrieben)" }));
+    });
+    PARTS.forEach(function (p) {
+      card.appendChild(el("div", { class: "sep" }));
+      card.appendChild(el("h3", { text: p.title + " (" + p.level + ")" }));
+      var list = el("div", { class: "ans" });
+      p.questions.forEach(function (q) {
+        var gi = ALL_Q.indexOf(q), a = (d.answers || [])[gi];
+        var cls = a === q.c ? "r" : (a === -1 || a == null ? "s" : "f");
+        var given = a === -1 || a == null ? "weiss nicht" : q.o[a];
+        var detail = cls === "r" ? "✓ " + given : (cls === "s" ? "– weiss nicht · richtig: " + q.o[q.c] : "✗ " + given + " · richtig: " + q.o[q.c]);
+        list.appendChild(el("div", { class: "ans-row " + cls }, [
+          el("span", { class: "k", text: (gi + 1) + "." }),
+          el("span", { text: q.q + "  [" + q.topic + "]" }),
+          el("span", { class: "d", text: detail })
+        ]));
+      });
+      card.appendChild(list);
+    });
+    if (cap.db && results.some(function (r) { return r.key === x.key; })) {
+      var confirmRow = el("div", { class: "confirm", hidden: true }, [
+        el("span", { text: "Wirklich löschen?" }),
+        el("button", { class: "btn small", type: "button", text: "Ja, löschen", onclick: async function () {
+          try { await cap.db.doc("results/" + x.key).delete(); selectedKey = null; detailBox.innerHTML = ""; }
+          catch (e) { confirmRow.firstChild.textContent = "Löschen hat nicht geklappt. Bitte später nochmal."; }
+        } }),
+        el("button", { class: "btn small ghost", type: "button", text: "Abbrechen", onclick: function () { confirmRow.hidden = true; delBtn.hidden = false; } })
+      ]);
+      var delBtn = el("button", { class: "btn small ghost", type: "button", text: "Ergebnis löschen", onclick: function () { delBtn.hidden = true; confirmRow.hidden = false; } });
+      card.appendChild(el("div", { class: "sep" }));
+      card.appendChild(el("div", { class: "row" }, [delBtn, confirmRow]));
+    }
+    detailBox.appendChild(card);
+  }
+
+  function showTab(which) {
+    var t = which === "test";
+    document.getElementById("view-test").hidden = !t;
+    document.getElementById("view-results").hidden = t;
+    document.getElementById("tab-test").setAttribute("aria-selected", String(t));
+    document.getElementById("tab-results").setAttribute("aria-selected", String(!t));
+  }
+  document.getElementById("tab-test").addEventListener("click", function () { showTab("test"); });
+  document.getElementById("tab-results").addEventListener("click", function () { showTab("results"); });
+
+  renderTest();
+
+  capReady.then(function () {
+    if (!cap.owner) return;
+    document.getElementById("tabs").hidden = false;
+    buildResultsView();
+    if (location.hash === "#ergebnisse") showTab("results");
+    if (cap.db) {
+      cap.db.collection("results").onSnapshot(function (snap) {
+        results = snap.docs.map(function (doc) { return { key: doc.id, data: doc.data() || {} }; });
+        dbNote.textContent = "";
+        renderList();
+        if (selectedKey) renderDetail();
+      }, function () { dbNote.textContent = "Gespeicherte Ergebnisse konnten nicht geladen werden. Codes kannst du trotzdem unten einfügen."; });
+    } else {
+      dbNote.textContent = "Die Online-Speicherung ist in dieser Ansicht nicht verfügbar. Codes kannst du trotzdem unten einfügen.";
+    }
+  });
+})();
+</script>
