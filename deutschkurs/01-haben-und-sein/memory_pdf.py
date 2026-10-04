@@ -1,4 +1,4 @@
-"""Erzeugt memory-zum-ausschneiden.pdf (A4) für das Memory zu haben und sein.
+"""Erzeugt zwei A4-PDFs zum Ausschneiden: memory-haben.pdf und memory-sein.pdf.
 
 Aufruf:  python3 memory_pdf.py
 """
@@ -15,7 +15,7 @@ FONT_DIR = "/usr/share/fonts/truetype/dejavu"
 pdfmetrics.registerFont(TTFont("Sans", f"{FONT_DIR}/DejaVuSans.ttf"))
 pdfmetrics.registerFont(TTFont("Sans-Bold", f"{FONT_DIR}/DejaVuSans-Bold.ttf"))
 
-OUT = Path(__file__).with_name("memory-zum-ausschneiden.pdf")
+OUT_DIR = Path(__file__).parent
 
 PERSONS = ["ich", "du", "er / sie / es", "wir", "ihr", "sie / Sie"]
 FORMS = {
@@ -26,6 +26,11 @@ FORMS = {
 }
 COLOR = {"haben": HexColor("#2b4fd8"), "sein": HexColor("#0f8a6a")}
 SOFT = {"haben": HexColor("#e4eaff"), "sein": HexColor("#dcf3ec")}
+# Rückseiten in der Farbe des Verbs, damit sich die beiden Kartensätze nicht vermischen.
+BACK = {"haben": (HexColor("#283a8f"), HexColor("#3449ad")),
+        "sein": (HexColor("#0b5e48"), HexColor("#137a5e"))}
+EXAMPLE = {"haben": ("wir · haben · Präteritum", "hatten", "ich hatte", "hatte"),
+           "sein": ("wir · sein · Präteritum", "waren", "ich war", "war")}
 INK = HexColor("#1d2433")
 MUTED = HexColor("#5a6478")
 CUT = HexColor("#9aa5ba")
@@ -133,7 +138,7 @@ def verb_page(c, verb):
     c.showPage()
 
 
-def backs_page(c):
+def backs_page(c, verb):
     """Rückseite für das vorherige Blatt.
 
     Keine Überschrift und keine Schnittlinien: Die blaue Fläche geht über das ganze
@@ -142,23 +147,25 @@ def backs_page(c):
     lange Kante genau hinter den Vorderseiten.
     """
     bleed = 3 * mm
-    c.setFillColor(HexColor("#283a8f"))
+    dark, light = BACK[verb]
+    c.setFillColor(dark)
     c.rect(GRID_X - bleed, GRID_TOP - ROWS * CARD_H - bleed,
            COLS * CARD_W + 2 * bleed, ROWS * CARD_H + 2 * bleed, stroke=0, fill=1)
     for i in range(COLS * ROWS):
         x, y = card_origin(i)
-        c.setFillColor(HexColor("#3449ad"))
+        c.setFillColor(light)
         c.circle(x + CARD_W / 2, y + CARD_H / 2, 10 * mm, stroke=0, fill=1)
         c.setFillColor(white)
         c.setFont("Sans-Bold", 22)
         c.drawCentredString(x + CARD_W / 2, y + CARD_H / 2 - 7.5, "?")
         c.setFont("Sans-Bold", 6.5)
-        c.drawCentredString(x + CARD_W / 2, y + 5.5 * mm, "HABEN & SEIN")
+        c.drawCentredString(x + CARD_W / 2, y + 5.5 * mm, verb.upper())
     c.showPage()
 
 
-def rules_page(c):
-    header(c, "Spielregeln und Lösung", "Für die Lehrkraft oder zum Nachschauen nach dem Spiel")
+def rules_page(c, verb):
+    ex_prompt, ex_form, ex_same, ex_same_form = EXAMPLE[verb]
+    header(c, f"Spielregeln und Lösung: {verb}", "Für die Lehrkraft oder zum Nachschauen nach dem Spiel")
     x0 = GRID_X
     y = PAGE_H - 38 * mm
     c.setFillColor(INK)
@@ -167,16 +174,16 @@ def rules_page(c):
     rules = [
         "1. Karten ausschneiden, mischen und verdeckt auf den Tisch legen.",
         "2. Wer dran ist, deckt zwei Karten auf.",
-        "3. Passen Personen-Karte und Verbform zusammen (z. B. „wir · sein · Präteritum“ + „waren“),",
+        f"3. Passen Personen-Karte und Verbform zusammen (z. B. „{ex_prompt}“ + „{ex_form}“),",
         "    darf man das Paar behalten und ist nochmal dran.",
         "4. Passen sie nicht, werden beide Karten wieder umgedreht. Dann ist die nächste Person dran.",
         "5. Wer am Ende die meisten Paare hat, gewinnt.",
         "",
         "Drucken: beidseitig, Wenden an der langen Kante, Größe 100 % (nicht „an Seite anpassen“).",
-        "Seite 1 + 2 = Blatt „haben“, Seite 3 + 4 = Blatt „sein“, Seite 5 = diese Anleitung.",
+        "Seite 1 = Karten, Seite 2 = Rückseiten, Seite 3 = diese Anleitung.",
         "",
-        "Tipp: Gleiche Formen zählen als richtig. „ich hatte“ passt auch auf die „hatte“-Karte",
-        "von „er / sie / es“. Für Anfänger nur ein Blatt (nur haben oder nur sein) verwenden.",
+        f"Tipp: Gleiche Formen zählen als richtig. „{ex_same}“ passt auch auf die „{ex_same_form}“-Karte",
+        "von „er / sie / es“. Für Fortgeschrittene: Kartensätze von haben und sein zusammen mischen.",
     ]
     c.setFont("Sans", 10)
     for line in rules:
@@ -185,8 +192,8 @@ def rules_page(c):
 
     y -= 14 * mm
     col_w = [34 * mm, 26 * mm, 30 * mm]
-    for t, verb in enumerate(("haben", "sein")):
-        tx = x0 + t * 92 * mm
+    if True:
+        tx = x0
         ty = y
         c.setFillColor(COLOR[verb])
         c.setFont("Sans-Bold", 14)
@@ -211,22 +218,26 @@ def rules_page(c):
     c.showPage()
 
 
-def main():
-    c = canvas.Canvas(str(OUT), pagesize=A4)
-    c.setTitle("Memory: haben und sein (zum Ausschneiden)")
+def build(verb):
+    out = OUT_DIR / f"memory-{verb}.pdf"
+    c = canvas.Canvas(str(out), pagesize=A4)
+    c.setTitle(f"Memory: {verb} (zum Ausschneiden)")
     c.setAuthor("Deutschkurs")
     # Druckvoreinstellungen: Duplex über die lange Kante, keine Skalierung.
     # Adobe Acrobat/Reader übernimmt das im Druckdialog; andere Programme ignorieren es teils.
     c.setViewerPreference("Duplex", "DuplexFlipLongEdge")
     c.setViewerPreference("PrintScaling", "None")
-    # Reihenfolge für Duplex: Vorderseite, Rückseite, Vorderseite, Rückseite, Anleitung.
-    verb_page(c, "haben")
-    backs_page(c)
-    verb_page(c, "sein")
-    backs_page(c)
-    rules_page(c)
+    # Reihenfolge für Duplex: Vorderseite, Rückseite, Anleitung.
+    verb_page(c, verb)
+    backs_page(c, verb)
+    rules_page(c, verb)
     c.save()
-    print(OUT)
+    print(out)
+
+
+def main():
+    for verb in FORMS:
+        build(verb)
 
 
 if __name__ == "__main__":
