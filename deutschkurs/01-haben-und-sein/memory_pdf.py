@@ -1,4 +1,5 @@
-"""Erzeugt zwei A4-PDFs zum Ausschneiden: memory-haben.pdf und memory-sein.pdf.
+"""Erzeugt die A4-PDFs zum Memory: memory-haben.pdf und memory-sein.pdf (je Karten +
+Rückseiten) sowie memory-spielregeln.pdf (Spielregeln und Lösung für beide Verben).
 
 Aufruf:  python3 memory_pdf.py
 """
@@ -29,8 +30,6 @@ SOFT = {"haben": HexColor("#e4eaff"), "sein": HexColor("#dcf3ec")}
 # Rückseiten in der Farbe des Verbs, damit sich die beiden Kartensätze nicht vermischen.
 BACK = {"haben": (HexColor("#283a8f"), HexColor("#3449ad")),
         "sein": (HexColor("#0b5e48"), HexColor("#137a5e"))}
-EXAMPLE = {"haben": ("wir · haben · Präteritum", "hatten", "ich hatte", "hatte"),
-           "sein": ("wir · sein · Präteritum", "waren", "ich war", "war")}
 INK = HexColor("#1d2433")
 MUTED = HexColor("#5a6478")
 CUT = HexColor("#9aa5ba")
@@ -163,9 +162,8 @@ def backs_page(c, verb):
     c.showPage()
 
 
-def rules_page(c, verb):
-    ex_prompt, ex_form, ex_same, ex_same_form = EXAMPLE[verb]
-    header(c, f"Spielregeln und Lösung: {verb}", "Für die Lehrkraft oder zum Nachschauen nach dem Spiel")
+def rules_page(c):
+    header(c, "Memory haben & sein: Spielregeln und Lösung", "Für die Lehrkraft oder zum Nachschauen nach dem Spiel")
     x0 = GRID_X
     y = PAGE_H - 38 * mm
     c.setFillColor(INK)
@@ -174,15 +172,15 @@ def rules_page(c, verb):
     rules = [
         "1. Karten ausschneiden, mischen und verdeckt auf den Tisch legen.",
         "2. Wer dran ist, deckt zwei Karten auf.",
-        f"3. Passen Personen-Karte und Verbform zusammen (z. B. „{ex_prompt}“ + „{ex_form}“),",
+        "3. Passen Personen-Karte und Verbform zusammen (z. B. „wir · sein · Präteritum“ + „waren“),",
         "    darf man das Paar behalten und ist nochmal dran.",
         "4. Passen sie nicht, werden beide Karten wieder umgedreht. Dann ist die nächste Person dran.",
         "5. Wer am Ende die meisten Paare hat, gewinnt.",
         "",
         "Drucken: beidseitig, Wenden an der langen Kante, Größe 100 % (nicht „an Seite anpassen“).",
-        "Seite 1 = Karten, Seite 2 = Rückseiten, Seite 3 = diese Anleitung.",
+        "memory-haben.pdf und memory-sein.pdf: Seite 1 = Karten, Seite 2 = Rückseiten.",
         "",
-        f"Tipp: Gleiche Formen zählen als richtig. „{ex_same}“ passt auch auf die „{ex_same_form}“-Karte",
+        "Tipp: Gleiche Formen zählen als richtig. „ich hatte“ passt auch auf die „hatte“-Karte",
         "von „er / sie / es“. Für Fortgeschrittene: Kartensätze von haben und sein zusammen mischen.",
     ]
     c.setFont("Sans", 10)
@@ -192,8 +190,8 @@ def rules_page(c, verb):
 
     y -= 14 * mm
     col_w = [34 * mm, 26 * mm, 30 * mm]
-    if True:
-        tx = x0
+    for t, verb in enumerate(FORMS):
+        tx = x0 + t * 92 * mm
         ty = y
         c.setFillColor(COLOR[verb])
         c.setFont("Sans-Bold", 14)
@@ -227,10 +225,19 @@ def build(verb):
     # Adobe Acrobat/Reader übernimmt das im Druckdialog; andere Programme ignorieren es teils.
     c.setViewerPreference("Duplex", "DuplexFlipLongEdge")
     c.setViewerPreference("PrintScaling", "None")
-    # Reihenfolge für Duplex: Vorderseite, Rückseite, Anleitung.
+    # Reihenfolge für Duplex: Vorderseite, Rückseite.
     verb_page(c, verb)
     backs_page(c, verb)
-    rules_page(c, verb)
+    c.save()
+    print(out)
+
+
+def build_rules():
+    out = OUT_DIR / "memory-spielregeln.pdf"
+    c = canvas.Canvas(str(out), pagesize=A4)
+    c.setTitle("Memory haben & sein: Spielregeln und Lösung")
+    c.setAuthor("Deutschkurs")
+    rules_page(c)
     c.save()
     print(out)
 
@@ -238,6 +245,7 @@ def build(verb):
 def main():
     for verb in FORMS:
         build(verb)
+    build_rules()
 
 
 if __name__ == "__main__":
