@@ -134,13 +134,19 @@ def verb_page(c, verb):
 
 
 def backs_page(c):
-    header(c, "Rückseiten (optional)",
-           "Beidseitig drucken (lange Kante) oder auf die Rückseite von Seite 1 und 2 kleben.")
-    pad = 2.5 * mm
+    """Rückseite für das vorherige Blatt.
+
+    Keine Überschrift und keine Schnittlinien: Die blaue Fläche geht über das ganze
+    Kartenraster hinaus, damit ein leichter Versatz beim Duplexdruck nicht auffällt.
+    Das Raster ist waagerecht zentriert, deshalb liegt es beim Wenden über die
+    lange Kante genau hinter den Vorderseiten.
+    """
+    bleed = 3 * mm
+    c.setFillColor(HexColor("#283a8f"))
+    c.rect(GRID_X - bleed, GRID_TOP - ROWS * CARD_H - bleed,
+           COLS * CARD_W + 2 * bleed, ROWS * CARD_H + 2 * bleed, stroke=0, fill=1)
     for i in range(COLS * ROWS):
         x, y = card_origin(i)
-        c.setFillColor(HexColor("#283a8f"))
-        c.roundRect(x + pad, y + pad, CARD_W - 2 * pad, CARD_H - 2 * pad, 3 * mm, stroke=0, fill=1)
         c.setFillColor(HexColor("#3449ad"))
         c.circle(x + CARD_W / 2, y + CARD_H / 2, 10 * mm, stroke=0, fill=1)
         c.setFillColor(white)
@@ -148,7 +154,6 @@ def backs_page(c):
         c.drawCentredString(x + CARD_W / 2, y + CARD_H / 2 - 7.5, "?")
         c.setFont("Sans-Bold", 6.5)
         c.drawCentredString(x + CARD_W / 2, y + 5.5 * mm, "HABEN & SEIN")
-    cut_grid(c)
     c.showPage()
 
 
@@ -167,8 +172,11 @@ def rules_page(c):
         "4. Passen sie nicht, werden beide Karten wieder umgedreht. Dann ist die nächste Person dran.",
         "5. Wer am Ende die meisten Paare hat, gewinnt.",
         "",
+        "Drucken: beidseitig, Wenden an der langen Kante, Größe 100 % (nicht „an Seite anpassen“).",
+        "Seite 1 + 2 = Blatt „haben“, Seite 3 + 4 = Blatt „sein“, Seite 5 = diese Anleitung.",
+        "",
         "Tipp: Gleiche Formen zählen als richtig. „ich hatte“ passt auch auf die „hatte“-Karte",
-        "von „er / sie / es“. Für Anfänger nur eine Seite (nur haben oder nur sein) verwenden.",
+        "von „er / sie / es“. Für Anfänger nur ein Blatt (nur haben oder nur sein) verwenden.",
     ]
     c.setFont("Sans", 10)
     for line in rules:
@@ -207,7 +215,13 @@ def main():
     c = canvas.Canvas(str(OUT), pagesize=A4)
     c.setTitle("Memory: haben und sein (zum Ausschneiden)")
     c.setAuthor("Deutschkurs")
+    # Druckvoreinstellungen: Duplex über die lange Kante, keine Skalierung.
+    # Adobe Acrobat/Reader übernimmt das im Druckdialog; andere Programme ignorieren es teils.
+    c.setViewerPreference("Duplex", "DuplexFlipLongEdge")
+    c.setViewerPreference("PrintScaling", "None")
+    # Reihenfolge für Duplex: Vorderseite, Rückseite, Vorderseite, Rückseite, Anleitung.
     verb_page(c, "haben")
+    backs_page(c)
     verb_page(c, "sein")
     backs_page(c)
     rules_page(c)
