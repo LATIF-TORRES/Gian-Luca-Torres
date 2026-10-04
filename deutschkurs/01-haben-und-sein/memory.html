@@ -1,0 +1,545 @@
+<title>Haben &amp; Sein Memory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a squared exercise-book page; settings strip on top, card grid in the middle, cheat sheet below. */
+:root {
+  --paper: #f6f8fb;
+  --grid: #dfe6f0;
+  --ink: #1d2433;
+  --muted: #5a6478;
+  --surface: #ffffff;
+  --line: #c9d3e1;
+  --haben: #2b4fd8;      /* Füllertinte */
+  --haben-soft: #e4eaff;
+  --sein: #0f8a6a;
+  --sein-soft: #dcf3ec;
+  --back: #283a8f;
+  --back-2: #3449ad;
+  --good: #0f8a6a;
+  --bad: #c2412d;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121722; --grid: #1c2331; --ink: #e8ecf4; --muted: #9aa5ba;
+    --surface: #1a2130; --line: #2c3547;
+    --haben: #8ea6ff; --haben-soft: #232d52; --sein: #4fd1aa; --sein-soft: #173b33;
+    --back: #2f3f8f; --back-2: #3a4ca6; --good: #4fd1aa; --bad: #ff8a73;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121722; --grid: #1c2331; --ink: #e8ecf4; --muted: #9aa5ba;
+  --surface: #1a2130; --line: #2c3547;
+  --haben: #8ea6ff; --haben-soft: #232d52; --sein: #4fd1aa; --sein-soft: #173b33;
+  --back: #2f3f8f; --back-2: #3a4ca6; --good: #4fd1aa; --bad: #ff8a73;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 24px 48px;
+  display: grid;
+  gap: 20px;
+}
+
+header { display: grid; gap: 6px; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  line-height: 1;
+  margin: 0;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+h1 .h { color: var(--haben); }
+h1 .s { color: var(--sein); }
+.lead { margin: 0; color: var(--muted); max-width: 62ch; }
+
+/* settings */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  align-items: end;
+}
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; min-width: 0; }
+legend {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); font-weight: 700; padding: 0; margin-bottom: 6px;
+}
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label {
+  padding: 7px 12px; cursor: pointer; font-weight: 700; font-size: 0.92rem;
+  color: var(--muted); border-right: 1px solid var(--line); user-select: none;
+}
+.seg label:last-of-type { border-right: 0; }
+.seg input:checked + label { background: var(--ink); color: var(--paper); }
+.seg input:focus-visible + label { outline: 3px solid var(--haben); outline-offset: -3px; }
+
+.btn {
+  font: 700 0.95rem var(--font-body);
+  padding: 9px 16px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+}
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn:focus-visible { outline: 3px solid var(--haben); outline-offset: 2px; }
+.panel .btn { margin-left: auto; }
+
+/* status */
+.status {
+  display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.stat { display: flex; gap: 6px; align-items: baseline; }
+.stat b { font-family: var(--font-display); font-size: 1.3rem; }
+.stat span { color: var(--muted); font-size: 0.85rem; }
+.players { display: flex; gap: 8px; flex-wrap: wrap; }
+.player {
+  display: flex; gap: 8px; align-items: baseline;
+  padding: 5px 12px; border-radius: 999px; border: 2px solid var(--line);
+  background: var(--surface); font-weight: 700;
+}
+.player.active { border-color: var(--ink); }
+.player b { font-family: var(--font-display); font-size: 1.15rem; }
+.msg { margin-left: auto; font-weight: 700; min-height: 1.5em; }
+.msg.good { color: var(--good); }
+.msg.bad { color: var(--bad); }
+
+/* board */
+.board {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 640px) { .board { --cols: 4 !important; gap: 8px; } }
+
+.card {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  max-width: 100%;
+  perspective: 800px;
+  border: 0; padding: 0; background: none; cursor: pointer;
+  font: inherit; color: inherit;
+}
+.card:focus-visible { outline: 3px solid var(--haben); outline-offset: 3px; border-radius: 12px; }
+.inner {
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(.3,.7,.3,1);
+}
+.card.up .inner, .card.done .inner { transform: rotateY(180deg); }
+.face {
+  position: absolute; inset: 0;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.back {
+  background:
+    repeating-linear-gradient(45deg, var(--back) 0 10px, var(--back-2) 10px 20px);
+  border: 3px solid var(--surface);
+  box-shadow: 0 1px 0 var(--line), 0 2px 6px rgba(20, 30, 60, .15);
+}
+.back span {
+  font-family: var(--font-display); font-weight: 800; color: #fff;
+  font-size: clamp(1.4rem, 4vw, 2rem); opacity: .9;
+  background: rgba(0,0,0,.18); width: 2.2em; height: 2.2em; border-radius: 50%;
+  display: grid; place-items: center;
+}
+.front {
+  transform: rotateY(180deg);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  padding: 8px 6px;
+  text-align: center;
+  align-content: center;
+  gap: 4px;
+}
+.front .tag {
+  font-size: clamp(0.6rem, 1.6vw, 0.72rem);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 2px 7px; border-radius: 999px; line-height: 1.3;
+}
+.front .who {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(1.05rem, 3.4vw, 1.6rem); line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+.front .gap { color: var(--muted); letter-spacing: 0.1em; font-size: 0.9rem; }
+.front .form {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(1.15rem, 3.8vw, 1.8rem); line-height: 1;
+  overflow-wrap: anywhere;
+}
+.front .kind { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.v-haben .tag { background: var(--haben-soft); color: var(--haben); }
+.v-sein .tag { background: var(--sein-soft); color: var(--sein); }
+.v-haben.prompt .front { border-color: var(--haben); }
+.v-sein.prompt .front { border-color: var(--sein); }
+.answer .front { border-style: dashed; }
+
+.card.done { cursor: default; }
+.card.done .front { background: var(--sein-soft); border-color: var(--good); border-style: solid; }
+.card.done .front::after {
+  content: "✓"; position: absolute; top: 6px; right: 8px;
+  color: var(--good); font-weight: 700;
+}
+.card.wrong .front { border-color: var(--bad); border-style: solid; }
+.card.wrong { animation: shake 0.4s; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* win */
+.win {
+  background: var(--surface); border: 2px solid var(--good); border-radius: 14px;
+  padding: 18px; display: grid; gap: 8px;
+}
+.win h2 { font-family: var(--font-display); margin: 0; font-size: 1.6rem; }
+.win p { margin: 0; }
+.win .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* cheat sheet */
+details {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 12px 14px;
+}
+summary { cursor: pointer; font-weight: 700; }
+.tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 12px; }
+.tbl { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+caption {
+  text-align: left; font-family: var(--font-display); font-weight: 800; font-size: 1.2rem;
+  padding-bottom: 6px;
+}
+caption.haben { color: var(--haben); }
+caption.sein { color: var(--sein); }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+td:first-child { color: var(--muted); }
+td.f { font-weight: 700; }
+
+.rules { margin: 0; color: var(--muted); font-size: 0.92rem; max-width: 70ch; }
+
+@media (prefers-reduced-motion: reduce) {
+  .inner { transition: none; }
+  .card.wrong { animation: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Memory: <span class="h">haben</span> &amp; <span class="s">sein</span></h1>
+    <p class="lead">Finde die Paare. Eine Karte zeigt die Person, das Verb und die Zeitform. Die passende Karte zeigt die richtige Verbform.</p>
+  </header>
+
+  <form class="panel" id="settings" autocomplete="off">
+    <fieldset>
+      <legend>Verb</legend>
+      <div class="seg">
+        <input type="radio" name="verb" id="v-haben" value="haben"><label for="v-haben">haben</label>
+        <input type="radio" name="verb" id="v-sein" value="sein"><label for="v-sein">sein</label>
+        <input type="radio" name="verb" id="v-beide" value="beide" checked><label for="v-beide">beide</label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Zeitform</legend>
+      <div class="seg">
+        <input type="radio" name="tense" id="t-praes" value="praes"><label for="t-praes">Präsens</label>
+        <input type="radio" name="tense" id="t-praet" value="praet"><label for="t-praet">Präteritum</label>
+        <input type="radio" name="tense" id="t-beide" value="beide" checked><label for="t-beide">beide</label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Spieler</legend>
+      <div class="seg">
+        <input type="radio" name="players" id="p-1" value="1" checked><label for="p-1">1</label>
+        <input type="radio" name="players" id="p-2" value="2"><label for="p-2">2</label>
+      </div>
+    </fieldset>
+    <button class="btn" type="submit" id="new-game">Neues Spiel</button>
+  </form>
+
+  <div class="status" aria-live="polite">
+    <div class="stat"><b id="moves">0</b><span>Züge</span></div>
+    <div class="stat"><b id="pairs">0 / 0</b><span>Paare</span></div>
+    <div class="stat"><b id="time">0:00</b><span>Zeit</span></div>
+    <div class="players" id="players" hidden></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="win" id="win" hidden>
+    <h2 id="win-title">Geschafft!</h2>
+    <p id="win-text"></p>
+    <div class="row"><button class="btn" type="button" id="again">Nochmal spielen</button></div>
+  </div>
+
+  <div class="board" id="board" aria-label="Memory-Karten"></div>
+
+  <p class="rules"><b>So geht's:</b> Decke zwei Karten auf. Passen Person und Verbform zusammen, bleiben beide offen. Sonst werden sie wieder umgedreht. Bei zwei Spielern ist man nach einem Paar nochmal dran.</p>
+
+  <details id="cheat">
+    <summary>Spickzettel: alle Formen von haben und sein</summary>
+    <div class="tables" id="tables"></div>
+  </details>
+</div>
+
+<script>
+(function () {
+  var PERSONS = ["ich", "du", "er / sie / es", "wir", "ihr", "sie / Sie"];
+  var FORMS = {
+    haben: { praes: ["habe", "hast", "hat", "haben", "habt", "haben"],
+             praet: ["hatte", "hattest", "hatte", "hatten", "hattet", "hatten"] },
+    sein:  { praes: ["bin", "bist", "ist", "sind", "seid", "sind"],
+             praet: ["war", "warst", "war", "waren", "wart", "waren"] }
+  };
+  var TENSE_NAME = { praes: "Präsens", praet: "Präteritum" };
+  var MAX_PAIRS = 12;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var board = $("board"), msg = $("msg");
+
+  var state = null, lock = false, timer = null;
+
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function readSettings() {
+    var f = $("settings");
+    return {
+      verb: f.querySelector('[name="verb"]:checked').value,
+      tense: f.querySelector('[name="tense"]:checked').value,
+      players: Number(f.querySelector('[name="players"]:checked').value)
+    };
+  }
+  function applySettings(s) {
+    ["verb", "tense", "players"].forEach(function (k) {
+      var el = document.querySelector('[name="' + k + '"][value="' + s[k] + '"]');
+      if (el) el.checked = true;
+    });
+  }
+
+  function buildDeck(s) {
+    var verbs = s.verb === "beide" ? ["haben", "sein"] : [s.verb];
+    var tenses = s.tense === "beide" ? ["praes", "praet"] : [s.tense];
+    var pairs = [];
+    verbs.forEach(function (v) {
+      tenses.forEach(function (t) {
+        PERSONS.forEach(function (p, i) {
+          pairs.push({ verb: v, tense: t, person: p, form: FORMS[v][t][i] });
+        });
+      });
+    });
+    pairs = shuffle(pairs).slice(0, MAX_PAIRS);
+    var cards = [];
+    pairs.forEach(function (p, i) {
+      cards.push({ kind: "prompt", verb: p.verb, tense: p.tense, person: p.person, form: p.form, done: false });
+      cards.push({ kind: "answer", verb: p.verb, form: p.form, done: false });
+    });
+    return shuffle(cards);
+  }
+
+  function newGame(s, restore) {
+    clearInterval(timer);
+    lock = false;
+    if (restore) {
+      state = restore;
+      state.open = [];
+    } else {
+      state = {
+        settings: s, cards: buildDeck(s), open: [], moves: 0, found: 0,
+        seconds: 0, started: false, turn: 0, scores: [0, 0]
+      };
+    }
+    $("win").hidden = true;
+    setMsg("", "");
+    render();
+    if (state.started && state.found < state.cards.length / 2) startTimer();
+  }
+
+  function render() {
+    var n = state.cards.length;
+    board.style.setProperty("--cols", n <= 12 ? 4 : 6);
+    board.innerHTML = "";
+    state.cards.forEach(function (c, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "card " + c.kind + " v-" + c.verb + (c.done ? " done" : "");
+      b.dataset.i = i;
+      var front;
+      if (c.kind === "prompt") {
+        front = '<span class="tag">' + c.verb + " · " + TENSE_NAME[c.tense] + '</span>' +
+                '<span class="who">' + c.person + '</span><span class="gap">_ _ _</span>';
+      } else {
+        front = '<span class="form">' + c.form + '</span><span class="kind">Verbform</span>';
+      }
+      b.innerHTML = '<span class="inner"><span class="face back"><span>?</span></span>' +
+                    '<span class="face front">' + front + '</span></span>';
+      b.setAttribute("aria-label", c.done ? label(c) : "Verdeckte Karte " + (i + 1));
+      board.appendChild(b);
+    });
+    updateStatus();
+  }
+
+  function label(c) {
+    return c.kind === "prompt" ? c.person + ", " + c.verb + ", " + TENSE_NAME[c.tense] : "Verbform " + c.form;
+  }
+
+  function updateStatus() {
+    $("moves").textContent = state.moves;
+    $("pairs").textContent = state.found + " / " + state.cards.length / 2;
+    var m = Math.floor(state.seconds / 60), sec = state.seconds % 60;
+    $("time").textContent = m + ":" + (sec < 10 ? "0" : "") + sec;
+    var pl = $("players");
+    if (state.settings.players === 2) {
+      pl.hidden = false;
+      pl.innerHTML = [0, 1].map(function (k) {
+        return '<div class="player' + (state.turn === k ? " active" : "") + '">Spieler ' + (k + 1) +
+               ' <b>' + state.scores[k] + '</b></div>';
+      }).join("");
+    } else {
+      pl.hidden = true;
+    }
+  }
+
+  function setMsg(text, cls) { msg.textContent = text; msg.className = "msg " + cls; }
+
+  function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(function () { state.seconds++; updateStatus(); }, 1000);
+  }
+
+  function isPair(a, b) {
+    return a.kind !== b.kind && a.form === b.form && (a.verb === b.verb);
+  }
+
+  board.addEventListener("click", function (e) {
+    var el = e.target.closest(".card");
+    if (!el || lock) return;
+    var i = Number(el.dataset.i), c = state.cards[i];
+    if (c.done || state.open.indexOf(i) !== -1) return;
+    if (!state.started) { state.started = true; startTimer(); }
+    el.classList.add("up");
+    el.setAttribute("aria-label", label(c));
+    state.open.push(i);
+    if (state.open.length < 2) return;
+
+    state.moves++;
+    var a = state.cards[state.open[0]], b = state.cards[state.open[1]];
+    var els = state.open.map(function (k) { return board.children[k]; });
+    if (isPair(a, b)) {
+      a.done = b.done = true;
+      state.found++;
+      if (state.settings.players === 2) state.scores[state.turn]++;
+      els.forEach(function (x) { x.classList.add("done"); });
+      var p = a.kind === "prompt" ? a : b;
+      setMsg("Richtig: " + p.person.split(" / ")[0] + " " + p.form + " ✓", "good");
+      state.open = [];
+      updateStatus();
+      if (state.found === state.cards.length / 2) finish();
+    } else {
+      lock = true;
+      var hint = (a.kind === b.kind)
+        ? (a.kind === "prompt" ? "Zwei Personen-Karten passen nicht zusammen." : "Zwei Verbformen passen nicht zusammen.")
+        : "Leider falsch.";
+      setMsg(hint, "bad");
+      els.forEach(function (x) { x.classList.add("wrong"); });
+      setTimeout(function () {
+        els.forEach(function (x) {
+          x.classList.remove("up", "wrong");
+          x.setAttribute("aria-label", "Verdeckte Karte " + (Number(x.dataset.i) + 1));
+        });
+        state.open = [];
+        if (state.settings.players === 2) state.turn = 1 - state.turn;
+        lock = false;
+        updateStatus();
+      }, 1200);
+    }
+    updateStatus();
+  });
+
+  function finish() {
+    clearInterval(timer);
+    var t = $("time").textContent;
+    var title = "Geschafft!", text;
+    if (state.settings.players === 2) {
+      var s = state.scores;
+      title = s[0] === s[1] ? "Unentschieden!" : "Spieler " + (s[0] > s[1] ? 1 : 2) + " gewinnt!";
+      text = "Spieler 1: " + s[0] + " Paare · Spieler 2: " + s[1] + " Paare · " + state.moves + " Züge.";
+    } else {
+      var perfect = state.cards.length / 2;
+      text = "Du hast alle " + perfect + " Paare in " + state.moves + " Zügen und " + t + " Minuten gefunden." +
+             (state.moves <= perfect * 1.6 ? " Starkes Gedächtnis!" : " Versuch es nochmal mit weniger Zügen.");
+    }
+    $("win-title").textContent = title;
+    $("win-text").textContent = text;
+    $("win").hidden = false;
+    setMsg("", "");
+  }
+
+  function renderTables() {
+    var html = "";
+    ["haben", "sein"].forEach(function (v) {
+      html += '<div class="tbl"><table><caption class="' + v + '">' + v + '</caption>' +
+              '<thead><tr><th>Person</th><th>Präsens</th><th>Präteritum</th></tr></thead><tbody>';
+      PERSONS.forEach(function (p, i) {
+        html += '<tr><td>' + p + '</td><td class="f">' + FORMS[v].praes[i] + '</td><td class="f">' + FORMS[v].praet[i] + '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    });
+    $("tables").innerHTML = html;
+  }
+
+  $("settings").addEventListener("submit", function (e) { e.preventDefault(); newGame(readSettings()); });
+  $("again").addEventListener("click", function () { newGame(state.settings); });
+
+  renderTables();
+
+  window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(function () {
+    return { state: state };
+  });
+  function start(data) {
+    if (data && data.state && data.state.cards) {
+      applySettings(data.state.settings);
+      newGame(data.state.settings, data.state);
+    } else {
+      newGame(readSettings());
+    }
+  }
+  if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(start);
+  else start((window.claude && window.claude.hot && window.claude.hot.data) || {});
+})();
+</script>
