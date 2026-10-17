@@ -11,8 +11,13 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from probetest_pdf import (FIG, INK, L, LINE_PAIRS, MUTED, OUT_DIR, PAGE_H, R, SEGMENTS_CM, SOFT, W,
+from zeichnen import (FIG, INK, L, MUTED, OUT_DIR, PAGE_H, R, SOFT, W,
                            ctext, header, line_through, right_mark, text, wrapped)
+
+# Werte aus der ersten Version des Probetests (Aufgabe 7 dort)
+LINE_PAIRS = {"A": (20, 20, "parallel"), "B": (-30, 60, "senkrecht"),
+              "C": (10, 78, "keins"), "D": (15, 105, "senkrecht")}
+SEGMENTS_CM = [6.0, 4.5]
 
 PAR = HexColor("#c8281c")    # Parallele: rot
 SEN = HexColor("#0f8a6a")    # Senkrechte: grün

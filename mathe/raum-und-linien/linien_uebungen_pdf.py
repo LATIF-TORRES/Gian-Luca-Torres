@@ -18,7 +18,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from probetest_pdf import (FIG, INK, L, MUTED, OUT_DIR, PAGE_H, R, SOFT, W, ctext, header, hline,
+from zeichnen import (FIG, INK, L, MUTED, OUT_DIR, PAGE_H, R, SOFT, W, ctext, header, hline,
                            right_mark, text, wrapped)
 from reportlab.lib.colors import white
 
