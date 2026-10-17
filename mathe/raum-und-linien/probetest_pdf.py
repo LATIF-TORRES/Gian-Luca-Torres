@@ -367,9 +367,13 @@ def page3(c, sol):
     y -= 42 * mm
 
     y = task_head(c, y, 6, "Parallel und senkrecht erkennen",
-                  "Prüfe mit dem Geodreieck.  a) Suche die Geraden, die parallel sind. Male jedes Paar in einer eigenen "
-                  "Farbe an. Es gibt 2 Paare.  b) und c) Suche die Geraden, die einen rechten Winkel bilden. Male jedes Paar in "
-                  "einer eigenen Farbe an und zeichne das Zeichen für den rechten Winkel ein. In b) gibt es 2 Paare, in c) 1 Paar.",
+                  "Prüfe jede Gerade mit dem Geodreieck.  "
+                  "a) Welche Geraden sind parallel? Es gibt 2 Paare. Male die zwei Geraden von einem Paar mit derselben "
+                  "Farbe an. Nimm für das zweite Paar eine andere Farbe.  "
+                  "b) Welche Geraden bilden einen rechten Winkel? Es gibt 2 Paare. Male die zwei Geraden von einem Paar mit "
+                  "derselben Farbe an. Zeichne das Zeichen für den rechten Winkel ein.  "
+                  "c) Welche zwei Geraden bilden einen rechten Winkel? Es gibt nur 1 Paar. Male die beiden Geraden mit "
+                  "derselben Farbe an. Zeichne das Zeichen für den rechten Winkel ein.",
                   "Ich kann Parallelen und Senkrechte mit dem Geodreieck erkennen.")
     specs = [("a", 951, "par", 2, [2, 2], 1), ("b", 952, "perp", 2, None, 1), ("c", 953, "perp", 1, None, 2)]
     for k, (lbl, seed, kind, groups, sizes, distract) in enumerate(specs):
