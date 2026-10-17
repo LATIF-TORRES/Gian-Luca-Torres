@@ -55,7 +55,7 @@ DRAW_FIELDS = [
       [(5, 1), (6, 1), (7, 1), (8, 1), (5, 2), (5, 3), (5, 4), (6, 4)]], {"F": 8}),
     ("c", "Zeichne eine Figur mit 9 Häuschen. Der Umfang soll so klein wie möglich sein.", 24, 11, 0,
      [[(x, y) for x in range(3, 6) for y in range(2, 5)]], {"F": 9, "U": 12}),
-    ("d", "Zeichne eine Figur mit 12 Häuschen (so viele wie Figur A in Aufgabe 2). Der Umfang ist 16.", 0, 18, 1,
+    ("d", "Zeichne ein Rechteck mit 12 Häuschen. Der Umfang ist 16 Häuschenlängen.", 0, 18, 1,
      [[(x, y) for x in range(2, 8) for y in range(2, 4)]], {"F": 12, "U": 16}),
     ("e", "Zeichne ein Quadrat. Der Umfang ist 16 Häuschenlängen.", 18, 17, 1,
      [[(x, y) for x in range(5, 9) for y in range(1, 5)]], {"U": 16}),
@@ -319,7 +319,7 @@ def page2(c, sol):
     y -= 2 * (rows * CELL + 15 * mm) + 2 * mm
     if sol:
         y = wrapped(c, L, y + 2 * mm, "Es gibt mehrere richtige Lösungen. a) Auch 5 × 1 und 3 × 3 haben den Umfang 12.  b) Jede Figur mit genau 8 Häuschen ist richtig.  "
-                    "d) Achtung: Figur A (4 × 3) hat nur den Umfang 14. Richtig ist z. B. 6 × 2.",
+                    "d) Nur das Rechteck 6 × 2 passt: 4 × 3 hat den Umfang 14, 12 × 1 den Umfang 26.",
                     W, 8, color=SOL) - 2 * mm
 
     y = task_head(c, y, 4, "Parkett fortsetzen",
