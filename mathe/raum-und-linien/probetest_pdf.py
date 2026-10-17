@@ -350,10 +350,11 @@ def page3(c, sol):
         text(c, x + 19.5 * mm, y - 37.6 * mm, "Würfel", 9.5)
     y -= 46 * mm
     text(c, L, y, "b)", 10, "Sans-Bold", FIG)
-    building(c, CUBE_TASK, L + 12 * mm, y - 26 * mm)
-    qs = [("Wie viele Würfel fehlen noch? Dann ist das Gebäude links ein grosser Würfel (2 lang, 2 breit, 2 hoch).",
+    text(c, L + 8 * mm, y - 4 * mm, "Gebäude E", 9.5, "Sans-Bold", FIG)
+    building(c, CUBE_TASK, L + 12 * mm, y - 28 * mm)
+    qs = [("Ein grosser Würfel ist 2 Würfel lang, 2 breit und 2 hoch. Wie viele Holzwürfel braucht man?", "2 · 2 · 2 = 8"),
+          ("Schau das Gebäude E an (hier links). Wie viele Würfel fehlen noch, bis es so ein grosser Würfel ist?",
            f"{8 - len(CUBE_TASK)} Würfel"),
-          ("Ein grosser Würfel ist 2 Würfel lang, 2 breit und 2 hoch. Wie viele Holzwürfel braucht man?", "2 · 2 · 2 = 8"),
           ("Ein grosser Würfel ist 3 Würfel lang, 3 breit und 3 hoch. Wie viele Holzwürfel braucht man?", "3 · 3 · 3 = 27")]
     for i, (q, a) in enumerate(qs):
         yy = y - 2 * mm - i * 10.5 * mm
@@ -362,7 +363,7 @@ def page3(c, sol):
     if sol:
         # gestrichelt: die fehlenden Würfel
         missing = [(x, y_, z) for x in range(2) for y_ in range(2) for z in range(2) if (x, y_, z) not in CUBE_TASK]
-        note(c, L, y - 34 * mm, f"Es fehlen die {len(missing)} Würfel vorne oben. Ein Würfel 2 × 2 × 2 hat 2 Schichten mit je 4 Würfeln: 4 + 4 = 8.", 8)
+        note(c, L, y - 34 * mm, f"Gebäude E hat {len(CUBE_TASK)} Würfel. Ein Würfel 2 × 2 × 2 hat 8 (2 Schichten mit je 4). Es fehlen {len(missing)} Würfel vorne oben: 8 − {len(CUBE_TASK)} = {len(missing)}.", 8)
     y -= 42 * mm
 
     y = task_head(c, y, 6, "Parallel und senkrecht erkennen",
