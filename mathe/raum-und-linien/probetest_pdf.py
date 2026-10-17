@@ -48,16 +48,16 @@ SHAPE_POS = {"A": 1, "B": 8, "C": 17, "D": 26}
 
 # Aufgabe 3: Felder (Startspalte, Breite in Häuschen) und je eine Musterlösung (Häuschen relativ zum Feld)
 DRAW_FIELDS = [
-    ("a", "Rechteck mit dem Umfang 12 Häuschenlängen", 0, 12, 0,
+    ("a", "Zeichne ein Rechteck. Der Umfang ist 12 Häuschenlängen.", 0, 12, 0,
      [[(x, y) for x in range(1, 5) for y in range(2, 4)]], {"U": 12}),
-    ("b", "Zwei verschiedene Figuren mit dem Flächeninhalt 8 Häuschen", 12, 12, 0,
+    ("b", "Zeichne zwei verschiedene Figuren. Jede hat genau 8 Häuschen.", 12, 12, 0,
      [[(x, y) for x in range(1, 3) for y in range(1, 5)],
       [(5, 1), (6, 1), (7, 1), (8, 1), (5, 2), (5, 3), (5, 4), (6, 4)]], {"F": 8}),
-    ("c", "Figur mit 9 Häuschen und dem kleinsten möglichen Umfang", 24, 11, 0,
+    ("c", "Zeichne eine Figur mit 9 Häuschen. Der Umfang soll so klein wie möglich sein.", 24, 11, 0,
      [[(x, y) for x in range(3, 6) for y in range(2, 5)]], {"F": 9, "U": 12}),
-    ("d", "Gleich viel Fläche wie Figur A (Aufgabe 2), aber Umfang 16", 0, 18, 1,
+    ("d", "Zeichne eine Figur mit 12 Häuschen (so viele wie Figur A in Aufgabe 2). Der Umfang ist 16.", 0, 18, 1,
      [[(x, y) for x in range(2, 8) for y in range(2, 4)]], {"F": 12, "U": 16}),
-    ("e", "Quadrat mit dem Umfang 16 Häuschenlängen", 18, 17, 1,
+    ("e", "Zeichne ein Quadrat. Der Umfang ist 16 Häuschenlängen.", 18, 17, 1,
      [[(x, y) for x in range(5, 9) for y in range(1, 5)]], {"U": 16}),
 ]
 
@@ -104,7 +104,9 @@ def task_head(c, y, nr, title, instruction, goal):
     ctext(c, L + 3.4 * mm, y - 0.2 * mm, str(nr), 10, "Sans-Bold", white)
     text(c, L + 9 * mm, y, title, 12, "Sans-Bold")
     text(c, R - 22 * mm, y, f"____ / {POINTS[nr]} P.", 9.5, "Sans", MUTED)
-    y = wrapped(c, L + 9 * mm, y - 5.5 * mm, instruction, W - 9 * mm, 9.5)
+    y -= 5.5 * mm
+    for part in instruction.split("  "):  # zwei Leerzeichen trennen die Teilaufgaben: jede auf eine eigene Zeile
+        y = wrapped(c, L + 9 * mm, y, part.strip(), W - 9 * mm, 9.5) - 0.8 * mm
     text(c, L + 9 * mm, y, f"Lernziel: {goal}", 7, "Sans", MUTED)
     return y - 5 * mm
 
@@ -192,20 +194,28 @@ def fig_points(i, ox, oy):
 def page1(c, sol):
     header(c, "Probetest Mathe", "Raum und Bewegung & Linien · 4. Klasse · Seite 1",
            name_fields=not sol)
-    y = PAGE_H - 37 * mm
-    text(c, L, y, "Du brauchst: Bleistift, Farbstifte (rot und blau), Geodreieck.  1 Häuschen = 5 mm.", 9, "Sans", MUTED)
-    y -= 8 * mm
+    y = PAGE_H - 38.5 * mm
+    text(c, L, y, "Du brauchst: Bleistift, Farbstifte (rot und blau), Geodreieck.", 9, "Sans", MUTED)
+    text(c, L + 108 * mm, y, "Zeichen für den rechten Winkel:", 9, "Sans", MUTED)
+    q = (R - 9 * mm, y - 1 * mm)
+    c.setStrokeColor(INK); c.setLineWidth(0.9)
+    c.line(q[0], q[1], q[0] + 8 * mm, q[1]); c.line(q[0], q[1], q[0], q[1] + 4.5 * mm)
+    right_mark(c, q, (q[0] + 1, q[1]), (q[0], q[1] + 1), r=2.8 * mm, color=INK)
+    y -= 9 * mm
 
     y = task_head(c, y, 1, "Begriffe zeichnen und erklären",
-                  "Zeichne in jedes Feld, was verlangt ist. Erkläre danach die zwei Begriffe in eigenen Worten.",
+                  "Lies bei jedem Feld, was du zeichnen sollst. Zeichne es auf das Häuschenpapier. "
+                  "1 Häuschen ist 5 mm breit, 2 Häuschen sind 1 cm.",
                   "Ich kann die Begriffe erklären.")
     bw, bh, gap = 17 * CELL, 6 * CELL, W - 34 * CELL
-    boxes = [("a) eine Strecke AB, die 4 cm lang ist", 0, 0), ("b) eine Gerade g", 1, 0),
-             ("c) zwei Geraden, die parallel sind", 0, 1), ("d) zwei senkrechte Geraden, mit Zeichen", 1, 1)]
+    boxes = [("a) Zeichne eine Strecke von A nach B. Sie ist genau 4 cm lang.", 0, 0),
+             ("b) Zeichne eine Gerade. Schreibe g daneben.", 1, 0),
+             ("c) Zeichne zwei Geraden, die parallel zueinander sind.", 0, 1),
+             ("d) Zeichne zwei Geraden, die einen rechten Winkel bilden. Zeichne das Zeichen für den rechten Winkel ein.", 1, 1)]
     for lbl, col, row in boxes:
         bx = L + col * (bw + gap)
-        by = y - row * (bh + 10 * mm) - 4.5 * mm
-        text(c, bx, by + 1.5 * mm, lbl, 9, "Sans-Bold")
+        by = y - row * (bh + 17 * mm) - 12 * mm
+        wrapped(c, bx, by + 9.5 * mm, lbl, bw, 8.5, "Sans-Bold", leading=3.7 * mm)
         grid(c, bx, by, 17, 6)
         if not sol:
             continue
@@ -215,36 +225,36 @@ def page1(c, sol):
             seg(c, a, b, SOL, 1.6)
             text(c, a[0] - 3 * mm, a[1] + 2 * mm, "A", 9.5, "Sans-Bold", SOL)
             text(c, b[0] + 1 * mm, b[1] + 2 * mm, "B", 9.5, "Sans-Bold", SOL)
-            note(c, a[0] - 8 * mm, a[1] - 5 * mm, "8 Häuschen = 4 cm, mit zwei Endpunkten")
+            note(c, a[0] - 8 * mm, a[1] - 5 * mm, "8 Häuschen = 4 cm, mit 2 Endpunkten")
         elif lbl.startswith("b"):
             seg(c, P(0, 1.5), P(17, 4.5), SOL, 1.6, ticks=False)
             text(c, P(14.5, 4.6)[0], P(14.5, 4.6)[1], "g", 10, "Sans-Bold", SOL)
-            note(c, P(0.5, 0.4)[0], P(0.5, 0.4)[1], "ohne Anfang und Ende: geht über das Feld hinaus")
+            note(c, P(0.5, 0.4)[0], P(0.5, 0.4)[1], "Eine Gerade hat keinen Anfang und kein Ende.")
         elif lbl.startswith("c"):
             seg(c, P(2, 4), P(15, 4), SOL, 1.6, ticks=False)
             seg(c, P(2, 2), P(15, 2), SOL, 1.6, ticks=False)
             for gx in (4, 8, 12):
                 c.setDash(1.5, 1.5); seg(c, P(gx, 2), P(gx, 4), MUTED, 0.7, ticks=False); c.setDash()
-            note(c, P(2, 0.6)[0], P(2, 0.6)[1], "überall gleicher Abstand (2 Häuschen)")
+            note(c, P(2, 0.6)[0], P(2, 0.6)[1], "Überall gleich weit auseinander (hier 2 Häuschen).")
         else:
             seg(c, P(2, 2.5), P(15, 2.5), SOL, 1.6, ticks=False)
             seg(c, P(8.5, 0.3), P(8.5, 5.7), SOL, 1.6, ticks=False)
             q = P(8.5, 2.5)
             right_mark(c, q, (q[0] + 1, q[1]), (q[0], q[1] + 1), r=3 * mm, color=SOL)
-    y -= 2 * (bh + 10 * mm) + 2 * mm
-    for i, (term, expl) in enumerate([("Umfang", "Der Umfang ist die Länge des ganzen Randes rund um eine Figur."),
-                                      ("Flächeninhalt", "Der Flächeninhalt sagt, wie viel Fläche die Figur innen bedeckt (Anzahl Häuschen).")]):
-        yy = y - i * 13 * mm
-        text(c, L, yy, f"e) {term} ist …", 9.5, "Sans-Bold")
-        hline(c, L + 32 * mm, R, yy - 0.8 * mm)
-        hline(c, L, R, yy - 7.8 * mm)
+    y -= 2 * (bh + 17 * mm) + 1 * mm
+    for i, (term, expl) in enumerate([("Umfang", "Der Umfang ist der ganze Rand rund um eine Figur. Man misst, wie lang er ist."),
+                                      ("Flächeninhalt", "Der Flächeninhalt ist die Fläche innen in der Figur. Man zählt die Häuschen.")]):
+        yy = y - i * 17 * mm
+        text(c, L, yy, f"{'ef'[i]}) Was ist der {term}? Erkläre in einem Satz.", 9.5, "Sans-Bold")
+        hline(c, L, R, yy - 7.5 * mm)
+        hline(c, L, R, yy - 14 * mm)
         if sol:
-            text(c, L + 1 * mm, yy - 7 * mm, expl, 8.5, "Sans-Bold", SOL)
-    y -= 2 * 13 * mm + 3 * mm
+            text(c, L + 1 * mm, yy - 6.7 * mm, expl, 8.5, "Sans-Bold", SOL)
+    y -= 2 * 17 * mm + 2 * mm
 
     y = task_head(c, y, 2, "Flächeninhalt und Umfang bestimmen",
-                  "Schreibe bei jeder Figur den Flächeninhalt (F, in Häuschen) und den Umfang (U, in Häuschenlängen) auf. "
-                  "Beantworte dann die Fragen.",
+                  "F = Flächeninhalt: Zähle die Häuschen in der Figur.  U = Umfang: Zähle die Häuschenlängen "
+                  "am Rand rund um die Figur. Schreibe beide Zahlen auf und beantworte dann die zwei Fragen.",
                   "Ich kann Flächeninhalt und Umfang bestimmen und Figuren vergleichen.")
     cols, rows = 35, 7
     grid(c, L, y, cols, rows)
@@ -277,7 +287,7 @@ def page1(c, sol):
         answer(c, R - 30 * mm, y, 30 * mm, sol, a)
         y -= 7 * mm
     if sol:
-        note(c, L + 9 * mm, y, "Tipp: Den Umfang zählt man am Rand entlang (rot), den Flächeninhalt innen (Häuschen).")
+        note(c, L + 9 * mm, y, "Rot = der Umfang (am Rand zählen).  Blau = der Flächeninhalt (die Häuschen innen zählen).")
     c.showPage()
 
 
@@ -285,13 +295,14 @@ def page2(c, sol):
     header(c, "Probetest Mathe", "Raum und Bewegung & Linien · Seite 2", name_fields=False)
     y = PAGE_H - 38 * mm
     y = task_head(c, y, 3, "Figuren zeichnen",
-                  "Zeichne die Figuren auf das Häuschenpapier, jede in ihr eigenes Feld. Zeichne genau auf den Linien.",
+                  "Zeichne jede Figur in ihr eigenes Feld. Zeichne genau auf den Linien vom Häuschenpapier.",
                   "Ich kann Figuren mit einem bestimmten Umfang und einer bestimmten Fläche zeichnen.")
-    rows = 9
+    rows = 8
     for lbl, desc, col0, wcols, row, sols, need in DRAW_FIELDS:
         fx = L + col0 * CELL
-        fy = y - row * (rows * CELL + 9 * mm) - 6 * mm
-        wrapped(c, fx, fy + 4 * mm, f"{lbl}) {desc}", wcols * CELL - 1 * mm, 8, "Sans-Bold", leading=3.4 * mm)
+        top = y - row * (rows * CELL + 15 * mm)
+        wrapped(c, fx + 0.5 * mm, top - 1 * mm, f"{lbl}) {desc}", wcols * CELL - 2 * mm, 7.8, "Sans-Bold", leading=3.3 * mm)
+        fy = top - 11 * mm
         grid(c, fx, fy, wcols, rows)
         c.setStrokeColor(INK); c.setLineWidth(0.8)
         c.rect(fx, fy - rows * CELL, wcols * CELL, rows * CELL, stroke=1, fill=0)
@@ -305,14 +316,14 @@ def page2(c, sol):
                     assert (a if k == "F" else p) == v, (lbl, k, a, p)
                 infos.append(f"F={a} U={p}")
             note(c, fx + 1.5 * mm, fy - rows * CELL + 1.5 * mm, "  ·  ".join(infos), 7.5)
-    y -= 2 * (rows * CELL + 9 * mm) + 4 * mm
+    y -= 2 * (rows * CELL + 15 * mm) + 2 * mm
     if sol:
-        y = wrapped(c, L, y + 2 * mm, "Es gibt mehrere richtige Lösungen. a) auch 5 × 1 oder 3 × 3.  b) jede Figur mit 8 Häuschen.  "
-                    "d) auch 3 × 4 hat F = 12, aber U = 14; richtig sind z. B. 6 × 2 oder eine andere Form mit F = 12 und U = 16.",
+        y = wrapped(c, L, y + 2 * mm, "Es gibt mehrere richtige Lösungen. a) Auch 5 × 1 und 3 × 3 haben den Umfang 12.  b) Jede Figur mit genau 8 Häuschen ist richtig.  "
+                    "d) Achtung: Figur A (4 × 3) hat nur den Umfang 14. Richtig ist z. B. 6 × 2.",
                     W, 8, color=SOL) - 2 * mm
 
     y = task_head(c, y, 4, "Parkett fortsetzen",
-                  "Zeichne die Muster genau weiter, bis das Häuschenpapier voll ist. Male die Platten wie im Muster an.",
+                  "Zeichne beide Muster genau gleich weiter, bis zum Ende vom Häuschenpapier. Male die Platten so an wie im Muster.",
                   "Ich kann angefangene Parkettierungen fortsetzen.")
     for lbl, tiles, upto in (("a)", tiles_bricks(34, 4), 9), ("b)", tiles_towers(34, 4), 6)):
         text(c, L, y - 4 * mm, lbl, 10, "Sans-Bold", FIG)
@@ -327,8 +338,8 @@ def page3(c, sol):
     header(c, "Probetest Mathe", "Raum und Bewegung & Linien · Seite 3", name_fields=False)
     y = PAGE_H - 38 * mm
     y = task_head(c, y, 5, "Holzwürfel",
-                  "a) Aus wie vielen Holzwürfeln besteht jedes Gebäude? Achtung: Die Einheit heisst Würfel, nicht Häuschen!  "
-                  "b) Beantworte die Fragen zum grossen Würfel.",
+                  "a) Zähle: Aus wie vielen Holzwürfeln ist jedes Gebäude gebaut? Denke auch an die Würfel, die man nicht "
+                  "sieht: Unter jedem Würfel steht ein Würfel.  b) Beantworte die Fragen.",
                   "Ich kann Holzwürfel zählen und bestimmen, wie viele es für einen grossen Würfel braucht.")
     bw = W / 4
     for i, (name, cubes) in enumerate(BUILDINGS.items()):
@@ -340,10 +351,10 @@ def page3(c, sol):
     y -= 46 * mm
     text(c, L, y, "b)", 10, "Sans-Bold", FIG)
     building(c, CUBE_TASK, L + 12 * mm, y - 26 * mm)
-    qs = [("Wie viele Würfel fehlen beim Gebäude links, bis es ein Würfel 2 × 2 × 2 ist?",
+    qs = [("Wie viele Würfel fehlen noch? Dann ist das Gebäude links ein grosser Würfel (2 lang, 2 breit, 2 hoch).",
            f"{8 - len(CUBE_TASK)} Würfel"),
-          ("Wie viele Holzwürfel braucht man für einen Würfel mit 2 Würfeln an jeder Kante?", "2 · 2 · 2 = 8"),
-          ("Wie viele Holzwürfel braucht man für einen Würfel mit 3 Würfeln an jeder Kante?", "3 · 3 · 3 = 27")]
+          ("Ein grosser Würfel ist 2 Würfel lang, 2 breit und 2 hoch. Wie viele Holzwürfel braucht man?", "2 · 2 · 2 = 8"),
+          ("Ein grosser Würfel ist 3 Würfel lang, 3 breit und 3 hoch. Wie viele Holzwürfel braucht man?", "3 · 3 · 3 = 27")]
     for i, (q, a) in enumerate(qs):
         yy = y - 2 * mm - i * 10.5 * mm
         wrapped(c, L + 45 * mm, yy, q, 100 * mm, 9.5, leading=4.2 * mm)
@@ -351,12 +362,13 @@ def page3(c, sol):
     if sol:
         # gestrichelt: die fehlenden Würfel
         missing = [(x, y_, z) for x in range(2) for y_ in range(2) for z in range(2) if (x, y_, z) not in CUBE_TASK]
-        note(c, L, y - 34 * mm, f"Es fehlen die Würfel vorne oben ({len(missing)} Stück). Schicht für Schicht: 4 + 4 = 8.", 8)
+        note(c, L, y - 34 * mm, f"Es fehlen die {len(missing)} Würfel vorne oben. Ein Würfel 2 × 2 × 2 hat 2 Schichten mit je 4 Würfeln: 4 + 4 = 8.", 8)
     y -= 42 * mm
 
     y = task_head(c, y, 6, "Parallel und senkrecht erkennen",
-                  "a) Färbe Geraden, die parallel sind, mit derselben Farbe (2 Paare).  b) und c) Färbe Geraden, die senkrecht "
-                  "zueinander stehen, mit derselben Farbe und zeichne das Zeichen für den rechten Winkel ein.",
+                  "Prüfe mit dem Geodreieck.  a) Suche die Geraden, die parallel sind. Male jedes Paar in einer eigenen "
+                  "Farbe an. Es gibt 2 Paare.  b) und c) Suche die Geraden, die einen rechten Winkel bilden. Male jedes Paar in "
+                  "einer eigenen Farbe an und zeichne das Zeichen für den rechten Winkel ein. In b) gibt es 2 Paare, in c) 1 Paar.",
                   "Ich kann Parallelen und Senkrechte mit dem Geodreieck erkennen.")
     specs = [("a", 951, "par", 2, [2, 2], 1), ("b", 952, "perp", 2, None, 1), ("c", 953, "perp", 1, None, 2)]
     for k, (lbl, seed, kind, groups, sizes, distract) in enumerate(specs):
@@ -369,9 +381,10 @@ def page4(c, sol):
     header(c, "Probetest Mathe", "Raum und Bewegung & Linien · Seite 4", name_fields=False)
     y = PAGE_H - 38 * mm
     y = task_head(c, y, 7, "Mit dem Geodreieck zeichnen und messen",
-                  "a) Zeichne zur Geraden g eine Parallele durch den Punkt P und eine Senkrechte durch den Punkt Q.  "
-                  f"b) Zeichne ein Rechteck mit den Seiten {RECT_CM[0]} cm und {RECT_CM[1]} cm. Zeichne in alle Ecken das Zeichen "
-                  "für den rechten Winkel.  c) Miss die Strecken genau.",
+                  "a) Zeichne eine Gerade durch den Punkt P, die parallel zu g ist. Zeichne eine Gerade durch den Punkt Q, die "
+                  f"mit g einen rechten Winkel bildet (senkrecht).  b) Zeichne ein Rechteck: {RECT_CM[0]} cm lang und {RECT_CM[1]} cm "
+                  "breit. Zeichne in alle 4 Ecken das Zeichen für den rechten Winkel.  c) Miss jede Strecke und schreibe die Länge "
+                  "auf, z. B. 4,5 cm.",
                   "Ich kann Parallelen und Senkrechte mit dem Geodreieck zeichnen.")
     # a)
     fh = 62 * mm
@@ -392,8 +405,8 @@ def page4(c, sol):
         line_through(c, qx, qy, gdeg + 90, 26 * mm, SOL2, 1.6)
         right_mark(c, (qx, qy), (qx + math.cos(a), qy + math.sin(a)),
                    (qx - math.sin(a), qy + math.cos(a)), r=3.4 * mm, color=SOL2)
-        note(c, L + 3 * mm, y - fh + 3 * mm, "rot: Parallele durch P (überall gleicher Abstand, gestrichelt)   "
-             "grün: Senkrechte durch Q mit Zeichen für den rechten Winkel", 7.5, SOL)
+        note(c, L + 3 * mm, y - fh + 3 * mm, "Rot: parallel zu g durch P (überall gleich weit weg, siehe gestrichelt).   "
+             "Grün: senkrecht zu g durch Q (rechter Winkel).", 7.5, SOL)
     for (x, yv, lbl) in ((px, py, "P"), (qx, qy, "Q")):
         c.setFillColor(INK); c.circle(x, yv, 0.9 * mm, stroke=0, fill=1)
         text(c, x - 4.5 * mm, yv + 2 * mm, lbl, 10.5, "Sans-Bold")
@@ -425,9 +438,9 @@ def page4(c, sol):
             text(c, cx0 + 21 * mm, yy - 6.1 * mm, "cm", 9, "Sans", MUTED)
     y -= bh_ + 8 * mm
     if sol:
-        y = wrapped(c, L, y + 3 * mm, "So geht's: Parallele = eine Hilfslinie des Geodreiecks auf g legen und bis P verschieben. "
-                    "Senkrechte = die Mittellinie (von der 0 zur Spitze) auf g legen und verschieben, bis die lange Kante durch Q geht. "
-                    "Messen = die 0 an den Anfang der Strecke legen und am Ende ablesen.", W, 8.5, color=SOL)
+        y = wrapped(c, L, y + 3 * mm, "So geht es: Parallele: Eine dünne Linie vom Geodreieck auf g legen. Das Geodreieck bis zum Punkt P schieben und zeichnen.  "
+                    "Senkrechte: Die Mittellinie vom Geodreieck (von der 0 zur Spitze) auf g legen. Schieben, bis die lange Kante durch Q geht, "
+                    "und zeichnen.  Messen: Die 0 an den Anfang der Strecke legen und am Ende ablesen.", W, 8.5, color=SOL)
     c.showPage()
 
 
@@ -435,9 +448,9 @@ def page5(c, sol):
     header(c, "Probetest Mathe", "Raum und Bewegung & Linien · Seite 5", name_fields=False)
     y = PAGE_H - 38 * mm
     y = task_head(c, y, 8, "Rechte Winkel",
-                  "a) Prüfe mit dem Geodreieck alle Ecken. Zeichne bei jedem rechten Winkel das Zeichen ein (Bogen mit Punkt) "
-                  "und schreibe darunter, wie viele rechte Winkel die Figur hat.  b) Zeichne mit dem Geodreieck ein Viereck mit "
-                  "genau 2 rechten Winkeln.",
+                  "a) Prüfe jede Ecke mit dem Geodreieck. Ist es ein rechter Winkel? Dann zeichne das Zeichen für den rechten "
+                  "Winkel ein. Schreibe unter jede Figur, wie viele rechte Winkel sie hat.  b) Zeichne mit dem Geodreieck ein "
+                  "Viereck, das genau 2 rechte Winkel hat. Zeichne bei beiden das Zeichen ein.",
                   "Ich kann rechte Winkel erkennen und das richtige Symbol einzeichnen.")
     counts = []
     for i in range(len(RIGHT_FIGS)):
@@ -466,8 +479,8 @@ def page5(c, sol):
         c.setStrokeColor(SOL); c.setLineWidth(1.5); c.drawPath(p, stroke=1, fill=0)
         for k in right_corners(pts):
             right_mark(c, pts[k], pts[k - 1], pts[(k + 1) % 4], r=3 * mm, color=SOL)
-        note(c, L + 3 * mm, y - fh + 3 * mm, "z. B. ein Trapez mit zwei rechten Winkeln. Andere Vierecke mit genau 2 rechten "
-             "Winkeln sind auch richtig (ein Rechteck hat 4!).", 7.5)
+        note(c, L + 3 * mm, y - fh + 3 * mm, "Zum Beispiel so. Andere Vierecke mit genau 2 rechten Winkeln sind auch richtig. "
+             "Ein Rechteck ist falsch, es hat 4 rechte Winkel.", 7.5)
     y -= fh + 10 * mm
 
     # Selbsteinschätzung
