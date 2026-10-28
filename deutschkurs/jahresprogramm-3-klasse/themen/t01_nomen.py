@@ -1,0 +1,163 @@
+from werkzeug import Merkkasten, Saetze, Schreiben, Sortieren, Tabelle
+
+NR = "01"
+TITEL = "Nomen"
+BEREICH = "Grammatik"
+LERNZIELE = ["Du erkennst Nomen (Namenwörter).",
+             "Du schreibst Nomen gross.",
+             "Du kennst die Einzahl und die Mehrzahl."]
+
+MERK = Merkkasten("Merkkasten: Nomen (Namenwörter)", [
+    "Nomen sind Namen für Menschen, Tiere, Pflanzen und Dinge.",
+    "> die Lehrerin · der Hund · die Tulpe · das Velo",
+    "Auch Gefühle und Gedanken sind Nomen.",
+    "> die Freude · die Angst · der Traum",
+    "! Nomen schreibt man immer gross.",
+    "Trick: Vor ein Nomen passt der, die oder das.",
+    "",
+    "# Einzahl und Mehrzahl",
+    "Einzahl: ein Ding.  Mehrzahl: viele Dinge.",
+    "> der Hund → die Hunde · das Haus → die Häuser · die Maus → die Mäuse",
+    "In der Mehrzahl heisst der Begleiter immer die.",
+])
+
+# (Einzahl, Mehrzahl)
+PLURAL_1 = [("der Hund", "die Hunde"), ("die Katze", "die Katzen"), ("das Kind", "die Kinder"),
+            ("der Ball", "die Bälle"), ("die Blume", "die Blumen"), ("das Buch", "die Bücher")]
+PLURAL_2 = [("der Baum", "die Bäume"), ("die Maus", "die Mäuse"), ("das Haus", "die Häuser"),
+            ("der Apfel", "die Äpfel"), ("die Nuss", "die Nüsse"), ("das Glas", "die Gläser"),
+            ("der Vogel", "die Vögel"), ("die Hand", "die Hände")]
+
+
+def uebung(stufe):
+    if stufe == 1:
+        return [
+            MERK,
+            Saetze("Nomen finden",
+                   "Unterstreiche in jedem Satz die Nomen. Die Zahl in Klammern sagt dir, wie viele es sind.",
+                   ["Der [Hund] spielt mit dem [Ball]. (2)",
+                    "Die [Mama] backt einen [Kuchen]. (2)",
+                    "Im [Garten] wächst eine [Blume]. (2)",
+                    "Das [Kind] liest ein [Buch]. (2)",
+                    "Die [Katze] trinkt [Milch]. (2)"],
+                   hilfe="Frage dich: Passt der, die oder das davor?"),
+            Sortieren("Nomen oder nicht?",
+                      "Schreibe die Nomen in die linke Spalte. Schreibe sie gross. "
+                      "Schreibe die anderen Wörter in die rechte Spalte.",
+                      ["tisch", "laufen", "apfel", "rot", "schule", "lachen", "vogel", "klein"],
+                      {"Nomen (gross)": ["Tisch", "Apfel", "Schule", "Vogel"],
+                       "andere Wörter (klein)": ["laufen", "rot", "lachen", "klein"]},
+                      erklaerung="Vor Tisch, Apfel, Schule und Vogel passt der/die/das."),
+            Schreiben("Einzahl und Mehrzahl",
+                      "Schreibe die Mehrzahl auf die Linie. Der Begleiter heisst immer die.",
+                      PLURAL_1[1:], spalten=2, beispiel=PLURAL_1[0], breit=28 * 2.835),
+            Saetze("Gross oder klein?",
+                   "Schreibe den richtigen Anfangsbuchstaben in die Lücke.",
+                   ["Der {H}und bellt.",
+                    "Die {S}onne scheint.",
+                    "Ich {l}ache laut.",
+                    "Mein {B}ruder ist {k}lein.",
+                    "Wir essen eine {B}irne."],
+                   hilfe="Nomen schreibt man gross. Andere Wörter im Satz schreibt man klein."),
+            Schreiben("Nomen sammeln",
+                      "Schreibe zu jeder Gruppe zwei passende Nomen mit Begleiter.",
+                      [("Tiere:", "der Hase, die Kuh"),
+                       ("Essen:", "das Brot, der Apfel"),
+                       ("Schule:", "der Stift, die Tafel")],
+                      spalten=1, pro_item=2,
+                      erklaerung="Jedes passende Nomen mit Begleiter gibt einen Punkt."),
+        ]
+    return [
+        MERK,
+        Saetze("Nomen finden",
+               "Unterstreiche alle Nomen. Es sind #N.",
+               ["Am [Morgen] packt [Lea] ihren [Rucksack].",
+                "Sie nimmt ein [Brot], einen [Apfel] und ihr [Heft] mit.",
+                "Auf dem [Schulweg] trifft sie ihren [Freund] [Tim].",
+                "Die [Kinder] sehen eine [Katze] auf einer [Mauer].",
+                "[Tim] hat [Angst] vor dem grossen [Hund]."],
+               erklaerung="Auch Namen (Lea, Tim) und Gefühle (Angst) sind Nomen."),
+        Tabelle("Einzahl und Mehrzahl",
+                "Fülle die Tabelle aus. Schreibe immer den Begleiter dazu.",
+                ["Einzahl", "Mehrzahl"],
+                [["{" + e + "}" if k % 2 else e, m if k % 2 else "{" + m + "}"]
+                 for k, (e, m) in enumerate(PLURAL_2)],
+                beispiel=["der Tisch", "die Tische"],
+                hilfe="Oft kommt ein Umlaut dazu: a → ä, o → ö, u → ü, au → äu."),
+        Schreiben("Gross oder klein?",
+                  "Schreibe die Sätze richtig ab. Achte auf die Nomen und den Satzanfang.",
+                  [("die oma strickt einen warmen schal.", "Die Oma strickt einen warmen Schal."),
+                   ("im winter fahren wir mit dem schlitten.", "Im Winter fahren wir mit dem Schlitten."),
+                   ("mein bruder hat freude an seinem neuen velo.",
+                    "Mein Bruder hat Freude an seinem neuen Velo.")],
+                  spalten=0, linien=1,
+                  erklaerung="Gross schreibt man den Satzanfang und alle Nomen."),
+        Saetze("Nomen mit -ung, -heit, -keit",
+               "Bilde aus dem Wort in Klammern ein Nomen. Schreibe es in die Lücke.",
+               ["Wir machen eine {Wanderung|wandern}.",
+                "Die {Freiheit|frei} ist wichtig.",
+                "Die {Gesundheit|gesund} ist das Wichtigste.",
+                "Ich staune über die {Sauberkeit|sauber}.",
+                "Wir hören eine spannende {Erzählung|erzählen}."],
+               min_gap=34 * 2.835,
+               hilfe="Wörter mit -ung, -heit und -keit sind Nomen. Man schreibt sie gross."),
+        Schreiben("Nomen-Detektiv",
+                  "Schreibe zu jedem Buchstaben ein Nomen mit Begleiter.",
+                  [("B:", "der Baum"), ("F:", "die Feder"), ("K:", "das Kissen"),
+                   ("M:", "die Maus"), ("S:", "der Stuhl"), ("T:", "das Telefon")],
+                  spalten=2, erklaerung="Viele Lösungen sind richtig. Wichtig: gross geschrieben, mit Begleiter."),
+    ]
+
+
+def test(stufe):
+    if stufe == 1:
+        return [
+            Saetze("Nomen finden",
+                   "Unterstreiche alle Nomen. Es sind #N.",
+                   ["Der [Vogel] sitzt auf dem [Baum].",
+                    "Die [Oma] kocht eine [Suppe].",
+                    "Das [Pferd] frisst [Heu].",
+                    "Mein [Freund] hat ein [Velo]."]),
+            Sortieren("Nomen schreibt man gross",
+                      "Schreibe die Nomen gross in die linke Spalte. Schreibe die anderen Wörter klein in die rechte Spalte.",
+                      ["haus", "springen", "auto", "süss", "fisch", "singen"],
+                      {"Nomen (gross)": ["Haus", "Auto", "Fisch"],
+                       "andere Wörter (klein)": ["springen", "süss", "singen"]}),
+            Schreiben("Einzahl und Mehrzahl",
+                      "Schreibe die Mehrzahl auf die Linie.",
+                      [("der Stift", "die Stifte"), ("die Tasche", "die Taschen"),
+                       ("das Bild", "die Bilder"), ("der Fuss", "die Füsse")],
+                      spalten=2, beispiel=("die Kuh", "die Kühe"), breit=28 * 2.835),
+            Saetze("Gross oder klein?",
+                   "Schreibe den richtigen Anfangsbuchstaben in die Lücke.",
+                   ["Die {K}atze {s}chläft.",
+                    "Der {T}isch ist {r}und.",
+                    "Ich habe einen {B}all."]),
+        ]
+    return [
+        Saetze("Nomen finden",
+               "Unterstreiche alle Nomen. Es sind #N.",
+               ["Im [Sommer] fährt [Familie] [Keller] ans [Meer].",
+                "[Nina] baut mit ihrem [Bruder] eine [Burg] aus [Sand].",
+                "Plötzlich spritzt eine grosse [Welle] über den [Strand].",
+                "Die [Kinder] haben grosse [Freude]."],
+               erklaerung="„Familie Keller“ sind zwei Nomen. Auch Gefühle wie Freude sind Nomen."),
+        Tabelle("Einzahl und Mehrzahl",
+                "Fülle die Tabelle aus. Schreibe immer den Begleiter dazu.",
+                ["Einzahl", "Mehrzahl"],
+                [["der Zahn", "{die Zähne}"], ["{die Stadt}", "die Städte"],
+                 ["das Dach", "{die Dächer}"], ["{der Topf}", "die Töpfe"],
+                 ["die Bank", "{die Bänke}"], ["das Ei", "{die Eier}"]]),
+        Schreiben("Gross oder klein?",
+                  "Schreibe die Sätze richtig ab.",
+                  [("der kleine hase hoppelt über die wiese.", "Der kleine Hase hoppelt über die Wiese."),
+                   ("am abend liest papa uns eine geschichte vor.", "Am Abend liest Papa uns eine Geschichte vor.")],
+                  spalten=0, punkte=7,
+                  erklaerung="1 Punkt für jeden richtigen Grossbuchstaben: Satzanfang und jedes Nomen."),
+        Saetze("Nomen mit -ung, -heit, -keit",
+               "Bilde aus dem Wort in Klammern ein Nomen.",
+               ["Ich habe eine {Zeichnung|zeichnen} gemacht.",
+                "Die {Dunkelheit|dunkel} macht mir keine Angst.",
+                "Danke für deine {Freundlichkeit|freundlich}!"],
+               min_gap=36 * 2.835),
+    ]
