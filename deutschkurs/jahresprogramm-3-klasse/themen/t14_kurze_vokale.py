@@ -58,7 +58,7 @@ def uebung(stufe):
                "Setze ck oder tz ein.",
                CK_TZ_2),
         Saetze("Doppelt oder nicht?",
-               "Ein Wort in jeder Reihe ist falsch geschrieben. Streiche es durch. Schreibe es richtig auf die Linie.",
+               "Finde in jeder Reihe das falsch geschriebene Wort. Streiche es durch. Schreibe es richtig auf die Linie.",
                ["Hund · [Kinnd] · Lampe → {Kind}",
                 "Teller · [Kaze] · Puppe → {Katze}",
                 "Rock · [Zuker] · Jacke → {Zucker}",
@@ -99,7 +99,7 @@ def test(stufe):
                "Setze ck oder tz ein.",
                ["Schne{ck}e", "Pfü{tz}e", "Lü{ck}e", "Ka{tz}e"]),
         Saetze("Doppelt oder nicht?",
-               "Ein Wort in jeder Reihe ist falsch geschrieben. Streiche es durch. Schreibe es richtig.",
+               "Finde in jeder Reihe das falsch geschriebene Wort. Streiche es durch. Schreibe es richtig.",
                ["Lampe · [Bet] · Ball → {Bett}", "Tasse · [Haase] · Kamm → {Hase}"],
                mark="durch", min_gap=24 * 2.835, punkte=2),
     ]

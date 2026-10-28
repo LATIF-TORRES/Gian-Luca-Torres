@@ -47,7 +47,7 @@ def uebung(stufe):
     return [
         MERK,
         Saetze("Wörter für sagen",
-               "Ersetze „sagen“ durch ein besseres Wort. Jedes Wort aus dem Kasten passt einmal.",
+               "Setze für „sagen“ ein besseres Wort aus dem Kasten ein. Jedes Wort passt einmal.",
                ["„Hilfe!“, {schrie} die Frau.", "„Wie spät ist es?“, {fragte} Ben.",
                 "„Pst, das Baby schläft“, {flüsterte} Mama.", "„Ich habe gewonnen!“, {jubelte} Lara."],
                woerter=["schrie", "fragte", "flüsterte", "jubelte"], min_gap=28 * 2.835),

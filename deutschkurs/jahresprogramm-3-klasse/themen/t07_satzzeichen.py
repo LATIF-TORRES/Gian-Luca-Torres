@@ -81,7 +81,7 @@ def uebung(stufe):
                    ("Die Schule beginnt um acht Uhr.", "Wann beginnt die Schule?")],
                   spalten=0, linien=1),
         Schreiben("Ein Text ohne Zeichen",
-                  "Hier fehlen alle Satzzeichen und Grossbuchstaben am Satzanfang. Schreibe den Text richtig ab.",
+                  "Schreibe den Text richtig ab. Setze die Satzzeichen. Schreibe jeden Satzanfang gross.",
                   [("am morgen klingelt der wecker lina springt aus dem bett wo sind meine socken "
                     "schnell sie kommt sonst zu spät",
                     "Am Morgen klingelt der Wecker. Lina springt aus dem Bett. Wo sind meine Socken? "

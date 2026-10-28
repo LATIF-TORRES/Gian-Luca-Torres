@@ -76,7 +76,7 @@ def uebung(stufe):
                     "Sie tragen Blütenstaub von Blüte zu Blüte, so können Früchte wachsen.")],
                   spalten=0, linien=2, pro_item=2),
         Saetze("Wörter erklären",
-               "Was bedeutet das Wort? Kreise die richtige Erklärung ein.",
+               "Kreise die richtige Erklärung für das Wort ein.",
                ["Wabe:\t<*Zimmer aus Wachs für Honig und Eier|ein Bienenstachel>",
                 "Nektar:\t<*süsser Saft in Blüten|ein Teil vom Bienenstock>"],
                tab=27 * 2.835),

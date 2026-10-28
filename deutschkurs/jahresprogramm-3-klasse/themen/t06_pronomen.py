@@ -69,14 +69,13 @@ def uebung(stufe):
                 "Das Huhn gackert. Es ist laut. Es = {das Huhn}"],
                min_gap=26 * 2.835),
         Schreiben("Eine Geschichte verbessern",
-                  "Hier kommt immer wieder „Max“ vor. Schreibe die Geschichte ab. "
-                  "Ersetze Max zweimal durch er.",
+                  "Schreibe die Geschichte ab. Ersetze „Max“ im zweiten und dritten Satz durch er.",
                   [("Max geht in den Zoo. Max sieht einen Löwen. Max hat ein bisschen Angst. "
                     "Max geht schnell weiter.",
                     "Max geht in den Zoo. Er sieht einen Löwen. Er hat ein bisschen Angst. "
                     "Max geht schnell weiter.")],
                   spalten=0, linien=3, pro_item=2, nummern=False,
-                  erklaerung="Auch richtig: andere Sätze mit er ersetzen. Max am Anfang bleibt, damit man weiss, wer gemeint ist."),
+                  erklaerung="Max am Anfang bleibt, damit man weiss, wer gemeint ist."),
         Schreiben("Sätze mit Pronomen",
                   "Schreibe zu jedem Pronomen einen Satz über deine Familie oder deine Freunde.",
                   [("wir:", "Wir fahren am Sonntag in die Berge."),

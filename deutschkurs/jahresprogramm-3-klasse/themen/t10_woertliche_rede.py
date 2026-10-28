@@ -69,7 +69,7 @@ def uebung(stufe):
                   spalten=0, linien=1, pro_item=2,
                   erklaerung="1 Punkt für die Zeichen, 1 Punkt für ein passendes Wort statt sagen."),
         Schreiben("Ein kleines Gespräch",
-                  "Zwei Kinder treffen sich auf dem Pausenplatz. Schreibe ein Gespräch mit vier Sätzen in wörtlicher Rede.",
+                  "Schreibe ein Gespräch mit vier Sätzen in wörtlicher Rede. Zwei Kinder treffen sich auf dem Pausenplatz.",
                   [("", "Noah fragt: „Spielst du mit mir Fangen?“"),
                    ("", "Ella antwortet: „Ja, gern!“"),
                    ("", "Noah ruft: „Du bist dran!“"),

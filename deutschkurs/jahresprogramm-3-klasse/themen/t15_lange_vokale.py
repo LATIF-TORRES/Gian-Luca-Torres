@@ -57,7 +57,7 @@ def uebung(stufe):
                   {"ie": ["Bier", "Riese", "Knie"], "h": ["Mehl", "Sohn", "Stuhl"],
                    "aa / ee / oo": ["Zoo", "Fee", "Saal"]}),
         Saetze("Fehler-Detektiv",
-               "In jedem Satz ist ein Wort falsch geschrieben. Streiche es durch. Schreibe es richtig auf die Linie.",
+               "Finde in jedem Satz das falsch geschriebene Wort. Streiche es durch. Schreibe es richtig auf die Linie.",
                ["Die [Bine] fliegt zur Blume. → {Biene}",
                 "Wir [faren] mit dem Zug. → {fahren}",
                 "Das [Bot] schaukelt auf dem See. → {Boot}",

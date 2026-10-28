@@ -216,7 +216,7 @@ def piece_width(p, size, min_gap):
     return sw(CHOICE_SEP.join(t), size) + 2 * CHOICE_PAD
 
 
-def inline(ctx, x, y, s, width, size=None, lead=None, min_gap=None, mark="unter", fill=None):
+def inline(ctx, x, y, s, width, size=None, lead=None, min_gap=None, mark="unter", fill=None, abstand=1):
     """Zeichnet eine Zeile Kurzschrift mit Umbruch. Gibt die y-Position unter der letzten Zeile zurück.
 
     mark: 'unter' (unterstreichen), 'kreis' (einkreisen), 'durch' (durchstreichen), 'farbe' (anmalen)
@@ -225,7 +225,7 @@ def inline(ctx, x, y, s, width, size=None, lead=None, min_gap=None, mark="unter"
     c = ctx.c
     size = size or ctx.st.size
     lead = lead or ctx.st.lead
-    space = sw(" ", size)
+    space = sw(" ", size) * abstand    # abstand > 1: Platz zum Einzeichnen von Trennstrichen
     atoms = parse(s)
     lines, cur, cw = [], [], 0
     for a in atoms:
@@ -361,7 +361,8 @@ class Merkkasten(Block):
             elif z.startswith("> "):
                 rows.append(("Sans", ctx.accent, z[2:], 4 * mm))
             elif z.startswith("! "):
-                rows.append(("Sans-Bold", RED, z[2:], 0))
+                # nicht Rot: Rot ist auf allen Blättern die Farbe der Lösungen
+                rows.append(("Sans-Bold", ctx.accent, "► " + z[2:], 0))
             else:
                 rows.append(("Sans", INK, z, 0))
         lines = []
@@ -473,6 +474,7 @@ class Saetze(Aufgabe):
     hilfe: str = ""
     punkte: int = None
     legende: list = None           # Kategorienamen für die Lösungsfarben
+    abstand: float = 1             # Wortabstand (grösser, wenn das Kind Striche einzeichnet)
     tab: float = 62 * mm           # Text nach einem Tabulator (\t) beginnt bei dieser x-Verschiebung
 
     def __post_init__(self):
@@ -518,7 +520,7 @@ class Saetze(Aufgabe):
                 y2 = inline(ctx, x0 + self.tab, y, right, R - x0 - self.tab, mark=self.mark, min_gap=self.min_gap)
                 y = min(y1, y2)
             else:
-                y = inline(ctx, x0, y, z, R - x0, mark=self.mark, min_gap=self.min_gap)
+                y = inline(ctx, x0, y, z, R - x0, mark=self.mark, min_gap=self.min_gap, abstand=self.abstand)
         return y + ctx.st.lead - ctx.st.size * 0.36 * mm
 
 

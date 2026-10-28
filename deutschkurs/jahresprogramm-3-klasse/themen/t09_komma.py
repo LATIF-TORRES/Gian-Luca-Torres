@@ -50,7 +50,7 @@ def uebung(stufe):
                    "Setze die fehlenden Kommas in die Lücken.",
                    aufzaehlung(AUFZ_1), hilfe="Vor „und“ steht kein Komma."),
             Schreiben("Mein Znüni",
-                      "Was ist in deiner Znünibox? Schreibe einen Satz mit einer Aufzählung.",
+                      "Schreibe einen Satz mit einer Aufzählung: Was ist in deiner Znünibox?",
                       [("In meiner Znünibox sind …", "In meiner Znünibox sind ein Brot, ein Apfel und Nüsse.")],
                       spalten=0, linien=2, nummern=False, pro_item=2,
                       erklaerung="Kommas zwischen den Dingen, vor „und“ kein Komma."),

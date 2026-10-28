@@ -68,7 +68,7 @@ def uebung(stufe):
                     "<der|*die|das> Wasserflasche", "<*der|die|das> Fussball"],
                    erklaerung="die Tür → die Haustür · der Schirm → der Regenschirm"),
             Sortieren("Wortfamilien",
-                      "Welche Wörter gehören zu welcher Familie? Schreibe sie in die richtige Spalte.",
+                      "Schreibe jedes Wort in die Spalte seiner Wortfamilie.",
                       familien_woerter(FAMILIEN), FAMILIEN,
                       hilfe="Suche den gleichen Wortteil: spiel, mal, back."),
         ]
@@ -85,7 +85,7 @@ def uebung(stufe):
                    ("der Kinderwagen", "die Kinder + der Wagen"), ("das Zahnrad", "der Zahn + das Rad")],
                   spalten=1, pro_item=2),
         Sortieren("Wortfamilien",
-                  "Welche Wörter gehören zu welcher Familie? Schreibe sie in die richtige Spalte.",
+                  "Schreibe jedes Wort in die Spalte seiner Wortfamilie.",
                   familien_woerter(FAMILIEN_2), FAMILIEN_2),
         Schreiben("Eigene Wortfamilie",
                   "Schreibe zu jedem Wort zwei Wörter aus der gleichen Familie.",

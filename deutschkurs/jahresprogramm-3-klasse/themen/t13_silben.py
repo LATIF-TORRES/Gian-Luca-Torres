@@ -43,7 +43,7 @@ def uebung(stufe):
                "Zeichne die Silbenbögen. Schreibe das Wort getrennt auf. Schreibe die Anzahl Silben ins Kästchen.",
                SILBEN_2),
         Schreiben("Trennen am Zeilenende",
-                  "Das Wort passt nicht mehr auf die Zeile. Trenne es einmal mit einem Strich.",
+                  "Trenne jedes Wort einmal mit einem Strich, so wie am Ende einer Zeile.",
                   [("Wolke", "Wol-ke"), ("Sonne", "Son-ne"), ("Brücke", "Brü-cke"), ("Flasche", "Fla-sche"),
                    ("Garten", "Gar-ten"), ("Kissen", "Kis-sen")],
                   spalten=2, breit=24 * 2.835,
@@ -75,7 +75,7 @@ def test(stufe):
                erklaerung="Pro Wort 1 Punkt für die Bögen/Trennung und 1 Punkt für die Anzahl. "
                           "Elefant hat 3 Silben. Am Zeilenende trennt man aber nur Ele-fant."),
         Schreiben("Trennen am Zeilenende",
-                  "Trenne das Wort einmal mit einem Strich.",
+                  "Trenne jedes Wort einmal mit einem Strich, so wie am Ende einer Zeile.",
                   [("Decke", "De-cke"), ("Tasse", "Tas-se"), ("Fische", "Fi-sche"), ("Kerze", "Ker-ze")],
                   spalten=2, breit=24 * 2.835),
     ]

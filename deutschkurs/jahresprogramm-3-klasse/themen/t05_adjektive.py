@@ -92,7 +92,7 @@ def uebung(stufe):
                 beispiel=["klein", "kleiner", "am kleinsten"],
                 erklaerung="Oft kommt ein Umlaut dazu: lang → länger, alt → älter. hoch → höher."),
         Saetze("Fehler-Detektiv",
-               "In jedem Satz ist ein Fehler. Streiche das falsche Wort durch. Schreibe es richtig auf die Linie.",
+               "Finde in jedem Satz den Fehler. Streiche das falsche Wort durch. Schreibe es richtig auf die Linie.",
                ["Das ist das [guteste] Eis der Welt. → {beste}",
                 "Mein Turm ist [höcher] als deiner. → {höher}",
                 "Opa ist älter [wie] Oma. → {als}",

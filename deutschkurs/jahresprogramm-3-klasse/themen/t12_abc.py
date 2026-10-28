@@ -77,7 +77,7 @@ def uebung(stufe):
                    ["Affe\t<*vorne|Mitte|hinten>", "Nase\t<vorne|*Mitte|hinten>",
                     "Zebra\t<vorne|Mitte|*hinten>", "Kuh\t<vorne|*Mitte|hinten>",
                     "Brot\t<*vorne|Mitte|hinten>", "Wolke\t<vorne|Mitte|*hinten>"],
-                   tab=30 * 2.835,
+                   tab=30 * 2.835, hilfe="Vorne: A bis F. Mitte: G bis Q. Hinten: R bis Z.",
                    erklaerung="vorne: A–F · Mitte: G–Q · hinten: R–Z"),
         ]
     return [
@@ -86,7 +86,7 @@ def uebung(stufe):
                "Schreibe den Buchstaben vor und nach dem Buchstaben in der Mitte.",
                nachbarn("fkpux"), min_gap=8 * 2.835),
         Schreiben("Nach dem 2. Buchstaben ordnen",
-                  "Alle Wörter beginnen gleich. Ordne sie nach dem 2. (oder 3.) Buchstaben.",
+                  "Ordne die Wörter nach dem Abc. Alle Wörter beginnen gleich. Schau auf den 2. oder 3. Buchstaben.",
                   [(", ".join(l), ordnen(l)) for l in LISTEN_2],
                   spalten=0, linien=1),
         Saetze("Wer steht vorher?",

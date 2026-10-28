@@ -63,7 +63,7 @@ def uebung(stufe):
                 "Setze ä, e, äu oder eu ein. Schreibe das verwandte Wort daneben. Gibt es keins, mache einen Strich.",
                 ["Wort", "verwandtes Wort"], zeilen(ABL_2, True)),
         Saetze("Fehler-Detektiv",
-               "In jedem Satz ist ein Fehler. Streiche das falsche Wort durch. Schreibe es richtig.",
+               "Finde in jedem Satz den Fehler. Streiche das falsche Wort durch. Schreibe es richtig.",
                ["Der [Hunt] bellt laut. → {Hund}",
                 "Im [Walt] wohnt ein Fuchs. → {Wald}",
                 "Die [Heuser] sind hoch. → {Häuser}",

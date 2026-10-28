@@ -60,7 +60,7 @@ def uebung(stufe):
                     "Ergänze die Formen von spielen.",
                     ["Person", "spielen"], konjugation("spiel", {1, 2, 3, 4, 5})[1:],
                     beispiel=["ich", "spiele"], breiten=[1, 2],
-                    hilfe="Schau im Merkkasten nach."),
+                    hilfe="Die Endungen sind: -e, -st, -t, -en, -t, -en."),
             Saetze("Welche Endung passt?",
                    "Schreibe die richtige Endung in die Lücke.",
                    ["ich mal{e}", "du mal{st}", "er mal{t}", "wir mal{en}", "ihr mal{t}", "sie mal{en}"],
