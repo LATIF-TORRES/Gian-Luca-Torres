@@ -65,7 +65,7 @@ def uebung(stufe):
                   "Schreibe die Sätze als wörtliche Rede. Verwende ein passendes Wort für sagen.",
                   [("Pia – Ich habe heute Geburtstag!", "Pia ruft: „Ich habe heute Geburtstag!“"),
                    ("Leo – Wann beginnt der Film?", "Leo fragt: „Wann beginnt der Film?“"),
-                   ("Mama – Zieh deine Jacke an.", "Mama sagt: „Zieh deine Jacke an.“")],
+                   ("Mama – Zieh deine Jacke an!", "Mama ruft: „Zieh deine Jacke an!“")],
                   spalten=0, linien=1, pro_item=2,
                   erklaerung="1 Punkt für die Zeichen, 1 Punkt für ein passendes Wort statt sagen."),
         Schreiben("Ein kleines Gespräch",

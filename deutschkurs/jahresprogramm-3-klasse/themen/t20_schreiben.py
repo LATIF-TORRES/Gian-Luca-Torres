@@ -26,7 +26,7 @@ def uebung(stufe):
         return [
             MERK,
             Saetze("Gute Satzanfänge",
-                   "Hier fängt jeder Satz mit „Dann“ an. Setze andere Satzanfänge aus dem Kasten ein.",
+                   "Setze passende Satzanfänge aus dem Kasten ein. Jeder Satzanfang passt einmal.",
                    ["{Zuerst} ging Tom in den Wald.", "{Plötzlich} sah er einen Fuchs.",
                     "{Danach} rannte der Fuchs weg.", "{Zum Schluss} ging Tom nach Hause."],
                    woerter=["Zuerst", "Plötzlich", "Danach", "Zum Schluss"], min_gap=30 * 2.835,
@@ -84,7 +84,8 @@ def test(stufe):
                    "Setze passende Satzanfänge aus dem Kasten ein.",
                    ["{Zuerst} packte Lisa ihren Rucksack.", "{Dann} fuhr sie mit dem Velo los.",
                     "{Plötzlich} hatte das Velo einen Platten."],
-                   woerter=["Zuerst", "Dann", "Plötzlich"], min_gap=26 * 2.835),
+                   woerter=["Zuerst", "Dann", "Plötzlich"], min_gap=26 * 2.835,
+                   erklaerung="Zuerst steht am Anfang. Plötzlich passt zum Platten (etwas Unerwartetes)."),
             Freitext("Meine Geschichte",
                      "Schreibe eine kurze Geschichte mit dem Titel „Ein Tag im Schnee“. "
                      "Schreibe mindestens vier Sätze.",

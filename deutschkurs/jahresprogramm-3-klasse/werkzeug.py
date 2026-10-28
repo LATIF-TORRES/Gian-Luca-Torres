@@ -302,9 +302,10 @@ def inline(ctx, x, y, s, width, size=None, lead=None, min_gap=None, mark="unter"
 
 
 def count_items(s):
-    n = 0
+    """Anzahl Lösungen in einer Zeile. Eine Markierung über mehrere Wörter zählt einmal."""
+    n = s.count("[") + s.count("{") + s.count("<")
     for a in parse(s):
-        n += sum(1 for p in a if p[0] in "mgcs")
+        n += sum(1 for p in a if p[0] == "s")
     return n
 
 

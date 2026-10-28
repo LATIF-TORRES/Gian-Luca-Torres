@@ -63,7 +63,7 @@ def uebung(stufe):
             "Rätsel geliebt“, sagte sie.",
         ]),
         RichtigFalsch("Richtig oder falsch?",
-                      "Schreibe R (richtig) oder F (falsch) ins Kästchen. Verbessere die falschen Sätze im Kopf.",
+                      "Schreibe R (richtig) oder F (falsch) ins Kästchen.",
                       [("Es war ein sonniger Tag.", False, "Es regnete den ganzen Tag."),
                        ("Die Kiste war aus Holz.", True, ""),
                        ("Jonas öffnete den Brief.", False, "Mila öffnete den Brief."),
