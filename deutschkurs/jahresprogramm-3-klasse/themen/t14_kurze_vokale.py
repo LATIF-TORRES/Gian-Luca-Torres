@@ -97,7 +97,7 @@ def test(stufe):
                ["Ki{ss}en", "Su{pp}e", "Bri{ll}e", "Wa{ss}er"]),
         Saetze("ck oder tz?",
                "Setze ck oder tz ein.",
-               ["Schne{ck}e", "Pfü{tz}e", "Lü{ck}e", "Ka{tz}e"]),
+               ["Ba{ck}e", "Pfü{tz}e", "Lü{ck}e", "Ka{tz}e"]),
         Saetze("Doppelt oder nicht?",
                "Finde in jeder Reihe das falsch geschriebene Wort. Streiche es durch. Schreibe es richtig.",
                ["Lampe · [Bet] · Ball → {Bett}", "Tasse · [Haase] · Kamm → {Hase}"],

@@ -33,7 +33,7 @@ def uebung(stufe):
                    erklaerung="Andere Reihenfolgen sind auch richtig, wenn die Geschichte Sinn ergibt."),
             Wortkarten("Sätze für eine Geschichte",
                        "Ordne die Wortkarten. Schreibe den Satz auf die Linie.",
-                       ["Am Morgen schien die Sonne.", "Plötzlich bellte ein Hund."], seed=21),
+                       ["Am Morgen schien die Sonne.", "Plötzlich bellte ein Hund."], seed=24),
             Freitext("Meine Geschichte",
                      "Schreibe eine kurze Geschichte mit dem Titel „Der Ball im Baum“. "
                      "Schreibe mindestens vier Sätze. Die Satzanfänge im Kasten helfen dir.",

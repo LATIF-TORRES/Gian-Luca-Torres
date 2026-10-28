@@ -28,6 +28,7 @@ STEIGERUNG = {
     "laut": ("lauter", "am lautesten"), "kalt": ("kälter", "am kältesten"),
     "jung": ("jünger", "am jüngsten"), "stark": ("stärker", "am stärksten"),
     "gross": ("grösser", "am grössten"), "nah": ("näher", "am nächsten"),
+    "dick": ("dicker", "am dicksten"), "hell": ("heller", "am hellsten"),
 }
 
 GEGENTEIL = [("gross", "klein"), ("warm", "kalt"), ("schnell", "langsam"), ("laut", "leise"),
@@ -120,7 +121,7 @@ def test(stufe):
             Tabelle("Die Steigerungs-Treppe",
                     "Fülle die Tabelle aus.",
                     ["Grundform", "Vergleichsform", "Höchstform"],
-                    treppe(["stark", "laut", "schnell"], {1, 2}),
+                    treppe(["stark", "dick", "hell"], {1, 2}),
                     beispiel=["klein", "kleiner", "am kleinsten"]),
             Saetze("wie oder als?",
                    "Schreibe wie oder als in die Lücke.",

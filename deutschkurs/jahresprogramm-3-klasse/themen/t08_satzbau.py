@@ -83,7 +83,7 @@ def test(stufe):
         return [
             Wortkarten("Wortkarten ordnen",
                        "Ordne die Wortkarten zu einem Satz. Schreibe den Satz auf die Linie.",
-                       ["Die Katze schläft.", "Ich male ein Bild.", "Der Bus kommt spät."], seed=11),
+                       ["Die Katze schläft.", "Ich male ein Bild.", "Der Bus kommt spät."], seed=13),
             Saetze("Wer tut etwas?",
                    "Unterstreiche, wer etwas tut (das Subjekt).",
                    ["[Der Bäcker] backt Brot.", "[Lina] schwimmt.", "Im Wald wohnt [ein Fuchs]."]),

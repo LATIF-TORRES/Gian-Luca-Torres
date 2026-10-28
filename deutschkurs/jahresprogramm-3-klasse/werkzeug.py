@@ -192,6 +192,14 @@ def parse(s):
     return atoms
 
 
+def gleiche_luecken(zeilen, size, min_gap):
+    """Eine Lückenbreite für alle Lücken einer Aufgabe – sonst verrät die Länge die Lösung."""
+    sols = [t for z in zeilen for a in parse(z) for k, t, _ in a if k == "g"]
+    if not sols:
+        return min_gap
+    return max([sw(t, size) + 5 * mm for t in sols] + [min_gap or 0, 9 * mm])
+
+
 def gap_width(sol, size, min_w):
     if len(sol) <= 3 and min_w is None:
         return max(sw(sol, size) + 3 * mm, 7 * mm)
@@ -507,20 +515,21 @@ class Saetze(Aufgabe):
             y = wortkasten(ctx, y, ws)
         y -= ctx.st.size * 0.2 * mm
         x0 = L + IND + 7 * mm
+        gap = gleiche_luecken(self.zeilen, ctx.st.size, self.min_gap)
         if self.beispiel:
             text(c, L + IND, y, "Beispiel:", 9, "Sans", MUTED)
             y -= 5.5 * mm
-            y = inline(ctx, x0, y, self.beispiel, R - x0, mark=self.mark, min_gap=self.min_gap,
+            y = inline(ctx, x0, y, self.beispiel, R - x0, mark=self.mark, min_gap=gap,
                        fill=CAT[2])
         for k, z in enumerate(self.zeilen):
             text(c, L + IND, y, letter(k), ctx.st.size, "Sans", MUTED)
             if "\t" in z:
                 left, right = z.split("\t")
-                y1 = inline(ctx, x0, y, left, self.tab - 3 * mm, mark=self.mark, min_gap=self.min_gap)
-                y2 = inline(ctx, x0 + self.tab, y, right, R - x0 - self.tab, mark=self.mark, min_gap=self.min_gap)
+                y1 = inline(ctx, x0, y, left, self.tab - 3 * mm, mark=self.mark, min_gap=gap)
+                y2 = inline(ctx, x0 + self.tab, y, right, R - x0 - self.tab, mark=self.mark, min_gap=gap)
                 y = min(y1, y2)
             else:
-                y = inline(ctx, x0, y, z, R - x0, mark=self.mark, min_gap=self.min_gap, abstand=self.abstand)
+                y = inline(ctx, x0, y, z, R - x0, mark=self.mark, min_gap=gap, abstand=self.abstand)
         return y + ctx.st.lead - ctx.st.size * 0.36 * mm
 
 
@@ -650,6 +659,9 @@ class Tabelle(Aufgabe):
         y -= rh
         rows = ([("ex", r) for r in [self.beispiel]] if self.beispiel else []) + [("it", r) for r in self.zeilen]
         clead = st.size * 0.36 * mm * 1.4
+        teil = [c for r in self.zeilen for c in r
+                if not (c.startswith("{") and c.endswith("}") and c.count("{") == 1)]
+        gap = gleiche_luecken(teil, st.size, None)
         for kind, row in rows:
             xx = x0
             low = y
@@ -665,7 +677,7 @@ class Tabelle(Aufgabe):
                             size -= 0.5
                         text(c, xx + 2.5 * mm, y, sol, size, "Sans", CAT[2] if kind == "ex" else RED)
                 else:
-                    end = inline(ctx, xx + 2 * mm, y, cell, cw - 4 * mm, lead=clead,
+                    end = inline(ctx, xx + 2 * mm, y, cell, cw - 4 * mm, lead=clead, min_gap=gap,
                                  fill=CAT[2] if kind == "ex" else None)
                     low = min(low, end + clead)
                 xx += cw
