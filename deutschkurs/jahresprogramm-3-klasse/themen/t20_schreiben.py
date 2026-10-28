@@ -6,6 +6,9 @@ BEREICH = "Schreiben"
 LERNZIELE = ["Du planst eine Geschichte: Einleitung, Hauptteil, Schluss.",
              "Du verwendest verschiedene Satzanfänge.",
              "Du schreibst eine eigene Geschichte in der Vergangenheit."]
+LERNZIELE_1 = ["Du verwendest verschiedene Satzanfänge.",
+               "Du bildest aus Wortkarten richtige Sätze.",
+               "Du schreibst eine kurze Geschichte mit mindestens vier Sätzen."]
 
 MERK = Merkkasten("Merkkasten: So baust du eine Geschichte", [
     "# 1. Einleitung",
@@ -40,7 +43,7 @@ def uebung(stufe):
                      linien=7, satzanfaenge=SATZANFAENGE,
                      checkliste=["Ich habe einen Titel.", "Jeder Satz beginnt gross und endet mit einem Punkt.",
                                  "Ich habe verschiedene Satzanfänge."],
-                     beispiel="Der Ball im Baum. Am Samstag spielte Mia mit ihrem Bruder im Garten. "
+                     beispiel="Der Ball im Baum\nAm Samstag spielte Mia mit ihrem Bruder im Garten. "
                               "Plötzlich flog der Ball in den Apfelbaum. Mia holte eine Leiter. "
                               "Zum Schluss hatten die Kinder ihren Ball wieder."),
         ]
@@ -69,7 +72,7 @@ def uebung(stufe):
                  checkliste=["Meine Geschichte hat Einleitung, Hauptteil und Schluss.",
                              "Ich habe alle drei Wörter verwendet.", "Ich schreibe in der Vergangenheit.",
                              "Ich habe verschiedene Satzanfänge."],
-                 beispiel="Das Gewitter. An einem heissen Sommertag spielte ich mit meiner Freundin Sara im Wald. "
+                 beispiel="Das Gewitter\nAn einem heissen Sommertag spielte ich mit meiner Freundin Sara im Wald. "
                           "Plötzlich wurde der Himmel dunkel und es donnerte laut. Wir rannten zu Saras Haus. "
                           "Aber Sara hatte ihren Schlüssel verloren! Zum Glück kam ihr Vater nach Hause. "
                           "Am Abend tranken wir heisse Schokolade und lachten über unser Abenteuer.",
@@ -93,7 +96,7 @@ def test(stufe):
                      checkliste=["Ich habe vier Sätze geschrieben.",
                                  "Jeder Satz beginnt gross und endet mit einem Punkt.",
                                  "Ich habe verschiedene Satzanfänge."],
-                     beispiel="Ein Tag im Schnee. Am Morgen lag viel Schnee. Zuerst baute ich einen Schneemann. "
+                     beispiel="Ein Tag im Schnee\nAm Morgen lag viel Schnee. Zuerst baute ich einen Schneemann. "
                               "Dann fuhr ich mit dem Schlitten den Hügel hinunter. Am Abend trank ich heissen Tee.",
                      erklaerung="Bewertung: 4 Sätze (4 P.), Grossschreibung und Punkte (2 P.), "
                                 "verschiedene Satzanfänge (2 P.)."),
@@ -111,7 +114,7 @@ def test(stufe):
                  linien=11, punkte=12,
                  checkliste=["Einleitung, Hauptteil und Schluss", "Vergangenheit",
                              "mindestens ein Satz mit wörtlicher Rede", "verschiedene Satzanfänge"],
-                 beispiel="Das verschwundene Pausenbrot. Am Dienstag freute sich Tim auf sein Pausenbrot. "
+                 beispiel="Das verschwundene Pausenbrot\nAm Dienstag freute sich Tim auf sein Pausenbrot. "
                           "Doch in der Pause war die Box leer! „Wer hat mein Brot gegessen?“, rief Tim. "
                           "Alle suchten im Schulzimmer. Plötzlich sah Lea Krümel unter dem Pult. "
                           "Dort sass der Klassenhamster und kaute zufrieden. Alle lachten, und Tim bekam "

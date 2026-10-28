@@ -6,6 +6,9 @@ BEREICH = "Rechtschreibung"
 LERNZIELE = ["Du findest mit dem Verlängern heraus: d oder t, b oder p, g oder k am Wortende.",
              "Du findest mit dem Ableiten heraus: ä oder e, äu oder eu.",
              "Du wendest die Tricks beim Schreiben an."]
+LERNZIELE_1 = ["Du findest mit dem Verlängern heraus: d oder t, b oder p, g oder k am Wortende.",
+               "Du findest mit dem Ableiten heraus: ä oder äu.",
+               "Du kennst die Tricks Verlängern und Ableiten."]
 
 MERK = Merkkasten("Merkkasten: Zwei Tricks", [
     "# Trick 1: Verlängern",

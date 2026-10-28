@@ -62,7 +62,8 @@ def uebung(stufe):
                     ["Grundform", "Vergleichsform", "Höchstform"],
                     treppe(["schnell", "laut", "klein", "warm"], {1, 2}),
                     beispiel=["gross", "grösser", "am grössten"],
-                    hilfe="Vergleichsform: -er anhängen. Höchstform: am … -sten."),
+                    hilfe="Vergleichsform: -er anhängen. Höchstform: am … -sten oder -esten (am lautesten). "
+                         "Manchmal kommt ein Umlaut dazu: warm → wärmer."),
             Saetze("wie oder als?",
                    "Schreibe wie oder als in die Lücke.",
                    ["Ein Elefant ist grösser {als} eine Maus.",

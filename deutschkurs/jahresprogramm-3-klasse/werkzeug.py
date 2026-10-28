@@ -1016,8 +1016,8 @@ class Freitext(Aufgabe):
                 yy -= 5.5 * mm
             y -= bh + 6 * mm
         sol = []
-        if self.beispiel:
-            sol = simpleSplit(self.beispiel, "Sans", st.size - 0.5, W - IND - 2 * mm)
+        for teil in self.beispiel.split("\n") if self.beispiel else []:
+            sol += simpleSplit(teil, "Sans", st.size - 0.5, W - IND - 2 * mm)
         n = max(self.linien, len(sol))
         for li in range(n):
             hline(c, L + IND, R, y - 1.2 * mm)

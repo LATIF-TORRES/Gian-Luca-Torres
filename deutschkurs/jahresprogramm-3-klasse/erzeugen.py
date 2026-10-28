@@ -40,8 +40,9 @@ def erzeuge(mod):
         for stufe in (1, 2):
             name = f"{mod.NR}-{slug(mod.TITEL)}-{'uebung' if art == 'Übung' else 'lernkontrolle'}-stufe{stufe}"
             for loes in (False, True):
+                ziele = getattr(mod, f"LERNZIELE_{stufe}", mod.LERNZIELE)   # eigene Ziele je Stufe, falls nötig
                 blatt = Blatt(mod.TITEL, art, stufe, fn(stufe), mod.BEREICH, mod.NR,
-                              mod.LERNZIELE if art == "Lernkontrolle" else [])
+                              ziele if art == "Lernkontrolle" else [])
                 path = folder / (name + ("-loesungen" if loes else "") + ".pdf")
                 n = render(blatt, path, loes)
                 out.append((path, n))

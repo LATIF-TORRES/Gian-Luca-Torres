@@ -6,6 +6,9 @@ BEREICH = "Rechtschreibung"
 LERNZIELE = ["Du kannst das Abc auswendig.",
              "Du ordnest Wörter nach dem Abc – auch nach dem 2. Buchstaben.",
              "Du findest Wörter schnell im Wörterbuch."]
+LERNZIELE_1 = ["Du kannst das Abc auswendig.",
+               "Du ordnest Wörter nach dem ersten Buchstaben.",
+               "Du weisst, ob ein Wort vorne, in der Mitte oder hinten im Wörterbuch steht."]
 
 ABC = "abcdefghijklmnopqrstuvwxyz"
 

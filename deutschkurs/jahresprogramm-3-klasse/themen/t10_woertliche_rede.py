@@ -6,6 +6,9 @@ BEREICH = "Grammatik"
 LERNZIELE = ["Du erkennst, was jemand wörtlich sagt.",
              "Du setzt Anführungszeichen „ “ und den Doppelpunkt.",
              "Du verwendest verschiedene Wörter für „sagen“."]
+LERNZIELE_2 = ["Du setzt Anführungszeichen „ “ und den Doppelpunkt.",
+               "Du verwendest verschiedene Wörter für „sagen“.",
+               "Du schreibst selbst Sätze in wörtlicher Rede."]
 
 MERK = Merkkasten("Merkkasten: Wörtliche Rede", [
     "Was jemand genau sagt, steht zwischen Anführungszeichen.",

@@ -6,6 +6,9 @@ BEREICH = "Rechtschreibung"
 LERNZIELE = ["Du zerlegst Wörter in Silben (Silbenbögen).",
              "Du zählst die Silben eines Wortes.",
              "Du trennst Wörter am Zeilenende richtig."]
+LERNZIELE_1 = ["Du zerlegst Wörter in Silben (Silbenbögen).",
+               "Du zählst die Silben eines Wortes.",
+               "Du setzt Silben zu einem Wort zusammen."]
 
 MERK = Merkkasten("Merkkasten: Silben", [
     "Wenn du ein Wort langsam sprichst und dazu klatschst, hörst du die Silben.",

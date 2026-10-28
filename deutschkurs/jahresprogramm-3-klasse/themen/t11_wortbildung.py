@@ -90,7 +90,7 @@ def uebung(stufe):
         Schreiben("Eigene Wortfamilie",
                   "Schreibe zu jedem Wort zwei Wörter aus der gleichen Familie.",
                   [("springen:", "der Sprung, der Springbrunnen"), ("singen:", "der Sänger, der Gesang"),
-                   ("bauen:", "der Bauer, die Baustelle")],
+                   ("bauen:", "der Bau, die Baustelle")],
                   spalten=1, pro_item=2,
                   erklaerung="Viele Lösungen sind richtig, z. B. Sprung, Springer, abspringen."),
         Schreiben("Lange Wörter erfinden",
