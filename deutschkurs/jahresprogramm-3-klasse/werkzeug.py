@@ -487,6 +487,8 @@ class Saetze(Aufgabe):
 
     def __post_init__(self):
         n = sum(count_items(z) for z in self.zeilen)
+        if self.mark == "kreis" and self.abstand == 1:
+            self.abstand = 2.5     # Platz für den Kreis, ohne die Nachbarwörter zu berühren
         if self.punkte is None:
             self.punkte = n
         # „#N“ in der Anweisung = Anzahl der Lösungen, aus den Daten gezählt

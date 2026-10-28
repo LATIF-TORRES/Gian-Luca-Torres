@@ -1,4 +1,4 @@
-from werkzeug import Lesetext, RichtigFalsch, Saetze, Schreiben, Tabelle
+from werkzeug import Lesetext, RichtigFalsch, Saetze, Schreiben, Tabelle, Verbinden
 
 NR = "18"
 TITEL = "Lesen: Sachtexte verstehen"
@@ -75,11 +75,12 @@ def uebung(stufe):
                    ("Warum sind Bienen wichtig für uns Menschen?",
                     "Sie tragen Blütenstaub von Blüte zu Blüte, so können Früchte wachsen.")],
                   spalten=0, linien=2, pro_item=2),
-        Saetze("Wörter erklären",
-               "Kreise die richtige Erklärung für das Wort ein.",
-               ["Wabe:\t<*Zimmer aus Wachs für Honig und Eier|ein Bienenstachel>",
-                "Nektar:\t<*süsser Saft in Blüten|ein Teil vom Bienenstock>"],
-               tab=27 * 2.835),
+        Verbinden("Wörter erklären",
+                  "Verbinde jedes Wort mit seiner Erklärung. Zeichne einen Strich.",
+                  [("Wabe", "Zimmer aus Wachs für Honig und Eier"),
+                   ("Nektar", "süsser Saft in den Blüten"),
+                   ("Königin", "Biene, die alle Eier legt"),
+                   ("Arbeiterin", "Biene, die putzt, füttert und sammelt")]),
     ]
 
 
