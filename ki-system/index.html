@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f17">
+  <title>TORRES · Dein KI-System für Geld und Erfolg</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%230b0f17' stroke='%23e8b84a' stroke-width='5'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='28' font-family='Arial' font-weight='bold' fill='%23e8b84a'%3ET%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+</head>
+<body>
+  <header class="kopf">
+    <div class="marke">
+      <div class="kern" id="kern" aria-hidden="true"><span></span></div>
+      <div>
+        <div class="marke-name" id="marke-name">TORRES</div>
+        <div class="marke-sub" id="marke-sub">Bereit</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Bereiche">
+      <button data-tab="heute" class="aktiv">Heute</button>
+      <button data-tab="chat">Mentor</button>
+      <button data-tab="vorbilder">Vorbilder</button>
+      <button data-tab="geld">Geld</button>
+      <button data-tab="einstellungen">Ich</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HEUTE -->
+    <section id="tab-heute" class="tab aktiv">
+      <h1 id="gruss">Hallo</h1>
+      <p class="leise" id="datum"></p>
+
+      <div id="hinweis-schluessel" class="karte warnung versteckt">
+        <div><strong>Noch ein Schritt:</strong> Trag unter „Ich“ deinen Claude-API-Schlüssel ein. Erst dann kann der Mentor antworten.</div>
+        <button class="knopf klein" data-gehe="einstellungen">Jetzt eintragen</button>
+      </div>
+
+      <div class="raster">
+        <div class="karte">
+          <h2>Monatsziel</h2>
+          <div class="gross" id="ziel-text">–</div>
+          <div class="balken"><div id="ziel-balken"></div></div>
+          <p class="leise" id="ziel-detail"></p>
+        </div>
+        <div class="karte">
+          <h2>Die eine Sache heute</h2>
+          <div id="eine-sache" class="eine-sache">Noch nichts geplant.</div>
+          <button class="knopf klein" id="tag-planen">Tag planen lassen</button>
+        </div>
+      </div>
+
+      <div class="karte">
+        <h2>Aufgaben</h2>
+        <form id="aufgabe-form" class="zeile">
+          <input id="aufgabe-text" placeholder="Neue Aufgabe, z. B. 3 Kunden anschreiben" autocomplete="off">
+          <button class="knopf">Dazu</button>
+        </form>
+        <ul id="aufgaben" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Schnellstart</h2>
+        <div class="chips" id="schnellstart"></div>
+      </div>
+    </section>
+
+    <!-- CHAT -->
+    <section id="tab-chat" class="tab">
+      <div class="chat-leiste">
+        <select id="modus" aria-label="Rolle des Mentors"></select>
+        <select id="chat-wahl" aria-label="Gespräch wählen"></select>
+        <button class="knopf klein" id="chat-neu">Neu</button>
+      </div>
+      <p class="leise klein-text" id="modus-info"></p>
+      <div id="verlauf" class="verlauf" aria-live="polite"></div>
+      <form id="chat-form" class="eingabe">
+        <button type="button" class="rund" id="mikro" title="Sprechen">🎙</button>
+        <textarea id="frage" rows="1" placeholder="Frag deinen Mentor …"></textarea>
+        <button class="rund gold" id="senden" title="Senden">➤</button>
+      </form>
+      <div class="chat-fuss">
+        <label><input type="checkbox" id="websuche"> Web-Suche</label>
+        <label><input type="checkbox" id="vorlesen"> Vorlesen</label>
+        <label><select id="tiefe"><option value="low">Schnell</option><option value="medium" selected>Normal</option><option value="high">Gründlich</option></select></label>
+        <span class="leise" id="kosten"></span>
+      </div>
+    </section>
+
+    <!-- VORBILDER -->
+    <section id="tab-vorbilder" class="tab">
+      <h1>Was die Reichsten anders machen</h1>
+      <p class="leise">Jedes Prinzip mit einer Übung für dich. Tipp auf „Auf mich anwenden“, dann übersetzt der Mentor es in deine Situation.</p>
+      <div id="vorbilder" class="raster"></div>
+    </section>
+
+    <!-- GELD -->
+    <section id="tab-geld" class="tab">
+      <h1>Dein Geld</h1>
+      <div class="raster drei" id="geld-kacheln"></div>
+
+      <div class="karte">
+        <h2>Buchung eintragen</h2>
+        <form id="buchung-form" class="formular">
+          <select id="b-art"><option value="ein">Einnahme</option><option value="aus">Ausgabe</option></select>
+          <input id="b-betrag" type="number" step="0.05" min="0" placeholder="Betrag" required>
+          <input id="b-quelle" placeholder="Quelle oder Zweck" required>
+          <input id="b-datum" type="date" required>
+          <button class="knopf">Speichern</button>
+        </form>
+        <div id="quellen"></div>
+        <ul id="buchungen" class="liste"></ul>
+      </div>
+
+      <div class="raster">
+        <div class="karte">
+          <h2>Zinseszins-Rechner</h2>
+          <p class="leise">Warren Buffetts wichtigstes Werkzeug: Zeit.</p>
+          <div class="formular">
+            <label>Startbetrag <input id="z-start" type="number" value="1000" min="0"></label>
+            <label>Pro Monat <input id="z-rate" type="number" value="200" min="0"></label>
+            <label>Zins pro Jahr (%) <input id="z-zins" type="number" value="6" step="0.1"></label>
+            <label>Jahre <input id="z-jahre" type="number" value="20" min="1" max="70"></label>
+          </div>
+          <div id="z-ergebnis" class="ergebnis"></div>
+        </div>
+        <div class="karte">
+          <h2>Stundensatz-Rechner</h2>
+          <p class="leise">Was musst du pro Stunde verlangen?</p>
+          <div class="formular">
+            <label>Wunsch-Einkommen pro Jahr <input id="s-ziel" type="number" value="60000" min="0"></label>
+            <label>Kosten pro Jahr <input id="s-kosten" type="number" value="6000" min="0"></label>
+            <label>Stunden pro Woche <input id="s-stunden" type="number" value="35" min="1"></label>
+            <label>Arbeitswochen pro Jahr <input id="s-wochen" type="number" value="44" min="1" max="52"></label>
+            <label>Davon bezahlt (%) <input id="s-auslastung" type="number" value="60" min="5" max="100"></label>
+          </div>
+          <div id="s-ergebnis" class="ergebnis"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EINSTELLUNGEN -->
+    <section id="tab-einstellungen" class="tab">
+      <h1>Du und dein System</h1>
+      <div class="raster">
+        <div class="karte">
+          <h2>Persönlich</h2>
+          <div class="formular">
+            <label>Dein Name <input id="e-name" placeholder="z. B. Gian-Luca"></label>
+            <label>Name deines Assistenten <input id="e-ki-name" placeholder="TORRES"></label>
+            <label>Währung <select id="e-waehrung"><option>CHF</option><option>EUR</option><option>USD</option></select></label>
+            <label>Monatsziel Einnahmen <input id="e-ziel" type="number" min="0" placeholder="z. B. 3000"></label>
+            <label>Wofür willst du Geld verdienen? <textarea id="e-warum" rows="2" placeholder="z. B. eigene Wohnung, Firma gründen, Freiheit"></textarea></label>
+          </div>
+        </div>
+        <div class="karte">
+          <h2>KI-Zugang</h2>
+          <div class="formular">
+            <label>Claude-API-Schlüssel <input id="e-schluessel" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
+            <label>Modell
+              <select id="e-modell">
+                <option value="claude-opus-5-5">Claude Opus 5.5 · am klügsten</option>
+                <option value="claude-sonnet-5-5">Claude Sonnet 5.5 · halber Preis</option>
+                <option value="claude-haiku-5-5">Claude Haiku 5.5 · sehr günstig</option>
+              </select>
+            </label>
+            <label>Sprache für Sprechen <select id="e-sprache"><option value="de-CH">Deutsch (Schweiz)</option><option value="de-DE">Deutsch (Deutschland)</option><option value="en-US">English</option></select></label>
+            <label class="haken"><input type="checkbox" id="e-weckwort"> Freihändig: reagiert auf „Hey <span class="ki-name">TORRES</span>“, solange die Seite offen ist</label>
+          </div>
+          <p class="leise klein-text">Den Schlüssel bekommst du auf platform.claude.com unter „API Keys“. Er bleibt nur in diesem Browser gespeichert und geht direkt an Anthropic, an niemanden sonst. Du zahlst pro Antwort bei Anthropic, kein Abo.</p>
+        </div>
+      </div>
+
+      <div class="karte">
+        <h2>Was <span class="ki-name">TORRES</span> über dich weiss</h2>
+        <p class="leise">Der Mentor merkt sich Wichtiges selbst. Hier siehst und löschst du alles.</p>
+        <form id="merken-form" class="zeile">
+          <input id="merken-text" placeholder="Selbst etwas eintragen, z. B. Ich kann gut Videos schneiden" autocomplete="off">
+          <button class="knopf">Merken</button>
+        </form>
+        <ul id="gedaechtnis" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Daten</h2>
+        <div class="chips">
+          <button class="knopf klein" id="export">Sicherung herunterladen</button>
+          <label class="knopf klein">Sicherung laden <input type="file" id="import" accept="application/json" hidden></label>
+          <button class="knopf klein rot" id="loeschen">Alles löschen</button>
+        </div>
+        <p class="leise klein-text">Alles liegt nur in diesem Browser. Mach ab und zu eine Sicherung. Keine Anlage-, Steuer- oder Rechtsberatung: Entscheidungen triffst du selbst.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="js/daten.js"></script>
+  <script src="js/speicher.js"></script>
+  <script src="js/ki.js"></script>
+  <script src="js/stimme.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
