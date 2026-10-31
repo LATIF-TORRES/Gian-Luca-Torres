@@ -39,11 +39,25 @@ jeweils mit **Lösungsblatt** (dieselben Seiten, Lösungen rot eingetragen).
 - `pdf/<Nr>-<thema>/` – je 8 PDFs (Übung/Lernkontrolle × Stufe 1/2 × Kind/Lösungen)
 - `pdf/sammelmappen/` – alle Blätter einer Stufe in einer Datei (für Kinder bzw. mit Lösungen)
 
+## Verkaufspakete (`verkauf/`)
+
+Fertig zum Hochladen (z. B. auf eduki): jedes Paket als PDF mit Titelblatt, Nutzungsbedingungen,
+Inhaltsverzeichnis und Lesezeichen, dazu 4 Vorschaubilder (`vorschau-1.png` = Titelblatt, die anderen
+mit Wasserzeichen „VORSCHAU“).
+
+- `deutsch-3-klasse-jahresprogramm-komplett` – beide Stufen, 80 Blätter mit Lösungen
+- `deutsch-3-klasse-jahresprogramm-stufe1` / `-stufe2` – je eine Stufe, 40 Blätter mit Lösungen
+- `deutsch-3-klasse-NN-thema` – 20 Themenhefte, je beide Stufen mit Lösungen
+- `verkaufstexte.md` – Titel, Beschreibung, Stichwörter und Preisvorschlag für jedes Paket
+
+Der Verkäufername steht in `werkzeug.py` (`MARKE`) und erscheint klein unten auf jeder Seite.
+
 ## Neu erzeugen
 
 ```
-python3 erzeugen.py          # alles
+python3 erzeugen.py          # alle Blätter
 python3 erzeugen.py 05 09    # nur einzelne Themen
+python3 verkauf.py           # danach: Verkaufspakete
 ```
 
 Inhalte stehen in `themen/tNN_*.py`, das Layout in `werkzeug.py`. Die Lösungen werden aus

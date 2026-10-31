@@ -62,6 +62,10 @@ class Stil:
 STUFE = {1: Stil(13, 10.5 * mm, 11 * mm), 2: Stil(11.5, 9 * mm, 9.5 * mm)}
 STUFE_NAME = {1: "★ Stufe 1 · Grundlagen", 2: "★★ Stufe 2 · Standard"}
 
+# Name, unter dem das Material verkauft wird (erscheint klein unten auf jeder Seite)
+MARKE = "Deutsch-Werkstatt"
+COPYRIGHT = f"© {MARKE} · Kopieren nur für den eigenen Unterricht erlaubt"
+
 
 # ---------- Zeichnen ----------
 class NullCanvas:
@@ -1138,6 +1142,7 @@ def header(c, blatt, loesung, page, pages, accent):
         ctext(c, R - 26 * mm, PAGE_H - 23 * mm, "LÖSUNGEN", 13, "Sans-Bold", RED)
     hline(c, L, R, PAGE_H - 30.5 * mm, INK, 1)
     ctext(c, PAGE_W / 2, 10 * mm, f"Seite {page} von {pages}", 8.5, "Sans", MUTED)
+    ctext(c, PAGE_W / 2, 5.5 * mm, COPYRIGHT, 6.5, "Sans", LINE)
 
 
 def draw_lernziele(c, blatt, y, accent, loesung, total):
@@ -1243,6 +1248,7 @@ def vorlesetexte(path, titel, bereich, nr, texte):
         for p in absaetze:
             y = wrapped(c, L, y, p, W, 13, "Sans", 13 * 1.6) - 4 * mm
         ctext(c, PAGE_W / 2, 10 * mm, f"Seite {k + 1} von {len(texte)}", 8.5, "Sans", MUTED)
+        ctext(c, PAGE_W / 2, 5.5 * mm, COPYRIGHT, 6.5, "Sans", LINE)
         c.showPage()
     c.save()
     return len(texte)

@@ -7,7 +7,7 @@ from reportlab.lib.units import mm
 from reportlab.lib.utils import simpleSplit
 from reportlab.pdfgen import canvas
 
-from werkzeug import BEREICH, INK, LINE, MUTED, SOFT, ctext, hline, rtext, sw, text, white
+from werkzeug import BEREICH, COPYRIGHT, INK, LINE, MUTED, SOFT, ctext, hline, rtext, sw, text, white
 
 # Vorschlag: Reihenfolge im Schuljahr, je Thema etwa zwei Wochen. Die Bereiche wechseln sich ab.
 QUARTALE = [
@@ -36,6 +36,7 @@ def jahresplan(path, themen):
         text(c, L, PH - 26.5 * mm, sub, 10, "Sans", MUTED)
         hline(c, L, R, PH - 30.5 * mm, INK, 1)
         ctext(c, PW / 2, 10 * mm, f"Seite {seite} von {seiten}", 8.5, "Sans", MUTED)
+        ctext(c, PW / 2, 5.5 * mm, COPYRIGHT, 6.5, "Sans", LINE)
 
     # Seite 1: Aufbau des Programms
     kopf(1, 4, "Jahresplan Deutsch – 3. Klasse",
@@ -131,6 +132,7 @@ def jahresplan(path, themen):
     text(c, ql, QH - 19 * mm, "Klassenübersicht: Lernkontrollen", 16, "Sans-Bold")
     text(c, ql, QH - 25 * mm, "Tragen Sie die Note oder die Stufe ein (z. B. „5 / ★★“).", 9.5, "Sans", MUTED)
     ctext(c, QW / 2, 8 * mm, "Seite 4 von 4", 8.5, "Sans", MUTED)
+    ctext(c, QW / 2, 4 * mm, COPYRIGHT, 6.5, "Sans", LINE)
     order = [nr for _, ns in QUARTALE for nr in ns]
     name_w = 46 * mm
     cw = (qr - ql - name_w) / len(order)
