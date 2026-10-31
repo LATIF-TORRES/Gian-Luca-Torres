@@ -298,7 +298,7 @@
     var c = aktiverChat(true);
     if (!c.nachrichten.length) { c.titel = text.length > 40 ? text.slice(0, 40) + "…" : text; chatWahlFuellen(); }
     var modus = MODI[$("#modus").value] || MODI.stratege;
-    var kontext = "<kontext>\n" + modus.auftrag + "\n" + kontextFuerKi() +
+    var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + modus.auftrag + "\n" + kontextFuerKi() +
       (e.websuche ? "" : "\nNutze diesmal keine Web-Suche.") + "\n</kontext>";
     c.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: text }] });
     speichern();
@@ -395,10 +395,12 @@
     box.innerHTML = "";
     VORBILDER.forEach(function (v) {
       var d = document.createElement("article");
-      d.className = "karte vorbild";
-      d.innerHTML = "<div class='vorbild-kopf'><div class='initialen'>" + esc(v.name.split(" ").map(function (w) { return w[0]; }).join("").slice(0, 2)) + "</div>" +
+      d.className = "karte vorbild" + (v.islamisch ? " islamisch" : "");
+      var initialen = v.initialen || v.name.split(" ").map(function (w) { return w[0]; }).join("").slice(0, 2);
+      d.innerHTML = "<div class='vorbild-kopf'><div class='initialen'>" + esc(initialen) + "</div>" +
         "<div><h3>" + esc(v.name) + "</h3><div class='leise klein-text'>" + esc(v.wer) + "</div></div></div>" +
         "<div class='prinzip'>" + esc(v.prinzip) + "</div><p>" + esc(v.text) + "</p>" +
+        (v.halal ? "<p class='halal-hinweis'><strong>Halal-Hinweis:</strong> " + esc(v.halal) + "</p>" : "") +
         "<p class='uebung'><strong>Deine Übung:</strong> " + esc(v.uebung) + "</p>" +
         "<button class='knopf klein'>Auf mich anwenden</button>";
       d.querySelector("button").onclick = function () {
@@ -456,16 +458,36 @@
 
   function zahl(id) { var n = parseFloat($(id).value); return isFinite(n) ? n : 0; }
   function rechnen() {
-    // Zinseszins mit monatlicher Verzinsung
-    var start = zahl("#z-start"), rate = zahl("#z-rate"), zins = zahl("#z-zins"), jahre = Math.max(0, Math.round(zahl("#z-jahre")));
-    var r = zins / 100 / 12, n = jahre * 12;
-    var end = r === 0 ? start + rate * n : start * Math.pow(1 + r, n) + rate * (Math.pow(1 + r, n) - 1) / r;
-    var eingezahlt = start + rate * n;
-    $("#z-ergebnis").innerHTML =
-      "<div>Nach " + jahre + " Jahren: <strong class='gold-text'>" + geld(end) + "</strong></div>" +
-      "<div class='leise'>Selbst eingezahlt: " + geld(eingezahlt) + " · Zinsen: " + geld(end - eingezahlt) + "</div>" +
-      (zins > 0 ? "<div class='leise'>Regel der 72: Geld verdoppelt sich etwa alle " + (Math.round(72 / zins * 10) / 10) + " Jahre.</div>" : "") +
-      "<div class='leise klein-text'>Beispielrechnung mit festem Zins. Echte Renditen schwanken, auch nach unten.</div>";
+    // Sparziel ohne Zinsen: nur eigenes Geld, kein Zins, kein Zinseszins
+    var sparZiel = zahl("#p-ziel"), gespart = zahl("#p-gespart"), proMonat = zahl("#p-rate");
+    var fehlt = Math.max(0, sparZiel - gespart);
+    var monate = proMonat > 0 ? Math.ceil(fehlt / proMonat) : 0;
+    var fertig = new Date();
+    fertig.setMonth(fertig.getMonth() + monate);
+    $("#p-ergebnis").innerHTML = fehlt === 0
+      ? "<div><strong class='gold-text'>Ziel erreicht.</strong> Alhamdulillah.</div>"
+      : proMonat > 0
+        ? "<div>Noch <strong class='gold-text'>" + monate + " " + (monate === 1 ? "Monat" : "Monate") + "</strong> bis zum Ziel</div>" +
+          "<div class='leise'>" + geld(fehlt) + " ÷ " + geld(proMonat) + " pro Monat = " + (Math.round(fehlt / proMonat * 10) / 10) + " Monate, also etwa " +
+          fertig.toLocaleDateString("de-CH", { month: "long", year: "numeric" }) + "</div>" +
+          "<div class='leise'>Schneller geht es mit mehr Einnahmen aus erlaubter Arbeit und erlaubtem Handel, nicht mit Zinsen.</div>"
+        : "<div class='leise'>Trag ein, wie viel du pro Monat sparen kannst.</div>";
+
+    // Zakat: 2,5 % auf das Vermögen über dem Nisab (Wert von 85 g Gold), wenn es ein Mondjahr lang gehalten wurde
+    var goldpreis = zahl("#k-goldpreis");
+    var vermoegen = zahl("#k-bar") + zahl("#k-gold") + zahl("#k-waren") + zahl("#k-anteile") + zahl("#k-forderungen");
+    var netto = vermoegen - zahl("#k-schulden");
+    var nisab = goldpreis * 85;
+    var zakat = netto * 0.025;
+    $("#k-ergebnis").innerHTML = goldpreis <= 0
+      ? "<div class='leise'>Trag den heutigen Goldpreis pro Gramm ein. Daraus ergibt sich der Nisab.</div>"
+      : "<div>Nisab (85 g Gold): " + geld(nisab) + "</div>" +
+        "<div>Dein zakatpflichtiges Vermögen: " + geld(vermoegen) + " − " + geld(zahl("#k-schulden")) + " = <strong>" + geld(netto) + "</strong></div>" +
+        (netto >= nisab
+          ? "<div>Zakat: " + geld(netto) + " × 2,5 % = <strong class='gold-text'>" + geld(zakat) + "</strong></div>" +
+            "<div class='leise'>Fällig, wenn dein Vermögen ein ganzes Mondjahr (Hawl) über dem Nisab lag.</div>"
+          : "<div><strong class='gold-text'>Keine Zakat fällig.</strong> Dein Vermögen liegt unter dem Nisab.</div>") +
+        "<div class='leise klein-text'>Die Rechtsschulen rechnen teils verschieden (z. B. Silber-Nisab, Aktien, Schmuck). Frag im Zweifel einen Gelehrten.</div>";
 
     // Stundensatz
     var ziel = zahl("#s-ziel"), kosten = zahl("#s-kosten"), std = zahl("#s-stunden"), wochen = zahl("#s-wochen"), ausl = zahl("#s-auslastung");

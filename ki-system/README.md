@@ -2,16 +2,33 @@
 
 > „TORRES“ ist nur ein Arbeitstitel. Den endgültigen Namen suchen wir noch gemeinsam (Ideen am Ende). In der App änderst du den Namen unter **Ich → Name deines Assistenten**. Er hört dann auch auf „Hey <Name>“.
 
-Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt und ehrlich mehr Geld zu verdienen. Er orientiert sich an den Prinzipien der reichsten Unternehmer und Investoren der Welt.
+Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt und ehrlich mehr Geld zu verdienen, **ausschliesslich halal**. Er orientiert sich an den Prinzipien der reichsten Unternehmer und Investoren der Welt und an Händlern aus der islamischen Geschichte.
+
+## Halal-Modus (immer an)
+
+| Regel | Was das in der App heisst |
+| --- | --- |
+| Kein Riba (Zins) | Kein Zinseszins-Rechner, keine Zins-Sparkonten, Anleihen, Kredite oder Kreditkarten mit Zinsen. Stattdessen ein Sparziel-Rechner nur mit eigenem Geld |
+| Kein Maysir (Glücksspiel) | Keine Wetten, Lotto, Hebel-Trading, CFDs oder Optionen |
+| Kein übermässiges Gharar | Keine Verträge mit grosser Unklarheit, nichts verkaufen, was man nicht besitzt |
+| Keine verbotenen Branchen | Kein Alkohol, Schweinefleisch, Glücksspiel, Zinsbanken, Pornografie, Drogen, Tabak, Betrug |
+| Erlaubte Wege | Eigene Arbeit, Handel (auch Murabaha), Partnerschaften mit geteiltem Gewinn und Verlust (Musharaka, Mudaraba), Vermietung (Ijara), Sukuk, geprüfte schariakonforme Aktien und Fonds, physisches Gold |
+| Zakat und Sadaqa | Zakat-Rechner (2,5 % über dem Nisab von 85 g Gold), der Mentor erinnert an Zakat und Sadaqa |
+
+- Die Regeln stehen fest im Auftrag an die KI und liegen zusätzlich jeder Frage bei, auch in älteren Gesprächen.
+- Fragst du nach etwas Verbotenem, erklärt der Mentor freundlich, warum es nicht geht, und schlägt eine erlaubte Alternative vor.
+- Neue Rolle **Halal-Prüfer**: Er prüft eine Idee, einen Job oder ein Produkt und antwortet mit „Halal“, „Zweifelhaft“ oder „Haram“, jeweils mit Begründung und Alternative.
+- Bei Vorbildern mit verbotenen Geschäftsfeldern (z. B. Alkohol bei LVMH, Banken bei Buffett) steht ein Halal-Hinweis: Du übernimmst nur das Prinzip.
+- Wo die Gelehrten verschiedener Meinung sind (z. B. Krypto), sagt der Mentor das offen. Er gibt keine Fatwa und verweist auf einen Gelehrten.
 
 ## Was die App kann
 
 | Bereich | Was du dort machst |
 | --- | --- |
 | **Heute** | Monatsziel mit Fortschritt, „die eine Sache heute“, Aufgabenliste, Schnellstart-Fragen |
-| **Mentor** | Chat mit Claude in 6 Rollen: Stratege, Verkäufer, Rechner, Vermögen, Spiegel der Reichsten, Coach. Mit Web-Suche (mit Quellen), Spracheingabe, Vorlesen und Kostenanzeige |
-| **Vorbilder** | 12 Vorbilder (Buffett, Bezos, Musk, Gates, Arnault, Huang, Ellison, Zuckerberg, Page/Brin, Ortega, Slim, Bloomberg): je ein Prinzip, eine Übung und der Knopf „Auf mich anwenden“ |
-| **Geld** | Einnahmen und Ausgaben, Sparquote, woher dein Geld kommt, Zinseszins-Rechner, Stundensatz-Rechner |
+| **Mentor** | Chat mit Claude in 7 Rollen: Stratege, Verkäufer, Rechner, Halal-Vermögen, Halal-Prüfer, Spiegel der Reichsten, Coach. Mit Web-Suche (mit Quellen), Spracheingabe, Vorlesen und Kostenanzeige |
+| **Vorbilder** | 3 Vorbilder aus der islamischen Geschichte (Khadija, Abdur-Rahman ibn Auf, Uthman ibn Affan) und 12 heutige (Buffett, Bezos, Musk, Gates, Arnault, Huang, Ellison, Zuckerberg, Page/Brin, Ortega, Slim, Bloomberg): je ein Prinzip, eine Übung und der Knopf „Auf mich anwenden“ |
+| **Geld** | Einnahmen und Ausgaben, Sparquote, woher dein Geld kommt, Sparziel-Rechner ohne Zinsen, Zakat-Rechner, Stundensatz-Rechner |
 | **Ich** | Name, Ziel, API-Schlüssel, Modell, Sprache, Freihändig-Modus, Gedächtnis ansehen und löschen, Sicherung |
 
 Der Mentor **handelt selbst**:
@@ -113,5 +130,9 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 | **ATLAS** | Trägt die Last und zeigt den Weg |
 | **VENTURA** | „Das Kommende“, auch das Wort für Wagnis und Firma |
 | **MAGNAT** | Der grosse Unternehmer |
+| **BARAKA** | Arabisch für Segen: Geld, das wächst, weil es sauber verdient ist |
+| **RIZQ** | Arabisch für Versorgung, die von Allah kommt |
+| **AMANAH** | Arabisch für Vertrauen: Geld als anvertrautes Gut |
+| **TIJARA** | Arabisch für Handel, der Weg der Händler-Gefährten |
 
 Keine Anlage-, Steuer- oder Rechtsberatung. Entscheidungen triffst du selbst.

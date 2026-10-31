@@ -35,6 +35,14 @@
       <h1 id="gruss">Hallo</h1>
       <p class="leise" id="datum"></p>
 
+      <div class="karte halal-band">
+        <div class="halal-siegel">حلال</div>
+        <div>
+          <strong>Halal-Modus ist immer an.</strong>
+          <span class="leise">Keine Zinsen (Riba), kein Glücksspiel (Maysir), keine übermässige Unsicherheit (Gharar), keine verbotenen Branchen. Nur ehrliche Arbeit, Handel und echte Beteiligung.</span>
+        </div>
+      </div>
+
       <div id="hinweis-schluessel" class="karte warnung versteckt">
         <div><strong>Noch ein Schritt:</strong> Trag unter „Ich“ deinen Claude-API-Schlüssel ein. Erst dann kann der Mentor antworten.</div>
         <button class="knopf klein" data-gehe="einstellungen">Jetzt eintragen</button>
@@ -94,7 +102,7 @@
     <!-- VORBILDER -->
     <section id="tab-vorbilder" class="tab">
       <h1>Was die Reichsten anders machen</h1>
-      <p class="leise">Jedes Prinzip mit einer Übung für dich. Tipp auf „Auf mich anwenden“, dann übersetzt der Mentor es in deine Situation.</p>
+      <p class="leise">Jedes Prinzip mit einer Übung für dich. Tipp auf „Auf mich anwenden“, dann übersetzt der Mentor es in deine Situation, und zwar halal. Du übernimmst das Prinzip, nicht verbotene Branchen.</p>
       <div id="vorbilder" class="raster"></div>
     </section>
 
@@ -118,15 +126,28 @@
 
       <div class="raster">
         <div class="karte">
-          <h2>Zinseszins-Rechner</h2>
-          <p class="leise">Warren Buffetts wichtigstes Werkzeug: Zeit.</p>
+          <h2>Sparziel ohne Zinsen</h2>
+          <p class="leise">Wann erreichst du dein Ziel nur mit deinem eigenen Geld?</p>
           <div class="formular">
-            <label>Startbetrag <input id="z-start" type="number" value="1000" min="0"></label>
-            <label>Pro Monat <input id="z-rate" type="number" value="200" min="0"></label>
-            <label>Zins pro Jahr (%) <input id="z-zins" type="number" value="6" step="0.1"></label>
-            <label>Jahre <input id="z-jahre" type="number" value="20" min="1" max="70"></label>
+            <label>Sparziel <input id="p-ziel" type="number" value="10000" min="0"></label>
+            <label>Schon gespart <input id="p-gespart" type="number" value="1000" min="0"></label>
+            <label>Pro Monat <input id="p-rate" type="number" value="300" min="0"></label>
           </div>
-          <div id="z-ergebnis" class="ergebnis"></div>
+          <div id="p-ergebnis" class="ergebnis"></div>
+        </div>
+        <div class="karte">
+          <h2>Zakat-Rechner</h2>
+          <p class="leise">2,5 % auf dein Vermögen über dem Nisab.</p>
+          <div class="formular">
+            <label>Goldpreis heute pro Gramm <input id="k-goldpreis" type="number" min="0" step="0.01" placeholder="z. B. 85"></label>
+            <label>Bargeld und Konten <input id="k-bar" type="number" min="0" value="0"></label>
+            <label>Gold und Silber (Wert) <input id="k-gold" type="number" min="0" value="0"></label>
+            <label>Waren zum Verkauf <input id="k-waren" type="number" min="0" value="0"></label>
+            <label>Anteile und Aktien (Wert) <input id="k-anteile" type="number" min="0" value="0"></label>
+            <label>Sichere Forderungen <input id="k-forderungen" type="number" min="0" value="0"></label>
+            <label>Fällige Schulden <input id="k-schulden" type="number" min="0" value="0"></label>
+          </div>
+          <div id="k-ergebnis" class="ergebnis"></div>
         </div>
         <div class="karte">
           <h2>Stundensatz-Rechner</h2>
@@ -192,7 +213,7 @@
           <label class="knopf klein">Sicherung laden <input type="file" id="import" accept="application/json" hidden></label>
           <button class="knopf klein rot" id="loeschen">Alles löschen</button>
         </div>
-        <p class="leise klein-text">Alles liegt nur in diesem Browser. Mach ab und zu eine Sicherung. Keine Anlage-, Steuer- oder Rechtsberatung: Entscheidungen triffst du selbst.</p>
+        <p class="leise klein-text">Alles liegt nur in diesem Browser. Mach ab und zu eine Sicherung. Keine Anlage-, Steuer- oder Rechtsberatung und keine Fatwa: Bei religiösen Zweifeln frag einen Gelehrten oder Imam deines Vertrauens. Entscheidungen triffst du selbst.</p>
       </div>
     </section>
   </main>

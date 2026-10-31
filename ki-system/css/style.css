@@ -205,3 +205,14 @@ label.haken { display: flex; gap: 8px; align-items: center; color: var(--text); 
   .blase { max-width: 100%; }
   .quelle span { width: 40%; }
 }
+
+/* Halal */
+.halal-band { display: flex; gap: 14px; align-items: center; border-color: color-mix(in srgb, var(--plus) 55%, var(--rand)); }
+.halal-band span { display: block; font-size: .9rem; }
+.halal-siegel {
+  flex: none; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid var(--plus); color: var(--plus); font-size: 1.1rem; font-weight: 700;
+  background: color-mix(in srgb, var(--plus) 12%, transparent);
+}
+.halal-hinweis { font-size: .88rem; border-left: 3px solid var(--plus); padding: 6px 10px; background: color-mix(in srgb, var(--plus) 8%, transparent); border-radius: 0 8px 8px 0; }
+.vorbild.islamisch .initialen { color: var(--plus); border-color: var(--plus); }
