@@ -428,6 +428,7 @@ function profile() {
         ? `<button class="btn outline portal">${t('manageSub')}</button>`
         : `<button class="btn primary upgrade">💎 ${t('subscribe')} – ${esc(CONFIG.priceLabel)} ${t('perWeek')}</button>`) : ''}
       ${!backend.demo ? `<button class="btn ghost-red logout">${t('logout')}</button>` : ''}
+      ${backend.demo ? `<button class="btn ghost-red restart">↺ ${t('restart')}</button>` : ''}
     </div>`);
   app.append(el);
   $('.back', el).onclick = home;
@@ -441,6 +442,28 @@ function profile() {
   $('.portal', el)?.addEventListener('click', () => backend.openPortal().catch(() => toast(t('payError'))));
   $('.upgrade', el)?.addEventListener('click', paywall);
   $('.logout', el)?.addEventListener('click', async () => { store.reset(); await backend.signOut(); });
+  $('.restart', el)?.addEventListener('click', confirmRestart);
+}
+
+// Alles löschen und wie beim ersten Öffnen beginnen (Fortschritt, Fehler, Punkte, Code).
+function confirmRestart() {
+  const m = h(`
+    <div class="modal-bg"><div class="modal">
+      <h3>${t('restartTitle')}</h3><p>${t('restartText')}</p>
+      <button class="btn primary stay">${t('quitNo')}</button>
+      <button class="btn ghost-red go">${t('restartYes')}</button>
+    </div></div>`);
+  $('.stay', m).onclick = () => m.remove();
+  $('.go', m).onclick = async () => {
+    m.remove();
+    store.reset();
+    store.bindUser(user?.uid);
+    try { localStorage.removeItem('hd-code'); } catch {}
+    data = await backend.getCourse();
+    home();
+    toast(t('restartDone'));
+  };
+  document.body.append(m);
 }
 
 boot();
