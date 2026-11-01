@@ -1,0 +1,9 @@
+{
+  "name": "Hallo Deutsch!",
+  "short_name": "Deutsch",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F5F6FF",
+  "theme_color": "#6366F1",
+  "icons": []
+}

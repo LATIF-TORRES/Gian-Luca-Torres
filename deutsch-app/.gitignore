@@ -1,0 +1,3 @@
+functions/.env*
+.firebase/
+*.log

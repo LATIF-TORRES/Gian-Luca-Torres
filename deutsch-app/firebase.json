@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "public": "web",
+    "ignore": ["firebase.json", "**/.*"],
+    "rewrites": [
+      { "source": "/api/stripe-webhook", "function": { "functionId": "stripeWebhook", "region": "europe-west6" } },
+      { "source": "**", "destination": "/index.html" }
+    ],
+    "headers": [
+      { "source": "**", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+      { "source": "**/*.@(js|css)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  },
+  "functions": [{ "source": "functions", "codebase": "default", "runtime": "nodejs22" }],
+  "firestore": { "rules": "firestore.rules" }
+}
