@@ -162,6 +162,12 @@ function home() {
         </div>
       </header>
       ${backend.demo && !backend.preview ? `<div class="demo-banner">${t('demoBanner')}</div>` : ''}
+      ${backend.preview && data.whatsapp ? `
+        <a class="wa-bar" target="_blank" rel="noopener" href="https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(t('whatsappHello'))}">
+          <span class="wa-icon">💬</span>
+          <span class="wa-text"><b>${t('waBarTitle')}</b><small>WhatsApp · +${esc(fmtPhone(data.whatsapp))}</small></span>
+          <span class="wa-go">›</span>
+        </a>` : ''}
       <main class="path"></main>
     </div>`);
   app.append(el);
@@ -366,6 +372,8 @@ function wireCodeForm(el, onDone) {
   };
 }
 
+const fmtPhone = (d) => d.replace(/^(\d{2})(\d)(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5 $6');
+
 const prettyName = (n) => String(n || '').toLowerCase().replace(/(^|-)([a-z])/g, (m, a, b) => (a ? ' ' : '') + b.toUpperCase());
 
 function previewEnd() {
@@ -383,7 +391,7 @@ function previewEnd() {
       </ul>
       ${data.whatsapp ? `
         <a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(t('whatsappBuy'))}">💬 ${t('whatsappWrite')}</a>
-        <p class="wa-number">WhatsApp: <b>+${esc(data.whatsapp.replace(/^(\d{2})(\d)(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5 $6'))}</b></p>` : ''}
+        <p class="wa-number">WhatsApp: <b>+${esc(fmtPhone(data.whatsapp))}</b></p>` : ''}
       <ol class="steps">
         <li>${t(data.whatsapp ? 'step1Wa' : 'step1')}</li>
         <li>${t('step2')}</li>
