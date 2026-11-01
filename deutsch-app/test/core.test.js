@@ -119,3 +119,26 @@ test('Inhalt: Übersetzungen eindeutig und Schweizer Schreibweise', () => {
     assert.ok(u.tip.en && u.tip.fr);
   }
 });
+
+test('Freischalt-Codes', async () => {
+  const { makeCode, encryptCourse, openCourse, normName } = await import('../web/js/unlock.js');
+  const key = crypto.getRandomValues(new Uint8Array(16));
+  const locked = await encryptCourse(COURSE, key);
+  const code = await makeCode('Zoé Müller', key);
+  assert.match(code, /^ZOE-MULLER-[A-Z2-7]{26}$/);
+  const r = await openCourse(code, locked);
+  assert.equal(r.name, 'ZOE-MULLER');
+  assert.equal(r.course.units.length, 12);
+  // klein geschrieben und mit Leerzeichen geht auch
+  assert.ok(await openCourse(' ' + code.toLowerCase() + ' ', locked));
+  // anderer Name mit demselben Teil: ungültig
+  assert.equal(await openCourse(code.replace('ZOE-MULLER', 'ANNA'), locked), null);
+  // ein Zeichen falsch: ungültig
+  const bad = code.slice(0, -1) + (code.endsWith('A') ? 'B' : 'A');
+  assert.equal(await openCourse(bad, locked), null);
+  assert.equal(await openCourse('Quatsch', locked), null);
+  // anderer Schlüssel: ungültig
+  const other = await makeCode('Zoé Müller', crypto.getRandomValues(new Uint8Array(16)));
+  assert.equal(await openCourse(other, locked), null);
+  assert.equal(normName('  jean-luc  '), 'JEAN-LUC');
+});

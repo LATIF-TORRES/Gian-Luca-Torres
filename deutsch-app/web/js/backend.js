@@ -4,7 +4,8 @@
 import { CONFIG } from './config.js';
 
 const SDK = 'https://www.gstatic.com/firebasejs/12.19.0';
-export const DEMO = !CONFIG.firebase.apiKey;
+export const PREVIEW = !!CONFIG.preview;
+export const DEMO = PREVIEW || !CONFIG.firebase.apiKey;
 
 let fb = null; // { auth, db, fns, mods }
 
@@ -28,6 +29,7 @@ async function init() {
 
 export const backend = {
   demo: DEMO,
+  preview: PREVIEW,
 
   // Ruft cb(user | null) auf, sobald klar ist, ob jemand angemeldet ist.
   async onUser(cb) {
@@ -64,6 +66,17 @@ export const backend = {
 
   // Kurs laden. Zahlende bekommen alles, alle anderen nur die Gratis-Lektion.
   async getCourse() {
+    if (PREVIEW) {
+      // Mit gespeichertem Freischalt-Code: ganzer Kurs (entschlüsselt). Sonst nur die Gratis-Lektion.
+      let code = null;
+      try { code = localStorage.getItem('hd-code'); } catch {}
+      if (code) {
+        const r = await this.unlock(code, false);
+        if (r) return r;
+      }
+      const { PREVIEW_COURSE } = await import('./course-preview.js');
+      return { course: PREVIEW_COURSE, premium: false, whatsapp: '' };
+    }
     if (DEMO) {
       const { COURSE } = await import('../../functions/content/course.js');
       return { course: COURSE, premium: true, whatsapp: '' };
@@ -71,6 +84,15 @@ export const backend = {
     const f = await init();
     const res = await f.fnM.httpsCallable(f.fns, 'getCourse')();
     return res.data;
+  },
+
+  // Prüft einen Freischalt-Code. Gibt { course, premium, unlockedFor } zurück oder null.
+  async unlock(code, save = true) {
+    const [{ openCourse }, { LOCKED_COURSE }] = await Promise.all([import('./unlock.js'), import('./course-locked.js')]);
+    const r = await openCourse(code, LOCKED_COURSE);
+    if (!r) return null;
+    if (save) try { localStorage.setItem('hd-code', code.trim()); } catch {}
+    return { course: r.course, premium: true, whatsapp: '', unlockedFor: r.name };
   },
 
   async startCheckout() {

@@ -20,7 +20,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0F1023;
     --card: #1A1C36;
     --text: #EEF0FF;
@@ -35,7 +35,22 @@
     color-scheme: dark;
   }
 }
+:root[data-theme="dark"] {
+    --bg: #0F1023;
+    --card: #1A1C36;
+    --text: #EEF0FF;
+    --muted: #A1A6C8;
+    --line: #2C2F55;
+    --tile: #23264A;
+    --good-bg: #123524;
+    --good-text: #86EFAC;
+    --bad-bg: #3B1518;
+    --bad-text: #FCA5A5;
+    --shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
 
+[hidden] { display: none !important; }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
 body {
@@ -181,6 +196,15 @@ input { font: inherit; }
 .price { font-size: 18px; color: var(--muted); margin: 6px 0 14px; }
 .price b { font-size: 40px; color: var(--text); font-weight: 900; }
 .feats { list-style: none; padding: 0; margin: 0 0 20px; text-align: left; display: grid; gap: 8px; }
+.offer { background: var(--bg); border-radius: 14px; padding: 12px 14px; font-weight: 900; font-size: 20px; margin: 0 0 14px; }
+.steps { text-align: left; margin: 0 0 16px; padding-left: 22px; display: grid; gap: 6px; font-weight: 700; }
+.code-form { display: grid; gap: 8px; text-align: left; }
+.code-form label { font-weight: 800; font-size: 14px; color: var(--muted); }
+.code-form input { width: 100%; padding: 13px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--bg); color: var(--text); font-weight: 800; letter-spacing: .5px; outline: none; }
+.code-form input:focus { border-color: var(--primary); }
+.code-form .error { margin: 0; }
+.unlocked { margin-bottom: 16px; font-weight: 700; }
+.pw-cta { color: var(--text) !important; font-weight: 800; background: var(--good-bg); border-radius: 14px; padding: 12px 14px; }
 .feats li { background: var(--bg); border-radius: 14px; padding: 11px 14px; font-weight: 700; }
 .toast {
   position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 30px); opacity: 0; z-index: 99;

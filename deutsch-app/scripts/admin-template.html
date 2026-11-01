@@ -1,0 +1,147 @@
+<title>Hallo Deutsch Freischaltung</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  /* Einspaltiges Werkzeug: Name eingeben → Code und fertige WhatsApp-Nachricht kopieren */
+  :root {
+    --bg: #F5F6FF; --card: #FFFFFF; --text: #1E1B4B; --muted: #646A8A; --line: #E2E4F3;
+    --accent: #6366F1; --accent-dark: #4F46E5; --ok: #15803D; --ok-bg: #DCFCE7; --warn-bg: #FEF3C7; --warn: #92400E;
+    --display: 'Nunito', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #0F1023; --card: #1A1C36; --text: #EEF0FF; --muted: #A1A6C8; --line: #2C2F55;
+    --accent: #818CF8; --accent-dark: #6366F1; --ok: #86EFAC; --ok-bg: #123524; --warn-bg: #3A2A0A; --warn: #FCD34D; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #0F1023; --card: #1A1C36; --text: #EEF0FF; --muted: #A1A6C8; --line: #2C2F55;
+    --accent: #818CF8; --accent-dark: #6366F1; --ok: #86EFAC; --ok-bg: #123524; --warn-bg: #3A2A0A; --warn: #FCD34D; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--display); font-size: 16px; }
+  main { max-width: 560px; margin: 0 auto; padding-block: 24px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid; gap: 16px; }
+  h1 { font-size: 26px; font-weight: 900; margin: 0; text-wrap: balance; }
+  .lead { color: var(--muted); margin: 0; line-height: 1.5; }
+  .warn { background: var(--warn-bg); color: var(--warn); border-radius: 12px; padding: 10px 14px; font-weight: 800; font-size: 14px; }
+  .card { background: var(--card); border-radius: 18px; padding: 18px; box-shadow: 0 3px 0 var(--line); display: grid; gap: 12px; min-width: 0; }
+  label { font-weight: 800; font-size: 14px; color: var(--muted); }
+  input { width: 100%; font: inherit; font-weight: 800; font-size: 18px; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--text); outline: none; }
+  input:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button { font: inherit; font-weight: 900; border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer; }
+  .primary { background: var(--accent); color: #fff; box-shadow: 0 3px 0 var(--accent-dark); }
+  .secondary { background: var(--bg); color: var(--text); box-shadow: inset 0 0 0 2px var(--line); }
+  .code { font-family: var(--mono); font-size: 17px; background: var(--ok-bg); color: var(--ok); border-radius: 12px; padding: 12px 14px; word-break: break-all; user-select: all; }
+  .msg { white-space: pre-wrap; background: var(--bg); border-radius: 12px; padding: 12px 14px; line-height: 1.5; word-break: break-word; user-select: all; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tabs button[aria-pressed="true"] { background: var(--accent); color: #fff; box-shadow: none; }
+  ol { margin: 0; padding-left: 20px; line-height: 1.6; }
+  .done { color: var(--ok); font-weight: 800; min-height: 1.2em; margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { padding: 8px 4px; border-top: 1px solid var(--line); vertical-align: top; }
+  td.c { font-family: var(--mono); font-size: 12px; word-break: break-all; color: var(--muted); }
+  .empty { color: var(--muted); font-size: 14px; margin: 0; }
+</style>
+
+<main>
+  <h1>Freischalt-Codes für Hallo Deutsch!</h1>
+  <p class="lead">Wenn jemand bezahlt hat: Name eingeben, Code erstellen und die fertige Nachricht per WhatsApp schicken. Der Code öffnet alle 48 Lektionen.</p>
+  <div class="warn">🔒 Diese Seite nur für dich. Teile sie nie. Wer sie hat, kann selbst Codes erstellen.</div>
+
+  <form class="card" id="form">
+    <label for="name">Name der Person (so wie sie heisst)</label>
+    <input id="name" autocomplete="off" placeholder="z. B. Anna Müller" required>
+    <button class="primary" type="submit">Code erstellen</button>
+  </form>
+
+  <section class="card" id="result" hidden>
+    <label>Code</label>
+    <div class="code" id="code"></div>
+    <label>Nachricht zum Kopieren</label>
+    <div class="row tabs" role="group" aria-label="Sprache der Nachricht">
+      <button class="secondary" type="button" data-lang="fr" aria-pressed="true">Französisch</button>
+      <button class="secondary" type="button" data-lang="en" aria-pressed="false">Englisch</button>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div class="row">
+      <button class="primary" type="button" id="copyMsg">Nachricht kopieren</button>
+      <button class="secondary" type="button" id="copyCode">Nur Code kopieren</button>
+    </div>
+    <p class="done" id="done" role="status"></p>
+  </section>
+
+  <section class="card">
+    <label>So geht es</label>
+    <ol>
+      <li>Du teilst den Kurs-Link. Lektion 1 ist gratis.</li>
+      <li>Die Person schreibt dir auf WhatsApp und bezahlt dich.</li>
+      <li>Du erstellst hier den Code und schickst die Nachricht.</li>
+      <li>Die Person gibt den Code im Kurs ein (nach Lektion 1 oder im Profil 👤).</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <label>Erstellte Codes (nur in diesem Browser gespeichert)</label>
+    <table><tbody id="list"></tbody></table>
+    <p class="empty" id="empty">Noch keine Codes erstellt.</p>
+  </section>
+</main>
+
+<script type="module">
+  import { makeCode, unb64 } from './unlock.js';
+  const KEY = unb64('__KEY__');
+  const LINK = '__LINK__';
+  const $ = (id) => document.getElementById(id);
+  let current = null, lang = 'fr';
+
+  const texts = {
+    fr: (n, c) => `Bonjour ${n} ! Merci pour ton paiement 🙏\n\nVoici ton code pour débloquer tout le cours d'allemand :\n\n${c}\n\nOuvre le cours${LINK ? ` (${LINK})` : ''}, touche 👤 (Profil) et entre le code. Bon apprentissage – viel Spass !`,
+    en: (n, c) => `Hi ${n}! Thank you for your payment 🙏\n\nHere is your code to unlock the whole German course:\n\n${c}\n\nOpen the course${LINK ? ` (${LINK})` : ''}, tap 👤 (Profile) and enter the code. Have fun – viel Spass!`,
+  };
+
+  function load() { try { return JSON.parse(localStorage.getItem('hd-admin-codes') || '[]'); } catch { return []; } }
+  function save(list) { try { localStorage.setItem('hd-admin-codes', JSON.stringify(list)); } catch {} }
+
+  function renderList() {
+    const list = load();
+    $('empty').hidden = list.length > 0;
+    $('list').replaceChildren(...list.slice().reverse().map((e) => {
+      const tr = document.createElement('tr');
+      const a = document.createElement('td'); a.textContent = `${e.name} · ${new Date(e.at).toLocaleDateString('de-CH')}`;
+      const b = document.createElement('td'); b.className = 'c'; b.textContent = e.code;
+      tr.append(a, b); return tr;
+    }));
+  }
+
+  function renderMsg() {
+    if (!current) return;
+    $('msg').textContent = texts[lang](current.first, current.code);
+    document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  }
+
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('name').value.trim();
+    if (!name) return;
+    const code = await makeCode(name, KEY);
+    current = { code, first: name.split(/\s+/)[0] };
+    $('code').textContent = code;
+    $('result').hidden = false;
+    $('done').textContent = '';
+    renderMsg();
+    const list = load();
+    if (!list.some((x) => x.code === code)) { list.push({ name, code, at: Date.now() }); save(list); }
+    renderList();
+  });
+
+  document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; renderMsg(); }));
+
+  async function copy(text, label) {
+    try { await navigator.clipboard.writeText(text); $('done').textContent = `✓ ${label} kopiert. Jetzt in WhatsApp einfügen.`; }
+    catch { $('done').textContent = 'Kopieren ging nicht. Text markieren und von Hand kopieren.'; }
+  }
+  $('copyMsg').addEventListener('click', () => copy($('msg').textContent, 'Nachricht'));
+  $('copyCode').addEventListener('click', () => copy($('code').textContent, 'Code'));
+  renderList();
+</script>

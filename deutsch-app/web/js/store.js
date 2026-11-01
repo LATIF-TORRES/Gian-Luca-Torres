@@ -114,6 +114,7 @@ export const store = {
   },
 
   speakEnabled() {
+    if (this.noMic) return false;
     return state.settings.speak !== false && Date.now() > (state.speakOffUntil || 0);
   },
 

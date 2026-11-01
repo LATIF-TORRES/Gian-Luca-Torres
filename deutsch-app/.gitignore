@@ -1,3 +1,6 @@
 functions/.env*
 .firebase/
 *.log
+preview/
+scripts/.unlock-key
+preview-admin/

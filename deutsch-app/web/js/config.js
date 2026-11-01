@@ -22,4 +22,10 @@ export const CONFIG = {
   // Wird auf der Bezahlseite angezeigt. Der echte Preis kommt aus Stripe.
   priceLabel: '9.99 €',
   appName: 'Hallo Deutsch!',
+  // Vorschau-Link: nur die Gratis-Lektion, ohne Login, ohne Sprechübungen.
+  // Wird von scripts/build-preview.mjs auf true gesetzt. Hier immer false lassen.
+  preview: false,
+  // Nur für den Link mit Freischalt-Code: Preis und Zahlungsweg, wie er in der App steht.
+  // Leer lassen = kein Preis anzeigen. Beispiel: '49 € einmalig · TWINT oder PayPal'
+  offerText: '',
 };

@@ -18,6 +18,8 @@ let user = null;
 let data = null; // { course, premium, whatsapp }
 
 setLang(detectLang());
+// Im Vorschau-Link ist das Mikrofon gesperrt: keine Sprechübungen.
+if (backend.preview) store.noMic = true;
 
 // ---------- Start
 
@@ -159,7 +161,7 @@ function home() {
           <button class="chip avatar" aria-label="${t('profile')}">👤</button>
         </div>
       </header>
-      ${backend.demo ? `<div class="demo-banner">${t('demoBanner')}</div>` : ''}
+      ${backend.demo && !backend.preview ? `<div class="demo-banner">${t('demoBanner')}</div>` : ''}
       <main class="path"></main>
     </div>`);
   app.append(el);
@@ -240,7 +242,7 @@ function openLesson(ui, li, st) {
   warnNoVoice();
   runLesson(app, exercises, {
     lang: getLang(),
-    debug: backend.demo,
+    debug: backend.demo && !backend.preview,
     hooks: playerHooks(),
     onDone: ({ xp }) => {
       store.finishLesson(u.id, li, xp);
@@ -287,7 +289,7 @@ function startReview() {
   const exercises = buildReview(data.course, items, { lang: getLang(), speakOn: store.speakEnabled() }).map((e) => ({ ...e, _review: true }));
   runLesson(app, exercises, {
     lang: getLang(),
-    debug: backend.demo,
+    debug: backend.demo && !backend.preview,
     hooks: playerHooks(),
     xpFor: (acc) => 8 + (acc === 100 ? 4 : 0),
     onDone: ({ xp }) => store.addXp(xp),
@@ -305,6 +307,7 @@ function startSprint() {
 // ---------- Bezahlseite
 
 function paywall() {
+  if (backend.preview) return previewEnd();
   const m = h(`
     <div class="modal-bg"><div class="modal paywall">
       <div class="pw-emoji">💎</div>
@@ -334,6 +337,63 @@ function paywall() {
   document.body.append(m);
 }
 
+// Link mit Freischalt-Code: Nach der Gratis-Lektion bezahlt man direkt bei dir
+// und bekommt einen Code, der den ganzen Kurs öffnet.
+function codeForm() {
+  return `
+    <form class="code-form">
+      <label for="unlock-code">${t('codeLabel')}</label>
+      <input id="unlock-code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ANNA-…">
+      <p class="error" hidden>${t('codeWrong')}</p>
+      <button class="btn primary" type="submit">🔓 ${t('codeButton')}</button>
+    </form>`;
+}
+
+function wireCodeForm(el, onDone) {
+  const form = $('.code-form', el), err = $('.error', form), btn = $('button', form);
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    err.hidden = true;
+    btn.disabled = true;
+    const r = await backend.unlock(form.code.value);
+    btn.disabled = false;
+    if (!r) { err.hidden = false; sfx.wrong(); return; }
+    data = r;
+    sfx.done();
+    onDone();
+    home();
+    toast(`${t('codeOk')} ${prettyName(r.unlockedFor)}! 🎉`, 5000);
+  };
+}
+
+const prettyName = (n) => String(n || '').toLowerCase().replace(/(^|-)([a-z])/g, (m, a, b) => (a ? ' ' : '') + b.toUpperCase());
+
+function previewEnd() {
+  const m = h(`
+    <div class="modal-bg"><div class="modal paywall">
+      <div class="pw-emoji">🎉</div>
+      <h3>${t('previewTitle')}</h3>
+      <p>${t('previewText')}</p>
+      ${CONFIG.offerText ? `<div class="offer">${esc(CONFIG.offerText)}</div>` : ''}
+      <ul class="feats">
+        <li>📚 ${t('feat1')}</li>
+        <li>🎧 ${t('featPreview2')}</li>
+        <li>💬 ${t('feat3')}</li>
+        <li>✅ ${t('featOnce')}</li>
+      </ul>
+      <ol class="steps">
+        <li>${t('step1')}</li>
+        <li>${t('step2')}</li>
+        <li>${t('step3')}</li>
+      </ol>
+      ${codeForm()}
+      <button class="link-btn later">${t('later')}</button>
+    </div></div>`);
+  $('.later', m).onclick = () => m.remove();
+  wireCodeForm(m, () => m.remove());
+  document.body.append(m);
+}
+
 // ---------- Profil
 
 function profile() {
@@ -346,7 +406,7 @@ function profile() {
       <header class="topbar"><button class="icon-btn back" aria-label="${t('back')}">←</button><div class="brand">${t('profile')}</div><span></span></header>
       <div class="card who">
         <div class="avatar-big">👤</div>
-        <div><b>${esc(user?.email || '')}</b><br><span class="plan ${data.premium ? 'pro' : ''}">${data.premium ? `💎 ${t('premium')}` : t('free')}</span></div>
+        <div><b>${esc(backend.preview ? (data.premium ? prettyName(data.unlockedFor) : t('free')) : user?.email || '')}</b><br><span class="plan ${data.premium ? 'pro' : ''}" ${backend.preview ? 'hidden' : ''}>${data.premium ? `💎 ${t('premium')}` : t('free')}</span></div>
       </div>
       <div class="stat-grid">
         <div class="stat"><b>🔥 ${store.currentStreak()}</b><span>${t('streak')}</span></div>
@@ -354,12 +414,15 @@ function profile() {
         <div class="stat"><b>${lessons}</b><span>${t('lessonsDone')}</span></div>
         <div class="stat"><b>${words}</b><span>${t('wordsLearned')}</span></div>
       </div>
+      ${backend.preview ? (data.premium
+        ? `<div class="card unlocked">🔓 ${t('unlockedFor')} <b>${esc(prettyName(data.unlockedFor))}</b></div>`
+        : `<div class="card">${codeForm()}</div>`) : ''}
       ${data.premium && data.whatsapp ? `<a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(t('whatsappText'))}">💬 ${t('whatsapp')}</a>` : ''}
       <div class="card settings">
         <h3>${t('settings')}</h3>
         <div class="row"><span>${t('uiLang')}</span>${langSwitch()}</div>
         <label class="row"><span>${t('sound')}</span><input type="checkbox" class="toggle" data-set="sound" ${s.settings.sound !== false ? 'checked' : ''}></label>
-        <label class="row"><span>${t('speaking')}</span><input type="checkbox" class="toggle" data-set="speak" ${s.settings.speak !== false ? 'checked' : ''}></label>
+        <label class="row" ${backend.preview ? 'hidden' : ''}><span>${t('speaking')}</span><input type="checkbox" class="toggle" data-set="speak" ${s.settings.speak !== false ? 'checked' : ''}></label>
       </div>
       ${!backend.demo ? (data.premium
         ? `<button class="btn outline portal">${t('manageSub')}</button>`
@@ -368,6 +431,7 @@ function profile() {
     </div>`);
   app.append(el);
   $('.back', el).onclick = home;
+  if ($('.code-form', el)) wireCodeForm(el, () => {});
   wireLang(el, profile);
   el.querySelectorAll('[data-set]').forEach((c) => (c.onchange = () => {
     store.setSetting(c.dataset.set, c.checked);

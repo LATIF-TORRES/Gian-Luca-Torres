@@ -40,6 +40,23 @@ Eine Lektion dauert etwa 5 Minuten.
 
 ---
 
+## Link ohne Server: einmal bezahlen, mit Freischalt-Code
+
+So läuft es im Moment, ohne Firebase und ohne Stripe:
+
+1. Du teilst den Kurs-Link (claude.ai) per WhatsApp. **Lektion 1 ist sofort offen.**
+2. Wer weiterlernen will, schreibt dir und bezahlt dich direkt, einmalig.
+3. Auf deiner **privaten Admin-Seite** gibst du den Namen ein und erhältst einen Code, z. B. `ANNA-MULLER-ESZV…`. Dazu bekommst du eine fertige WhatsApp-Nachricht auf Französisch oder Englisch.
+4. Die Person tippt den Code im Kurs ein (nach Lektion 1 oder im Profil 👤). Dann sind alle 48 Lektionen offen.
+
+Gut zu wissen:
+- Der übrige Kurs steht im Link nur **verschlüsselt**. Ohne gültigen Code lässt er sich nicht öffnen.
+- Jeder Code trägt den Namen der Person. Weitergeben lässt er sich trotzdem.
+- Der Code bleibt im Browser gespeichert. Wer den Browser wechselt oder die Daten löscht, gibt ihn noch einmal ein.
+- Auf claude.ai ist das Mikrofon gesperrt. Darum gibt es in diesem Link **keine Sprechübungen**, Hören und alles andere schon.
+- Neu erstellen: `node scripts/build-preview.mjs`. Der geheime Schlüssel liegt in `scripts/.unlock-key` (nicht im Repo, weil das Repo öffentlich ist). Eine Kopie steht in deiner Admin-Seite. Ein neuer Schlüssel macht alle alten Codes ungültig.
+- Preis und Zahlungsweg stehen in `web/js/config.js` unter `offerText`.
+
 ## Sofort ausprobieren (Demo, ohne Einrichtung)
 
 Du brauchst nur Python (ist auf Mac schon installiert).
