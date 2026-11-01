@@ -381,8 +381,11 @@ function previewEnd() {
         <li>💬 ${t('feat3')}</li>
         <li>✅ ${t('featOnce')}</li>
       </ul>
+      ${data.whatsapp ? `
+        <a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(t('whatsappBuy'))}">💬 ${t('whatsappWrite')}</a>
+        <p class="wa-number">WhatsApp: <b>+${esc(data.whatsapp.replace(/^(\d{2})(\d)(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5 $6'))}</b></p>` : ''}
       <ol class="steps">
-        <li>${t('step1')}</li>
+        <li>${t(data.whatsapp ? 'step1Wa' : 'step1')}</li>
         <li>${t('step2')}</li>
         <li>${t('step3')}</li>
       </ol>
@@ -417,7 +420,7 @@ function profile() {
       ${backend.preview ? (data.premium
         ? `<div class="card unlocked">🔓 ${t('unlockedFor')} <b>${esc(prettyName(data.unlockedFor))}</b></div>`
         : `<div class="card">${codeForm()}</div>`) : ''}
-      ${data.premium && data.whatsapp ? `<a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(t('whatsappText'))}">💬 ${t('whatsapp')}</a>` : ''}
+      ${(data.premium || backend.preview) && data.whatsapp ? `<a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(t('whatsappText'))}">💬 ${t('whatsapp')}</a>` : ''}
       <div class="card settings">
         <h3>${t('settings')}</h3>
         <div class="row"><span>${t('uiLang')}</span>${langSwitch()}</div>

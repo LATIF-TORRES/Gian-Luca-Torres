@@ -28,4 +28,7 @@ export const CONFIG = {
   // Nur für den Link mit Freischalt-Code: Preis und Zahlungsweg, wie er in der App steht.
   // Leer lassen = kein Preis anzeigen. Beispiel: '49 € einmalig · TWINT oder PayPal'
   offerText: '',
+  // Nur für den Link mit Freischalt-Code: deine WhatsApp-Nummer (nur Ziffern, mit Ländervorwahl).
+  // Bleibt im Repo leer. scripts/build-preview.mjs setzt sie aus WHATSAPP=… ein.
+  contactWhatsapp: '',
 };

@@ -7,6 +7,8 @@ const SDK = 'https://www.gstatic.com/firebasejs/12.19.0';
 export const PREVIEW = !!CONFIG.preview;
 export const DEMO = PREVIEW || !CONFIG.firebase.apiKey;
 
+const contactWa = () => String(CONFIG.contactWhatsapp || '').replace(/\D/g, '');
+
 let fb = null; // { auth, db, fns, mods }
 
 async function init() {
@@ -75,7 +77,7 @@ export const backend = {
         if (r) return r;
       }
       const { PREVIEW_COURSE } = await import('./course-preview.js');
-      return { course: PREVIEW_COURSE, premium: false, whatsapp: '' };
+      return { course: PREVIEW_COURSE, premium: false, whatsapp: contactWa() };
     }
     if (DEMO) {
       const { COURSE } = await import('../../functions/content/course.js');
@@ -92,7 +94,7 @@ export const backend = {
     const r = await openCourse(code, LOCKED_COURSE);
     if (!r) return null;
     if (save) try { localStorage.setItem('hd-code', code.trim()); } catch {}
-    return { course: r.course, premium: true, whatsapp: '', unlockedFor: r.name };
+    return { course: r.course, premium: true, whatsapp: contactWa(), unlockedFor: r.name };
   },
 
   async startCheckout() {

@@ -6,7 +6,7 @@
 // und auf deiner Admin-Seite. Geht die Datei verloren, steht er auf der Admin-Seite.
 // Mit einem neuen Schlüssel gelten alle alten Codes nicht mehr.
 //
-// Starten: node scripts/build-preview.mjs
+// Starten: WHATSAPP=+33... COURSE_URL=https://claude.ai/artifact/... node scripts/build-preview.mjs
 import { mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { COURSE, trialCourse } from '../functions/content/course.js';
 import { encryptCourse, makeCode, b64, unb64 } from '../web/js/unlock.js';
@@ -25,7 +25,11 @@ mkdirSync(new URL('js/', out), { recursive: true });
 
 for (const f of readdirSync(new URL('js/', web))) {
   let src = readFileSync(new URL(`js/${f}`, web), 'utf8');
-  if (f === 'config.js') src = src.replace('preview: false', 'preview: true');
+  if (f === 'config.js') {
+    src = src.replace('preview: false', 'preview: true');
+    const wa = (process.env.WHATSAPP || '').replace(/\D/g, '');
+    if (wa) src = src.replace("contactWhatsapp: ''", `contactWhatsapp: '${wa}'`);
+  }
   writeFileSync(new URL(`js/${f}`, out), src);
 }
 writeFileSync(new URL('js/course-preview.js', out),
