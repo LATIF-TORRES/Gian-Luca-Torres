@@ -1,6 +1,7 @@
 // Hauptprogramm: Anmeldung, Lernpfad, Bezahlseite, Profil.
 
 import { CONFIG } from './config.js';
+import { logoMark } from './logo.js';
 import { t, setLang, getLang, detectLang } from './i18n.js';
 import { backend } from './backend.js';
 import { store } from './store.js';
@@ -46,7 +47,7 @@ function boot() {
 }
 
 function splash() {
-  app.innerHTML = `<div class="center-msg"><div class="logo-big">🇩🇪</div><p>${t('loading')}</p></div>`;
+  app.innerHTML = `<div class="center-msg"><div class="logo-big">${logoMark(96)}</div><p>${t('loading')}</p></div>`;
 }
 
 // Zurück von Stripe: ?checkout=success / cancel
@@ -92,7 +93,7 @@ function authScreen(mode = 'signup') {
     <div class="auth">
       ${langSwitch()}
       <div class="hero">
-        <div class="hero-emoji">🇩🇪</div>
+        <div class="hero-emoji">${logoMark(120)}</div>
         <h1>${esc(CONFIG.appName)}</h1>
         <p>${t('tagline')}</p>
         <div class="hero-badges"><span>🎧</span><span>🎤</span><span>🖼️</span><span>🎮</span></div>
@@ -154,7 +155,7 @@ function home() {
   const el = h(`
     <div class="home">
       <header class="topbar">
-        <div class="brand">🇩🇪 <span>${esc(CONFIG.appName)}</span></div>
+        <div class="brand">${logoMark(34)} <span>${esc(CONFIG.appName)}</span></div>
         <div class="chips">
           <span class="chip streak" title="${t('streak')}">🔥 ${store.currentStreak()}</span>
           <span class="chip xp">⭐ ${s.xp}</span>
