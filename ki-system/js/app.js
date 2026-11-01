@@ -62,7 +62,7 @@
     var gruss = h < 11 ? "Guten Morgen" : h < 18 ? "Hallo" : "Guten Abend";
     $("#gruss").textContent = gruss + (e.name ? ", " + e.name : "");
     $("#datum").textContent = new Date().toLocaleDateString("de-CH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    $("#hinweis-schluessel").classList.toggle("versteckt", !!e.schluessel);
+    $("#hinweis-schluessel").classList.toggle("versteckt", hatSchluessel());
 
     var m = monatsZahlen();
     if (e.ziel > 0) {
@@ -167,6 +167,7 @@
       c = {
         id: neueId(), titel: "Neues Gespräch", modus: $("#modus").value || "stratege",
         system: grundauftrag(Z.einstellungen.kiName || STANDARD_NAME), // bleibt für dieses Gespräch fest
+        anbieter: Z.einstellungen.anbieter, // Gemini und Claude speichern Gespräche verschieden
         nachrichten: [], kosten: 0, datum: heuteISO()
       };
       Z.chats.push(c);
@@ -214,6 +215,7 @@
   function anzeigeAus(nachrichten) {
     var blasen = [];
     nachrichten.forEach(function (n) {
+      if (n.parts) n = geminiAlsAnzeige(n);
       if (n.role === "user") {
         var texte = (Array.isArray(n.content) ? n.content : [{ type: "text", text: n.content }])
           .filter(function (b) { return b.type === "text" && b.text.indexOf("<kontext>") !== 0; });
@@ -233,6 +235,21 @@
       });
     });
     return blasen;
+  }
+  // Wandelt eine Gemini-Nachricht in dieselbe Form wie bei Claude, nur für die Anzeige.
+  function geminiAlsAnzeige(n) {
+    var inhalt = [];
+    if (n.role === "user") {
+      return { role: "user", content: n.parts.filter(function (p) { return typeof p.text === "string"; }).map(function (p) { return { type: "text", text: p.text }; }) };
+    }
+    var text = "";
+    n.parts.forEach(function (p) {
+      if (typeof p.text === "string" && !p.thought) text += p.text;
+      if (p.functionCall) inhalt.push({ type: "tool_use", name: p.functionCall.name, input: p.functionCall.args });
+    });
+    if (text) inhalt.unshift({ type: "text", text: text });
+    if (n._quellen) inhalt.push({ type: "web_search_tool_result", content: n._quellen.map(function (q) { return { url: q.url, title: q.title }; }) });
+    return { role: n.role === "model" ? "assistant" : "user", content: inhalt };
   }
   function aktionText(name, input) {
     input = input || {};
@@ -268,7 +285,7 @@
     v.querySelectorAll(".vorlesen").forEach(function (btn) {
       btn.onclick = function () { Stimme.vorlesen(btn.parentNode.querySelector(".md").innerText); };
     });
-    $("#kosten").textContent = c && c.kosten ? "Gespräch ca. $" + c.kosten.toFixed(3) : "";
+    $("#kosten").textContent = c && c.anbieter === "gemini" ? "Gemini · kostenlos" : c && c.kosten ? "Gespräch ca. $" + c.kosten.toFixed(3) : "";
     v.scrollTop = v.scrollHeight;
     window.scrollTo(0, document.body.scrollHeight);
   }
@@ -288,19 +305,27 @@
     var text = (textVonStimme || $("#frage").value).trim();
     if (!text || laeuft) return;
     var e = Z.einstellungen;
-    if (!e.schluessel) {
-      toast("Zuerst den API-Schlüssel eintragen.");
+    if (!hatSchluessel()) {
+      toast(e.anbieter === "claude" ? "Zuerst den Claude-Schlüssel eintragen." : "Zuerst den kostenlosen Gemini-Schlüssel eintragen.");
       zeigeTab("einstellungen");
-      $("#e-schluessel").focus();
+      $(e.anbieter === "claude" ? "#e-schluessel" : "#e-gemini-schluessel").focus();
       return;
     }
     Stimme.stumm();
-    var c = aktiverChat(true);
+    var c = aktiverChat(false);
+    if (c && (c.anbieter || "claude") !== e.anbieter && c.nachrichten.length) {
+      // Anderer Anbieter: neues Gespräch, weil die Formate verschieden sind.
+      Z.aktiverChat = null;
+      toast("Neues Gespräch mit " + (e.anbieter === "claude" ? "Claude" : "Gemini") + ".");
+    }
+    c = aktiverChat(true);
+    if (!c.nachrichten.length) c.anbieter = e.anbieter;
     if (!c.nachrichten.length) { c.titel = text.length > 40 ? text.slice(0, 40) + "…" : text; chatWahlFuellen(); }
     var modus = MODI[$("#modus").value] || MODI.stratege;
     var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + modus.auftrag + "\n" + kontextFuerKi() +
       (e.websuche ? "" : "\nNutze diesmal keine Web-Suche.") + "\n</kontext>";
-    c.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: text }] });
+    if (c.anbieter === "gemini") c.nachrichten.push({ role: "user", parts: [{ text: kontext }, { text: text }] });
+    else c.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: text }] });
     speichern();
     $("#frage").value = "";
     groesse();
@@ -354,7 +379,8 @@
         // Unbeantwortete Frage wieder ins Eingabefeld holen und aus dem Verlauf nehmen,
         // aber nur, wenn noch keine Antwort darauf gespeichert ist (Verlauf bleibt sonst unverändert).
         var letzte = c.nachrichten[c.nachrichten.length - 1];
-        if (letzte && letzte.role === "user" && letzte.content[1] && letzte.content[1].text === text) {
+        var teile = letzte && (letzte.content || letzte.parts);
+        if (letzte && letzte.role === "user" && teile && teile[1] && teile[1].text === text) {
           c.nachrichten.pop();
           speichern();
           $("#frage").value = text;
@@ -501,10 +527,51 @@
   document.querySelectorAll("#tab-geld .formular input").forEach(function (i) { i.addEventListener("input", rechnen); });
 
   /* ---------- Einstellungen ---------- */
-  var FELDER = { "#e-name": "name", "#e-ki-name": "kiName", "#e-waehrung": "waehrung", "#e-ziel": "ziel", "#e-warum": "warum", "#e-schluessel": "schluessel", "#e-modell": "modell", "#e-sprache": "sprache" };
+  var FELDER = { "#e-name": "name", "#e-ki-name": "kiName", "#e-waehrung": "waehrung", "#e-ziel": "ziel", "#e-warum": "warum", "#e-schluessel": "schluessel", "#e-modell": "modell", "#e-sprache": "sprache",
+    "#e-anbieter": "anbieter", "#e-gemini-schluessel": "geminiSchluessel", "#e-gemini-modell": "geminiModell" };
+  function geminiOption(id) {
+    var sel = $("#e-gemini-modell");
+    if (id && !Array.prototype.some.call(sel.options, function (o) { return o.value === id; })) {
+      var o = document.createElement("option");
+      o.value = id; o.textContent = id;
+      sel.appendChild(o);
+    }
+  }
+  function anbieterZeigen() {
+    var g = Z.einstellungen.anbieter !== "claude";
+    $("#zugang-gemini").classList.toggle("versteckt", !g);
+    $("#info-gemini").classList.toggle("versteckt", !g);
+    $("#zugang-claude").classList.toggle("versteckt", g);
+    $("#info-claude").classList.toggle("versteckt", g);
+  }
+  $("#modelle-laden").onclick = function () {
+    var k = Z.einstellungen.geminiSchluessel;
+    if (!k) { toast("Zuerst den Gemini-Schlüssel eintragen."); return; }
+    this.disabled = true;
+    var knopf = this;
+    geminiModelleLaden(k).then(function (liste) {
+      var sel = $("#e-gemini-modell");
+      sel.innerHTML = "<option value=''>Automatisch wählen</option>";
+      liste.forEach(function (m) {
+        var o = document.createElement("option");
+        o.value = m.id;
+        o.textContent = m.titel + (m.lite ? " · mehr Gratis-Anfragen" : " · klüger") + (m.vorschau ? " · Vorschau" : "");
+        sel.appendChild(o);
+      });
+      if (!Z.einstellungen.geminiModell) Z.einstellungen.geminiModell = geminiStandardModell(liste);
+      geminiOption(Z.einstellungen.geminiModell);
+      sel.value = Z.einstellungen.geminiModell;
+      speichern();
+      toast(liste.length + " Modelle gefunden. Schlüssel funktioniert.");
+    }).catch(function (f) {
+      toast(f.message === "schluessel" ? "Der Gemini-Schlüssel stimmt nicht." : "Keine Verbindung zu Google.");
+    }).then(function () { knopf.disabled = false; });
+  };
   function einstellungenZeigen() {
     var e = Z.einstellungen;
+    geminiOption(e.geminiModell);
     Object.keys(FELDER).forEach(function (s) { $(s).value = e[FELDER[s]] || ""; });
+    anbieterZeigen();
     $("#e-weckwort").checked = !!e.weckwort;
     gedaechtnisZeigen();
   }
@@ -516,7 +583,9 @@
       Z.einstellungen[k] = wert;
       speichern();
       namenSetzen();
-      if (k === "schluessel" && wert) toast("Schlüssel gespeichert.");
+      if ((k === "schluessel" || k === "geminiSchluessel") && wert) toast("Schlüssel gespeichert.");
+      if (k === "geminiSchluessel" && wert && !Z.einstellungen.geminiModell) $("#modelle-laden").click();
+      if (k === "anbieter") { anbieterZeigen(); heuteZeigen(); }
     });
   });
   $("#e-weckwort").onchange = function () {
@@ -548,6 +617,7 @@
   $("#export").onclick = function () {
     var kopie = JSON.parse(JSON.stringify(Z));
     kopie.einstellungen.schluessel = ""; // Schlüssel nie in die Datei
+    kopie.einstellungen.geminiSchluessel = "";
     var blob = new Blob([JSON.stringify(kopie, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -561,9 +631,10 @@
     f.text().then(function (t) {
       var d = JSON.parse(t);
       if (!d || !d.einstellungen) throw new Error("keine Sicherung");
-      var schluessel = Z.einstellungen.schluessel;
+      var schluessel = Z.einstellungen.schluessel, gSchluessel = Z.einstellungen.geminiSchluessel;
       Object.keys(d).forEach(function (k) { Z[k] = d[k]; });
       if (!Z.einstellungen.schluessel) Z.einstellungen.schluessel = schluessel;
+      if (!Z.einstellungen.geminiSchluessel) Z.einstellungen.geminiSchluessel = gSchluessel;
       speichern();
       alles();
       toast("Sicherung geladen.");
@@ -603,5 +674,5 @@
   try { start = sessionStorage.getItem("aundt-tab") || "heute"; } catch (e) {}
   zeigeTab(start);
   // KI-Bibliothek schon im Hintergrund laden, damit die erste Antwort schneller kommt.
-  if (Z.einstellungen.schluessel) sdkLaden().catch(function () {});
+  if (Z.einstellungen.anbieter === "claude" && Z.einstellungen.schluessel) sdkLaden().catch(function () {});
 })();

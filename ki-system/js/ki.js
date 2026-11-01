@@ -106,6 +106,10 @@ function fehlerText(sdk, e) {
  * cb: { text(delta), status(text), quelle({title,url}), werkzeug(name, ergebnis), fertig(), fehler(text) }
  */
 function antwortHolen(chat, cb) {
+  return chat.anbieter === "gemini" ? antwortGemini(chat, cb) : antwortClaude(chat, cb);
+}
+
+function antwortClaude(chat, cb) {
   var abbruch = { gestoppt: false, stream: null };
 
   (async function () {

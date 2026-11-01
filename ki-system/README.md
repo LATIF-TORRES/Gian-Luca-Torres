@@ -38,25 +38,26 @@ Der Mentor **handelt selbst**:
 
 Unter „Ich“ siehst und löschst du alles, was er gespeichert hat.
 
-## Starten
+## Starten (kostenlos)
 
-1. Öffne `ki-system/index.html` im Browser (Chrome, Edge oder Safari). Eine Installation braucht es nicht.
-2. Hol dir auf [platform.claude.com](https://platform.claude.com) unter „API Keys“ einen Schlüssel und trag ihn unter **Ich** ein.
-3. Auf dem Handy: Seite öffnen, dann „Zum Home-Bildschirm“. Am einfachsten geht das über GitHub Pages: Repository-Einstellungen → Pages → Branch wählen. Die App liegt dann unter `…/ki-system/`.
+1. **Online stellen (gratis, einmalig):** Auf GitHub im Repository auf **Settings → Pages**. Bei „Source“ wählst du „Deploy from a branch“, dann den Branch `claude/epic-hypatia-7apja5` und den Ordner `/ (root)`, und tippst auf **Save**. Nach 1 bis 2 Minuten läuft die App unter **https://latif-torres.github.io/Gian-Luca-Torres/ki-system/**. Du kannst sie auch ohne Internet-Adresse nutzen: einfach `ki-system/index.html` im Browser öffnen.
+2. **Kostenlosen KI-Schlüssel holen:** Geh auf [aistudio.google.com](https://aistudio.google.com), melde dich mit deinem Google-Konto an und tipp auf „Get API key“. Du brauchst keine Kreditkarte.
+3. In der App unter **Ich** den Schlüssel bei „Gemini-Schlüssel“ einfügen. Die App sucht das passende Gratis-Modell selbst.
+4. Auf dem Handy: die Adresse öffnen, dann „Zum Home-Bildschirm“. Jetzt sieht A&T aus wie eine App.
 
-Alle Daten bleiben in deinem Browser. Der Schlüssel geht nur direkt an Anthropic, nie in eine Sicherungsdatei.
+Alle Daten bleiben in deinem Browser. Schlüssel gehen nur direkt an Google oder Anthropic, nie in eine Sicherungsdatei.
 
 ### Kosten
 
-Du zahlst pro Antwort bei Anthropic, kein Abo. Die App zeigt die ungefähren Kosten pro Gespräch an.
-
-| Modell | Eingabe / Ausgabe pro 1 Mio. Tokens | Eine typische Antwort |
+| Anbieter | Kosten | Gut zu wissen |
 | --- | --- | --- |
-| Claude Opus 5.5 (Standard) | $4 / $20 | etwa 2 bis 10 Rappen |
-| Claude Sonnet 5.5 | $2 / $10 | etwa halb so viel |
-| Claude Haiku 5.5 | $0.10 / $0.50 | weniger als 1 Rappen |
+| **Google Gemini (Standard)** | **kostenlos** | Tageslimit an Anfragen. Ist es erreicht, geht es am nächsten Tag weiter. Bei der Gratis-Stufe darf Google die Eingaben zur Verbesserung seiner Dienste nutzen, darum keine geheimen Daten eingeben. Die Modelle „Flash-Lite“ haben meist mehr Gratis-Anfragen pro Tag, die „Flash“-Modelle sind klüger. |
+| Claude (wahlweise) | pro Antwort, bei Opus 5.5 etwa 2 bis 10 Rappen | Am klügsten und hält sich am zuverlässigsten an die Regeln. Schlüssel auf [platform.claude.com](https://platform.claude.com), Guthaben vorher aufladen. |
+| GitHub Pages | kostenlos | Für öffentliche Repositories |
 
-Die Web-Suche kostet zusätzlich etwa 1 Cent pro Suche.
+Den Anbieter wechselst du unter **Ich → KI-Anbieter**. Ein Gespräch bleibt beim Anbieter, mit dem es begonnen hat. Nach einem Wechsel beginnt ein neues Gespräch.
+
+Ohne KI und immer gratis: Geldbuch, Monatsziel, Aufgaben, Vorbilder, Sparziel-, Zakat- und Stundensatz-Rechner.
 
 ## Analyse: Packstart (packstart.de)
 
@@ -92,7 +93,7 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 | Problem bei Packstart oder Jarvis | Lösung in A&T |
 | --- | --- |
 | Installation, 3 GB, nur Desktop | Läuft sofort im Browser, auch auf dem Handy |
-| Pakete kosten extra | Alle Rollen, Rechner und Vorbilder sind gratis dabei |
+| Pakete kosten extra | Alles gratis: App, Hosting über GitHub Pages und KI über die Gratis-Stufe von Gemini |
 | Kein klares Ziel | Ein Ziel: mehr Geld verdienen, mit Monatsziel, Geldbuch und „die eine Sache heute“ |
 | Jarvis-Apps vergessen alles | Gedächtnis, das du siehst und löschst |
 | Assistent redet nur | Der Mentor legt Aufgaben an, bucht Einnahmen und merkt sich Fakten |
@@ -104,7 +105,8 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 ## Technik
 
 - Reines HTML, CSS und JavaScript, ohne Build-Schritt.
-- Claude über das offizielle Anthropic-SDK (`@anthropic-ai/sdk`, geladen von jsDelivr), direkt aus dem Browser mit deinem Schlüssel.
+- Kostenlos: Google Gemini über die REST-Schnittstelle (Streaming, eigene Werkzeuge, Google-Suche mit Quellen). Die Modellliste wird bei Google abgefragt, weil sich die Modellnamen oft ändern.
+- Wahlweise Claude über das offizielle Anthropic-SDK (`@anthropic-ai/sdk`, geladen von jsDelivr), direkt aus dem Browser mit deinem Schlüssel.
 - Standardmodell Claude Opus 5.5 mit adaptivem Denken. Lehnt das Modell eine Anfrage ab, springt automatisch ein anderes Modell ein (`fallbacks: "default"`).
 - Der Gesprächsverlauf wird nur hinten ergänzt, nie verändert. So bleiben Zwischenspeicher und das Nachdenken früherer Antworten gültig.
 - Stimme über die Web Speech API des Browsers.
@@ -116,6 +118,7 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 | `js/daten.js` | Vorbilder, Rollen, Schnellstart, Grundauftrag an die KI |
 | `js/speicher.js` | Speichern im Browser, Gedächtnis, Aufgaben, Geldbuch |
 | `js/ki.js` | Verbindung zu Claude, Werkzeuge, Kosten |
+| `js/gemini.js` | Kostenlose Verbindung zu Google Gemini |
 | `js/stimme.js` | Sprechen, Zuhören, Weckwort |
 | `js/app.js` | Oberfläche |
 

@@ -44,7 +44,7 @@
       </div>
 
       <div id="hinweis-schluessel" class="karte warnung versteckt">
-        <div><strong>Noch ein Schritt:</strong> Trag unter „Ich“ deinen Claude-API-Schlüssel ein. Erst dann kann der Mentor antworten.</div>
+        <div><strong>Noch ein Schritt:</strong> Hol dir unter „Ich“ einen kostenlosen Gemini-Schlüssel. Erst dann kann der Mentor antworten.</div>
         <button class="knopf klein" data-gehe="einstellungen">Jetzt eintragen</button>
       </div>
 
@@ -181,18 +181,37 @@
         <div class="karte">
           <h2>KI-Zugang</h2>
           <div class="formular">
+            <label>KI-Anbieter
+              <select id="e-anbieter">
+                <option value="gemini">Google Gemini · kostenlos</option>
+                <option value="claude">Claude · bezahlt, am klügsten</option>
+              </select>
+            </label>
+          </div>
+          <div id="zugang-gemini" class="formular zugang">
+            <label>Gemini-Schlüssel <input id="e-gemini-schluessel" type="password" placeholder="AIza…" autocomplete="off"></label>
+            <label>Gemini-Modell
+              <select id="e-gemini-modell"><option value="">Automatisch wählen</option></select>
+            </label>
+            <button type="button" class="knopf klein" id="modelle-laden">Modelle laden</button>
+          </div>
+          <p id="info-gemini" class="leise klein-text">So bekommst du den Gratis-Schlüssel: Geh auf aistudio.google.com, melde dich mit deinem Google-Konto an und tipp auf „Get API key“. Du gibst keine Kreditkarte an, es kostet nichts. Es gibt ein Tageslimit. Ist es erreicht, geht es am nächsten Tag weiter. Achtung: Bei der Gratis-Stufe darf Google deine Eingaben zur Verbesserung seiner Dienste nutzen. Gib darum keine geheimen Daten ein (Passwörter, Kontonummern).</p>
+          <div id="zugang-claude" class="formular zugang">
             <label>Claude-API-Schlüssel <input id="e-schluessel" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
-            <label>Modell
+            <label>Claude-Modell
               <select id="e-modell">
                 <option value="claude-opus-5-5">Claude Opus 5.5 · am klügsten</option>
                 <option value="claude-sonnet-5-5">Claude Sonnet 5.5 · halber Preis</option>
                 <option value="claude-haiku-5-5">Claude Haiku 5.5 · sehr günstig</option>
               </select>
             </label>
-            <label>Sprache für Sprechen <select id="e-sprache"><option value="de-CH">Deutsch (Schweiz)</option><option value="de-DE">Deutsch (Deutschland)</option><option value="en-US">English</option></select></label>
-            <label class="haken"><input type="checkbox" id="e-weckwort"> Freihändig: reagiert auf „Hey <span class="ki-name">A&amp;T</span>“ (auch „Amanah“ oder „Tijara“), solange die Seite offen ist</label>
           </div>
-          <p class="leise klein-text">Den Schlüssel bekommst du auf platform.claude.com unter „API Keys“. Er bleibt nur in diesem Browser gespeichert und geht direkt an Anthropic, an niemanden sonst. Du zahlst pro Antwort bei Anthropic, kein Abo.</p>
+          <div class="formular">
+            <label>Sprache für Sprechen <select id="e-sprache"><option value="de-CH">Deutsch (Schweiz)</option><option value="de-DE">Deutsch (Deutschland)</option><option value="en-US">English</option></select></label>
+            <label class="haken"><input type="checkbox" id="e-weckwort"> <span>Freihändig: reagiert auf „Hey <span class="ki-name">A&amp;T</span>“ (auch „Amanah“ oder „Tijara“), solange die Seite offen ist</span></label>
+          </div>
+          <p id="info-claude" class="leise klein-text">Den Claude-Schlüssel bekommst du auf platform.claude.com unter „API Keys“. Du zahlst pro Antwort bei Anthropic, kein Abo.</p>
+          <p class="leise klein-text">Schlüssel bleiben nur in diesem Browser und gehen direkt an Google oder Anthropic, an niemanden sonst.</p>
         </div>
       </div>
 
@@ -223,6 +242,7 @@
   <script src="js/daten.js"></script>
   <script src="js/speicher.js"></script>
   <script src="js/ki.js"></script>
+  <script src="js/gemini.js"></script>
   <script src="js/stimme.js"></script>
   <script src="js/app.js"></script>
 </body>

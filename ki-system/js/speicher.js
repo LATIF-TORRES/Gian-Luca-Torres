@@ -9,6 +9,7 @@ function leererZustand() {
   return {
     einstellungen: {
       name: "", kiName: STANDARD_NAME, waehrung: "CHF", ziel: 0, warum: "",
+      anbieter: "gemini", geminiSchluessel: "", geminiModell: "",
       schluessel: "", modell: "claude-opus-5-5", sprache: "de-CH",
       weckwort: false, websuche: true, vorlesen: false, tiefe: "medium"
     },
@@ -30,6 +31,8 @@ var Z = (function laden() {
         if (gespeichert[k] !== undefined) z[k] = gespeichert[k];
       });
       z.einstellungen = Object.assign(leererZustand().einstellungen, gespeichert.einstellungen || {});
+      // Wer schon einen Claude-Schlüssel hatte, bleibt bei Claude.
+      if (!(gespeichert.einstellungen || {}).anbieter && z.einstellungen.schluessel) z.einstellungen.anbieter = "claude";
       if (z.einstellungen.kiName === "TORRES") z.einstellungen.kiName = STANDARD_NAME; // alter Arbeitstitel
     }
   } catch (e) { /* privates Fenster o. ä.: dann ohne Speicher */ }
@@ -133,4 +136,9 @@ function kontextFuerKi() {
     teile.push("Offene Aufgaben:\n" + offen.slice(-15).map(function (a) { return "- " + a.text + (a.wichtig ? " (wichtigste)" : ""); }).join("\n"));
   }
   return teile.join("\n");
+}
+
+function hatSchluessel() {
+  var e = Z.einstellungen;
+  return e.anbieter === "claude" ? !!e.schluessel : !!e.geminiSchluessel;
 }
