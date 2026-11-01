@@ -40,15 +40,28 @@ var Stimme = (function () {
       var letztes = ev.results[ev.results.length - 1];
       if (!letztes.isFinal) return;
       var t = letztes[0].transcript.trim();
-      var name = (Z.einstellungen.kiName || "TORRES").toLowerCase();
       var klein = t.toLowerCase();
-      var stelle = klein.indexOf(name);
+      var stelle = -1, laenge = 0;
+      weckwoerter().forEach(function (w) {
+        var i = klein.indexOf(w);
+        if (i !== -1 && (stelle === -1 || i < stelle)) { stelle = i; laenge = w.length; }
+      });
       if (stelle === -1) return;
-      var rest = t.slice(stelle + name.length).replace(/^[\s,.:!?]+/, "").trim();
+      var rest = t.slice(stelle + laenge).replace(/^[\s,.:!?]+/, "").trim();
       if (beiText) beiText(rest, true);
     };
     erkennung.onend = function () { if (weckModus && !hoertZu) setTimeout(weckStarten, 400); };
     try { erkennung.start(); } catch (e) { /* läuft schon */ }
+  }
+
+  // „A&T“ schreibt die Spracherkennung meist als „A und T“, darum mehrere Schreibweisen.
+  function weckwoerter() {
+    var name = (Z.einstellungen.kiName || STANDARD_NAME).toLowerCase();
+    var liste = [name, name.replace(/&/g, " und "), name.replace(/&/g, " and ")];
+    if (name === STANDARD_NAME.toLowerCase()) {
+      liste = liste.concat(["a und t", "a und tee", "a&t", "a and t", "amanah", "amana", "tijara", "tidschara"]);
+    }
+    return liste.map(function (w) { return w.replace(/\s+/g, " ").trim(); });
   }
 
   function weckwort(an) {

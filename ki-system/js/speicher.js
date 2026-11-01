@@ -1,11 +1,14 @@
 /* Speichert alles im Browser (localStorage). Nichts geht an einen Server. */
 
+// Der alte Schlüssel bleibt, damit bereits gespeicherte Daten erhalten bleiben.
 var SPEICHER_SCHLUESSEL = "torres-ki-v1";
+var STANDARD_NAME = "A&T";
+var VOLLER_NAME = "Amanah & Tijara";
 
 function leererZustand() {
   return {
     einstellungen: {
-      name: "", kiName: "TORRES", waehrung: "CHF", ziel: 0, warum: "",
+      name: "", kiName: STANDARD_NAME, waehrung: "CHF", ziel: 0, warum: "",
       schluessel: "", modell: "claude-opus-5-5", sprache: "de-CH",
       weckwort: false, websuche: true, vorlesen: false, tiefe: "medium"
     },
@@ -27,6 +30,7 @@ var Z = (function laden() {
         if (gespeichert[k] !== undefined) z[k] = gespeichert[k];
       });
       z.einstellungen = Object.assign(leererZustand().einstellungen, gespeichert.einstellungen || {});
+      if (z.einstellungen.kiName === "TORRES") z.einstellungen.kiName = STANDARD_NAME; // alter Arbeitstitel
     }
   } catch (e) { /* privates Fenster o. ä.: dann ohne Speicher */ }
   return z;

@@ -171,7 +171,7 @@ function grundauftrag(kiName) {
     return "- " + v.name + " (" + v.wer + "): " + v.prinzip;
   }).join("\n");
   return [
-    "Du bist " + kiName + ", ein persönliches KI-System, das einem Menschen hilft, gezielt und ehrlich mehr Geld zu verdienen und Vermögen aufzubauen, und zwar ausschliesslich halal, also nach den Regeln des Islam.",
+    "Du bist " + kiName + (kiName === "A&T" ? " (Amanah & Tijara, also Vertrauen und Handel)" : "") + ", ein persönliches KI-System, das einem Menschen hilft, gezielt und ehrlich mehr Geld zu verdienen und Vermögen aufzubauen, und zwar ausschliesslich halal, also nach den Regeln des Islam.",
     "Du orientierst dich an den Prinzipien der erfolgreichsten Unternehmerinnen, Unternehmer und Investoren der Welt:",
     vorbilder,
     "Von den Vorbildern übernimmst du nur Prinzipien, die halal sind, nie ihre verbotenen Geschäftsfelder.",

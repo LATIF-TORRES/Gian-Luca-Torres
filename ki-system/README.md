@@ -1,6 +1,6 @@
-# TORRES · Dein KI-System für Geld und Erfolg
+# A&T · Amanah & Tijara
 
-> „TORRES“ ist nur ein Arbeitstitel. Den endgültigen Namen suchen wir noch gemeinsam (Ideen am Ende). In der App änderst du den Namen unter **Ich → Name deines Assistenten**. Er hört dann auch auf „Hey <Name>“.
+> **A&T** steht für **Amanah** (arabisch: Vertrauen) und **Tijara** (arabisch: Handel): Geld verdienen durch ehrlichen Handel, mit Geld als anvertrautem Gut. Im Freihändig-Modus hört A&T auf „Hey A&T“, „Amanah“ oder „Tijara“. Den Namen kannst du unter **Ich → Name deines Assistenten** ändern.
 
 Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt und ehrlich mehr Geld zu verdienen, **ausschliesslich halal**. Er orientiert sich an den Prinzipien der reichsten Unternehmer und Investoren der Welt und an Händlern aus der islamischen Geschichte.
 
@@ -87,9 +87,9 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 | Zuckerbergs Jarvis (2016) | Privates Smart-Home-Projekt | Steuerung per Stimme | Nie veröffentlicht |
 | Open-Source- und App-Store-„Jarvis“ | Viele Hobby-Sprachassistenten für PC und Handy | Gratis, Stimme, oft mit Weckwort | Meist ohne Gedächtnis, ohne Ziel, oft unsicher oder veraltet |
 
-## Was TORRES besser macht
+## Was A&T besser macht
 
-| Problem bei Packstart oder Jarvis | Lösung in TORRES |
+| Problem bei Packstart oder Jarvis | Lösung in A&T |
 | --- | --- |
 | Installation, 3 GB, nur Desktop | Läuft sofort im Browser, auch auf dem Handy |
 | Pakete kosten extra | Alle Rollen, Rechner und Vorbilder sind gratis dabei |
@@ -119,20 +119,8 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 | `js/stimme.js` | Sprechen, Zuhören, Weckwort |
 | `js/app.js` | Oberfläche |
 
-## Namensideen
+## Der Name
 
-| Name | Idee dahinter |
-| --- | --- |
-| **TORRES** | Dein Familienname. Als Abkürzung: **T**atkräftiger **O**nline-**R**atgeber für **R**eichtum, **E**rfolg und **S**trategie |
-| **MIDAS** | Alles, was er berührt, wird zu Gold |
-| **AURUM** | Lateinisch für Gold |
-| **KAIROS** | Griechisch für „der richtige Moment“ |
-| **ATLAS** | Trägt die Last und zeigt den Weg |
-| **VENTURA** | „Das Kommende“, auch das Wort für Wagnis und Firma |
-| **MAGNAT** | Der grosse Unternehmer |
-| **BARAKA** | Arabisch für Segen: Geld, das wächst, weil es sauber verdient ist |
-| **RIZQ** | Arabisch für Versorgung, die von Allah kommt |
-| **AMANAH** | Arabisch für Vertrauen: Geld als anvertrautes Gut |
-| **TIJARA** | Arabisch für Handel, der Weg der Händler-Gefährten |
+Gewählt: **A&T = Amanah & Tijara**, Vertrauen und Handel. Der frühere Arbeitstitel war TORRES.
 
 Keine Anlage-, Steuer- oder Rechtsberatung. Entscheidungen triffst du selbst.

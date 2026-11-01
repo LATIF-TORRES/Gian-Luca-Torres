@@ -24,14 +24,14 @@
   }
   function kern(zustand, text) {
     $("#kern").className = "kern " + (zustand || "");
-    $("#marke-sub").textContent = text || "Bereit";
+    $("#marke-sub").textContent = text || (Z.einstellungen.kiName === STANDARD_NAME ? VOLLER_NAME : "Bereit");
   }
 
   /* ---------- Tabs ---------- */
   function zeigeTab(name) {
     document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("aktiv", t.id === "tab-" + name); });
     document.querySelectorAll("#tabs button").forEach(function (b) { b.classList.toggle("aktiv", b.dataset.tab === name); });
-    try { sessionStorage.setItem("torres-tab", name); } catch (e) {}
+    try { sessionStorage.setItem("aundt-tab", name); } catch (e) {}
     if (name === "heute") heuteZeigen();
     if (name === "geld") geldZeigen();
     if (name === "chat") { verlaufZeigen(); setTimeout(function () { $("#frage").focus(); }, 50); }
@@ -48,10 +48,10 @@
   });
 
   function namenSetzen() {
-    var n = Z.einstellungen.kiName || "TORRES";
+    var n = Z.einstellungen.kiName || STANDARD_NAME;
     $("#marke-name").textContent = n;
     document.querySelectorAll(".ki-name").forEach(function (el) { el.textContent = n; });
-    document.title = n + " · Dein KI-System für Geld und Erfolg";
+    document.title = n === STANDARD_NAME ? n + " · " + VOLLER_NAME : n + " · Dein KI-System für Geld und Erfolg";
     $("#frage").placeholder = "Frag " + n + " …";
   }
 
@@ -166,7 +166,7 @@
     if (!c && anlegen) {
       c = {
         id: neueId(), titel: "Neues Gespräch", modus: $("#modus").value || "stratege",
-        system: grundauftrag(Z.einstellungen.kiName || "TORRES"), // bleibt für dieses Gespräch fest
+        system: grundauftrag(Z.einstellungen.kiName || STANDARD_NAME), // bleibt für dieses Gespräch fest
         nachrichten: [], kosten: 0, datum: heuteISO()
       };
       Z.chats.push(c);
@@ -258,7 +258,7 @@
   function verlaufZeigen() {
     var c = aktiverChat(false);
     var v = $("#verlauf");
-    var n = Z.einstellungen.kiName || "TORRES";
+    var n = Z.einstellungen.kiName || STANDARD_NAME;
     if (!c || !c.nachrichten.length) {
       v.innerHTML = "<div class='leer'><div class='kern gross-kern'><span></span></div><p><strong>" + esc(n) + "</strong> ist bereit.</p>" +
         "<p class='leise'>Erzähl, was du kannst, wie viel Zeit du hast und wie viel du verdienen willst. Je mehr " + esc(n) + " weiss, desto besser passen die Ideen.</p></div>";
@@ -512,7 +512,7 @@
     $(s).addEventListener("change", function () {
       var k = FELDER[s], wert = this.value.trim();
       if (k === "ziel") wert = Math.max(0, parseFloat(wert) || 0);
-      if (k === "kiName") wert = wert || "TORRES";
+      if (k === "kiName") wert = wert || STANDARD_NAME;
       Z.einstellungen[k] = wert;
       speichern();
       namenSetzen();
@@ -551,7 +551,7 @@
     var blob = new Blob([JSON.stringify(kopie, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "torres-sicherung-" + heuteISO() + ".json";
+    a.download = "aundt-sicherung-" + heuteISO() + ".json";
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   };
@@ -600,7 +600,7 @@
   alles();
   if (Z.einstellungen.weckwort) Stimme.weckwort(true);
   var start = "heute";
-  try { start = sessionStorage.getItem("torres-tab") || "heute"; } catch (e) {}
+  try { start = sessionStorage.getItem("aundt-tab") || "heute"; } catch (e) {}
   zeigeTab(start);
   // KI-Bibliothek schon im Hintergrund laden, damit die erste Antwort schneller kommt.
   if (Z.einstellungen.schluessel) sdkLaden().catch(function () {});
