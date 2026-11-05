@@ -28,6 +28,21 @@ var Einrichtung = (function () {
     document.querySelectorAll("#ein-punkte i").forEach(function (p, i) { p.classList.toggle("an", i <= schritt); });
     $("#ein-zurueck").style.visibility = schritt === 0 ? "hidden" : "visible";
     $("#ein-weiter").textContent = schritt === ANZAHL - 1 ? "Fertig" : "Weiter";
+    if (schritt === 3) {
+      var info = $("#ein-lokal");
+      lokalPruefen().then(function (p) {
+        if (p.ok && p.modelle.length) {
+          info.className = "klein-text plus";
+          info.textContent = "✓ Lokale KI auf deinem PC gefunden (" + p.modell + "). A&T läuft damit unbegrenzt und kostenlos. Du brauchst keinen Schlüssel und kannst gleich auf „Fertig“ tippen.";
+          Z.einstellungen.anbieter = "lokal";
+          Z.einstellungen.lokalModell = Z.einstellungen.lokalModell || p.modell;
+          speichern();
+        } else {
+          info.className = "klein-text leise";
+          info.textContent = "Unbegrenzt und kostenlos: die lokale KI auf deinem PC. Unter Windows richtest du sie mit „Lokale KI installieren.cmd“ im A&T-Ordner ein. Das geht auch später.";
+        }
+      });
+    }
     var feld = document.querySelector("#einrichtung .schritt.aktiv input");
     if (feld) setTimeout(function () { feld.focus(); }, 60);
   }
@@ -54,7 +69,7 @@ var Einrichtung = (function () {
         e.geminiModell = "";
         _geminiListe = null;
       }
-      if (k) e.anbieter = "gemini";
+      if (k && e.anbieter !== "lokal") e.anbieter = "gemini";
     }
     speichern();
   }
@@ -109,7 +124,7 @@ var Einrichtung = (function () {
       if (!liste.length) throw new Error("leer");
       Z.einstellungen.geminiSchluessel = k;
       Z.einstellungen.geminiModell = geminiStandardModell(liste);
-      Z.einstellungen.anbieter = "gemini";
+      if (Z.einstellungen.anbieter !== "lokal") Z.einstellungen.anbieter = "gemini";
       speichern();
       aus.className = "klein-text plus";
       aus.textContent = "✓ Verbunden. " + liste.length + " kostenlose Modelle gefunden. Tippe auf „Fertig“.";

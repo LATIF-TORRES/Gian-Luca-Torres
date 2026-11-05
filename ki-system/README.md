@@ -21,6 +21,19 @@ Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt u
 - Bei Vorbildern mit verbotenen Geschäftsfeldern (z. B. Alkohol bei LVMH, Banken bei Buffett) steht ein Halal-Hinweis: Du übernimmst nur das Prinzip.
 - Wo die Gelehrten verschiedener Meinung sind (z. B. Krypto), sagt der Mentor das offen. Er gibt keine Fatwa und verweist auf einen Gelehrten.
 
+## KI ohne Limit: lokal auf deinem PC
+
+Jede KI im Internet (Google, OpenAI, Anthropic) begrenzt die Gratis-Nutzung. Bei manchen Google-Konten gibt es für einzelne Modelle sogar gar kein Gratis-Kontingent (Meldung „limit: 0“). **Wirklich unbegrenzt und kostenlos geht es nur, wenn die KI auf deinem eigenen PC läuft.** A&T nutzt dafür das kostenlose Programm [Ollama](https://ollama.com) mit dem freien Modell Qwen3.
+
+- **Windows:** Doppelklick auf **Lokale KI installieren.cmd** im A&T-Ordner. Das Skript installiert Ollama, erlaubt A&T den Zugriff und lädt je nach Arbeitsspeicher `qwen3:8b` (ab 16 GB) oder `qwen3:4b` (einmalig etwa 2,5 bis 5 GB).
+- A&T findet die lokale KI beim Start automatisch und nutzt sie, solange du unter **Ich** nichts anderes gewählt hast.
+- Ohne Limit, ohne Konto, ohne Schlüssel, ohne Kosten. Deine Fragen verlassen den PC nicht.
+- Mit 16 GB Arbeitsspeicher läuft es gut, mit 8 GB langsamer. Die lokale KI ist etwas weniger klug als Claude.
+- Auf dem Handy geht das nicht. Dort bleibt Gemini (mit Limit).
+- Hinweis: Damit A&T aus dem Browser zugreifen kann, setzt das Skript `OLLAMA_ORIGINS=*`. So dürfen Webseiten in deinem Browser die lokale KI ansprechen.
+
+**Gemini verbessert:** A&T zeigt jetzt die echte Meldung von Google. Modelle ohne Gratis-Kontingent werden dauerhaft übersprungen. Beim Minutenlimit wartet A&T die von Google genannte Zeit, statt alle Modelle hintereinander zu probieren. Die Web-Suche wird weggelassen, wenn sie ein eigenes Limit hat.
+
 ## Neu in Version 2
 
 - **Einrichtungs-Assistent** beim ersten Start: Name, Ziel, Fähigkeiten, Zeit, Startkapital, Wohnort und der kostenlose Schlüssel mit „Testen“-Knopf. Später erneut unter **Ich → Einrichtung wiederholen**.
@@ -140,6 +153,7 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 | `js/speicher.js` | Speichern im Browser, Gedächtnis, Aufgaben, Geldbuch |
 | `js/ki.js` | Verbindung zu Claude, Werkzeuge, Kosten |
 | `js/gemini.js` | Kostenlose Verbindung zu Google Gemini |
+| `js/lokal.js` | Lokale KI über Ollama (ohne Limit) |
 | `windows/` | Start- und Installationsskript, Symbol, Bauskript für das Windows-Paket |
 | `download/A-und-T-Windows.zip` | Fertiges Windows-Paket |
 | `js/stimme.js` | Sprechen, Zuhören, Weckwort |

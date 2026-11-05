@@ -10,7 +10,7 @@ function leererZustand() {
     einstellungen: {
       eingerichtet: false,
       name: "", kiName: STANDARD_NAME, waehrung: "CHF", ziel: 0, warum: "",
-      anbieter: "gemini", geminiSchluessel: "", geminiModell: "",
+      anbieter: "gemini", anbieterManuell: false, lokalModell: "", geminiSchluessel: "", geminiModell: "",
       schluessel: "", modell: "claude-opus-5-5", sprache: "de-CH",
       weckwort: false, sadaqaProzent: 5, websuche: true, vorlesen: false, tiefe: "medium"
     },
@@ -174,5 +174,6 @@ function kontextFuerKi() {
 
 function hatSchluessel() {
   var e = Z.einstellungen;
+  if (e.anbieter === "lokal") return true; // braucht keinen Schlüssel
   return e.anbieter === "claude" ? !!e.schluessel : !!e.geminiSchluessel;
 }

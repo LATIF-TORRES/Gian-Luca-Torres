@@ -230,6 +230,8 @@
     var blasen = [];
     nachrichten.forEach(function (n) {
       if (n.parts) n = geminiAlsAnzeige(n);
+      else if (typeof n.content === "string" || n.role === "tool") n = lokalAlsAnzeige(n);
+      if (!n) return;
       if (n.role === "user") {
         var texte = (Array.isArray(n.content) ? n.content : [{ type: "text", text: n.content }])
           .filter(function (b) { return b.type === "text" && b.text.indexOf("<kontext>") !== 0; });
@@ -249,6 +251,18 @@
       });
     });
     return blasen;
+  }
+  // Lokale KI (Ollama): Nachrichten in dieselbe Form wie bei Claude bringen, nur für die Anzeige.
+  function lokalAlsAnzeige(n) {
+    if (n.role === "tool") return null;
+    if (n.role === "user") return { role: "user", content: [{ type: "text", text: n._anzeige || n.content }] };
+    var inhalt = n.content ? [{ type: "text", text: n.content }] : [];
+    (n.tool_calls || []).forEach(function (a) {
+      var args = a.function && a.function.arguments;
+      if (typeof args === "string") { try { args = JSON.parse(args); } catch (x) { args = {}; } }
+      inhalt.push({ type: "tool_use", name: a.function && a.function.name, input: args });
+    });
+    return { role: "assistant", content: inhalt };
   }
   // Wandelt eine Gemini-Nachricht in dieselbe Form wie bei Claude, nur für die Anzeige.
   function geminiAlsAnzeige(n) {
@@ -314,7 +328,7 @@
     v.querySelectorAll(".kopieren").forEach(function (btn) {
       btn.onclick = function () { kopieren(btn.closest(".blase").querySelector(".md").innerText); };
     });
-    $("#kosten").textContent = c && c.anbieter === "gemini" ? "Gemini · kostenlos" : c && c.kosten ? "Gespräch ca. $" + c.kosten.toFixed(3) : "";
+    $("#kosten").textContent = c && c.anbieter === "lokal" ? "Lokal · kostenlos, ohne Limit" : c && c.anbieter === "gemini" ? "Gemini · kostenlos" : c && c.kosten ? "Gespräch ca. $" + c.kosten.toFixed(3) : "";
     v.scrollTop = v.scrollHeight;
     window.scrollTo(0, document.body.scrollHeight);
   }
@@ -345,7 +359,7 @@
     if (c && (c.anbieter || "claude") !== e.anbieter && c.nachrichten.length) {
       // Anderer Anbieter: neues Gespräch, weil die Formate verschieden sind.
       Z.aktiverChat = null;
-      toast("Neues Gespräch mit " + (e.anbieter === "claude" ? "Claude" : "Gemini") + ".");
+      toast("Neues Gespräch mit " + ({ claude: "Claude", gemini: "Gemini", lokal: "der lokalen KI" })[e.anbieter] + ".");
     }
     c = aktiverChat(true);
     if (!c.nachrichten.length) c.anbieter = e.anbieter;
@@ -358,7 +372,14 @@
     var letzteN = c.nachrichten[c.nachrichten.length - 1];
     var neueTeile = c.anbieter === "gemini" ? [{ text: kontext }, { text: text }] : [{ type: "text", text: kontext }, { type: "text", text: text }];
     var angehaengt = !!(letzteN && letzteN.role === "user");
-    if (angehaengt) {
+    var vorher = angehaengt ? JSON.stringify(letzteN) : null;
+    if (c.anbieter === "lokal") {
+      // Ollama: Text als eine Zeichenkette; _anzeige ist nur für die Anzeige.
+      if (angehaengt) {
+        letzteN.content += "\n\n" + kontext + "\n\n" + text;
+        letzteN._anzeige = (letzteN._anzeige ? letzteN._anzeige + "\n" : "") + text;
+      } else c.nachrichten.push({ role: "user", content: kontext + "\n\n" + text, _anzeige: text });
+    } else if (angehaengt) {
       var feld = c.anbieter === "gemini" ? "parts" : "content";
       if (!Array.isArray(letzteN[feld])) letzteN[feld] = [{ type: "text", text: String(letzteN[feld]) }];
       Array.prototype.push.apply(letzteN[feld], neueTeile);
@@ -417,9 +438,9 @@
         // Unbeantwortete Frage wieder ins Eingabefeld holen und aus dem Verlauf nehmen,
         // aber nur, wenn noch keine Antwort darauf gespeichert ist (Verlauf bleibt sonst unverändert).
         var letzte = c.nachrichten[c.nachrichten.length - 1];
-        var teile = letzte && (letzte.content || letzte.parts);
-        if (letzte && letzte.role === "user" && teile && teile.length >= 2 && teile[teile.length - 1].text === text) {
-          if (angehaengt) teile.splice(teile.length - 2, 2); else c.nachrichten.pop();
+        if (letzte && letzte.role === "user" && c.nachrichten.indexOf(letzte) === c.nachrichten.length - 1 &&
+            JSON.stringify(letzte).indexOf(JSON.stringify(text).slice(1, -1)) !== -1) {
+          if (angehaengt) c.nachrichten[c.nachrichten.length - 1] = JSON.parse(vorher); else c.nachrichten.pop();
           speichern();
           $("#frage").value = text;
           groesse();
@@ -582,7 +603,7 @@
 
   /* ---------- Einstellungen ---------- */
   var FELDER = { "#e-name": "name", "#e-ki-name": "kiName", "#e-waehrung": "waehrung", "#e-ziel": "ziel", "#e-warum": "warum", "#e-schluessel": "schluessel", "#e-modell": "modell", "#e-sprache": "sprache",
-    "#e-anbieter": "anbieter", "#e-sadaqa": "sadaqaProzent", "#e-gemini-schluessel": "geminiSchluessel", "#e-gemini-modell": "geminiModell" };
+    "#e-anbieter": "anbieter", "#e-lokal-modell": "lokalModell", "#e-sadaqa": "sadaqaProzent", "#e-gemini-schluessel": "geminiSchluessel", "#e-gemini-modell": "geminiModell" };
   function geminiOption(id) {
     var sel = $("#e-gemini-modell");
     if (id && !Array.prototype.some.call(sel.options, function (o) { return o.value === id; })) {
@@ -592,12 +613,41 @@
     }
   }
   function anbieterZeigen() {
-    var g = Z.einstellungen.anbieter !== "claude";
-    $("#zugang-gemini").classList.toggle("versteckt", !g);
-    $("#info-gemini").classList.toggle("versteckt", !g);
-    $("#zugang-claude").classList.toggle("versteckt", g);
-    $("#info-claude").classList.toggle("versteckt", g);
+    var a = Z.einstellungen.anbieter;
+    $("#zugang-lokal").classList.toggle("versteckt", a !== "lokal");
+    $("#zugang-gemini").classList.toggle("versteckt", a !== "gemini");
+    $("#info-gemini").classList.toggle("versteckt", a !== "gemini");
+    $("#zugang-claude").classList.toggle("versteckt", a !== "claude");
+    $("#info-claude").classList.toggle("versteckt", a !== "claude");
   }
+  function lokalOption(id) {
+    var sel = $("#e-lokal-modell");
+    if (id && !Array.prototype.some.call(sel.options, function (o) { return o.value === id; })) {
+      var o = document.createElement("option"); o.value = id; o.textContent = id; sel.appendChild(o);
+    }
+  }
+  // Prüft, ob Ollama läuft, und füllt die Modellliste.
+  function lokalStatusPruefen(still) {
+    var st = $("#lokal-status");
+    if (!still) { st.className = "klein-text leise"; st.textContent = "Prüfe …"; }
+    return lokalPruefen().then(function (p) {
+      if (p.ok && p.modelle.length) {
+        p.modelle.forEach(lokalOption);
+        if (!Z.einstellungen.lokalModell) { Z.einstellungen.lokalModell = p.modell; speichern(); }
+        $("#e-lokal-modell").value = Z.einstellungen.lokalModell;
+        st.className = "klein-text plus";
+        st.textContent = "✓ Lokale KI läuft. Modelle: " + p.modelle.join(", ") + ". Unbegrenzt und kostenlos.";
+      } else if (p.ok) {
+        st.className = "klein-text minus";
+        st.textContent = "Ollama läuft, aber es ist noch kein Modell geladen. Starte „Lokale KI installieren.cmd“.";
+      } else {
+        st.className = "klein-text minus";
+        st.textContent = "Keine lokale KI gefunden. Unter Windows: Doppelklick auf „Lokale KI installieren.cmd“. Ist sie schon installiert, öffne Ollama im Startmenü.";
+      }
+      return p;
+    });
+  }
+  $("#lokal-pruefen").onclick = function () { lokalStatusPruefen(false); };
   $("#modelle-laden").onclick = function () {
     var k = Z.einstellungen.geminiSchluessel;
     if (!k) { toast("Zuerst den Gemini-Schlüssel eintragen."); return; }
@@ -624,6 +674,7 @@
   function einstellungenZeigen() {
     var e = Z.einstellungen;
     geminiOption(e.geminiModell);
+    lokalOption(e.lokalModell);
     Object.keys(FELDER).forEach(function (s) { $(s).value = e[FELDER[s]] || ""; });
     anbieterZeigen();
     $("#e-weckwort").checked = !!e.weckwort;
@@ -639,9 +690,15 @@
       speichern();
       namenSetzen();
       if ((k === "schluessel" || k === "geminiSchluessel") && wert) toast("Schlüssel gespeichert.");
-      if (k === "geminiSchluessel") { _geminiListe = null; Z.einstellungen.geminiErschoepft = null; speichern(); }
+      if (k === "geminiSchluessel") {
+        _geminiListe = null;
+        Z.einstellungen.geminiErschoepft = null;
+        Z.einstellungen.geminiKeinGratis = [];
+        delete Z.einstellungen.geminiSucheOk;
+        speichern();
+      }
       if (k === "geminiSchluessel" && wert && !Z.einstellungen.geminiModell) $("#modelle-laden").click();
-      if (k === "anbieter") { anbieterZeigen(); heuteZeigen(); }
+      if (k === "anbieter") { Z.einstellungen.anbieterManuell = true; speichern(); anbieterZeigen(); heuteZeigen(); if (wert === "lokal") lokalStatusPruefen(false); }
     });
   });
   $("#e-weckwort").onchange = function () {
@@ -735,6 +792,15 @@
   alles();
   $("#b-art").onchange.call($("#b-art"));
   if (!Z.einstellungen.eingerichtet) Einrichtung.start(function () { alles(); zeigeTab("heute"); });
+  // Läuft eine lokale KI (Ollama) und hat man nichts anderes gewählt, wird sie automatisch genutzt.
+  lokalStatusPruefen(true).then(function (p) {
+    if (p.ok && p.modelle.length && Z.einstellungen.anbieter !== "lokal" && !Z.einstellungen.anbieterManuell) {
+      Z.einstellungen.anbieter = "lokal";
+      speichern();
+      alles();
+      toast("Lokale KI gefunden: A&T läuft jetzt unbegrenzt und kostenlos auf deinem PC.");
+    }
+  });
   // Auf einer Internet-Adresse (z. B. GitHub Pages) als App installierbar und schneller beim Start.
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && location.hostname !== "localhost") {
     navigator.serviceWorker.register("sw.js").catch(function () {});

@@ -16,7 +16,7 @@ SCHRIFT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 # Diese Dateien der Web-App kommen ins Paket (Ordner app/).
 APP_DATEIEN = ["index.html", "manifest.webmanifest", "css/style.css",
                "js/lib/marked.min.js", "js/lib/purify.min.js",
-               "js/daten.js", "js/speicher.js", "js/ki.js", "js/gemini.js",
+               "js/daten.js", "js/speicher.js", "js/ki.js", "js/gemini.js", "js/lokal.js",
                "js/stimme.js", "js/einrichtung.js", "js/app.js",
                "a-und-t-192.png", "a-und-t-512.png"]
 
@@ -44,12 +44,13 @@ def main():
     os.makedirs(os.path.dirname(ZIEL), exist_ok=True)
     wurzel = "A-und-T/"
     with zipfile.ZipFile(ZIEL, "w", zipfile.ZIP_DEFLATED) as zf:
-        for name in ["A-und-T starten.cmd", "Installieren.cmd", "LIESMICH.txt"]:
+        for name in ["A-und-T starten.cmd", "Installieren.cmd", "Lokale KI installieren.cmd", "LIESMICH.txt"]:
             zf.write(os.path.join(HIER, name), wurzel + name)
         for name in APP_DATEIEN:
             zf.write(os.path.join(KI, name), wurzel + "app/" + name)
         zf.write(SYMBOL, wurzel + "app/a-und-t.ico")
         zf.write(os.path.join(HIER, "installieren.ps1"), wurzel + "app/installieren.ps1")
+        zf.write(os.path.join(HIER, "lokale-ki.ps1"), wurzel + "app/lokale-ki.ps1")
     print("Gebaut:", ZIEL, os.path.getsize(ZIEL), "Bytes")
 
 

@@ -199,10 +199,21 @@
           <div class="formular">
             <label>KI-Anbieter
               <select id="e-anbieter">
-                <option value="gemini">Google Gemini · kostenlos</option>
+                <option value="lokal">Lokal auf deinem PC · kostenlos, ohne Limit</option>
+                <option value="gemini">Google Gemini · kostenlos mit Limit</option>
                 <option value="claude">Claude · bezahlt, am klügsten</option>
               </select>
             </label>
+          </div>
+          <div id="zugang-lokal" class="zugang">
+            <div class="formular">
+              <label>Lokales Modell
+                <select id="e-lokal-modell"><option value="">Automatisch wählen</option></select>
+              </label>
+              <button type="button" class="knopf klein" id="lokal-pruefen">Verbindung prüfen</button>
+            </div>
+            <p id="lokal-status" class="klein-text leise"></p>
+            <p class="leise klein-text">Die lokale KI läuft mit dem kostenlosen Programm Ollama auf deinem PC: ohne Limit, ohne Konto, ohne Kosten, und deine Daten verlassen den PC nicht. Unter Windows richtest du sie mit einem Doppelklick auf „Lokale KI installieren.cmd“ im A&amp;T-Ordner ein (einmalig, etwa 3 bis 5 GB Download). Auf dem Handy geht das nicht, dort nimm Gemini.</p>
           </div>
           <div id="zugang-gemini" class="formular zugang">
             <label>Gemini-Schlüssel <input id="e-gemini-schluessel" type="password" placeholder="AIza…" autocomplete="off"></label>
@@ -286,7 +297,9 @@
       </div>
 
       <div class="schritt" data-schritt="3">
-        <h2>Kostenlose KI verbinden</h2>
+        <h2>KI verbinden</h2>
+        <p id="ein-lokal" class="klein-text leise">Suche lokale KI auf deinem PC …</p>
+        <p class="klein-text"><strong>Für unterwegs oder ohne lokale KI:</strong> Google Gemini (kostenlos, aber mit Limit).</p>
         <ol class="anleitung">
           <li>Öffne <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> und melde dich mit deinem Google-Konto an.</li>
           <li>Tippe auf „Create API key“ und kopiere den Schlüssel.</li>
@@ -312,6 +325,7 @@
   <script src="js/speicher.js"></script>
   <script src="js/ki.js"></script>
   <script src="js/gemini.js"></script>
+  <script src="js/lokal.js"></script>
   <script src="js/stimme.js"></script>
   <script src="js/einrichtung.js"></script>
   <script src="js/app.js"></script>

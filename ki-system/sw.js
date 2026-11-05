@@ -1,10 +1,10 @@
 /* Service Worker: macht A&T installierbar und lädt die App schneller.
    Netzwerk zuerst, damit Updates sofort ankommen; ohne Netz aus dem Zwischenspeicher.
    Anfragen an die KI (Google, Anthropic) laufen nie über den Zwischenspeicher. */
-var NAME = "a-und-t-v2";
+var NAME = "a-und-t-v3";
 var DATEIEN = ["./", "index.html", "manifest.webmanifest", "css/style.css",
   "js/lib/marked.min.js", "js/lib/purify.min.js", "js/daten.js", "js/speicher.js", "js/ki.js",
-  "js/gemini.js", "js/stimme.js", "js/einrichtung.js", "js/app.js", "a-und-t-192.png", "a-und-t-512.png"];
+  "js/gemini.js", "js/lokal.js", "js/stimme.js", "js/einrichtung.js", "js/app.js", "a-und-t-192.png", "a-und-t-512.png"];
 
 self.addEventListener("install", function (ev) {
   ev.waitUntil(caches.open(NAME).then(function (c) { return c.addAll(DATEIEN); }).then(function () { return self.skipWaiting(); }));

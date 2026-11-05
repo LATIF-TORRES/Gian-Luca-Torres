@@ -75,10 +75,19 @@ async function geminiAnfrage(modell, schluessel, koerper, signal, cb) {
     signal: signal
   });
   if (!antwort.ok) {
-    var text = "";
-    try { text = (await antwort.json()).error.message || ""; } catch (e) {}
+    var text = "", warten = 0;
+    try {
+      var fehler = (await antwort.json()).error || {};
+      text = fehler.message || "";
+      (fehler.details || []).forEach(function (d) {
+        // Google sagt bei Minutenlimits, wie lange man warten soll (z. B. "31s").
+        if (d.retryDelay) warten = parseFloat(d.retryDelay) || 0;
+      });
+    } catch (e) {}
     var f = new Error(text || ("HTTP " + antwort.status));
     f.status = antwort.status;
+    f.warten = warten;
+    f.keinGratis = /limit:\s*0\b/.test(text); // dieses Modell hat in diesem Projekt kein Gratis-Kontingent
     throw f;
   }
   var leser = antwort.body.getReader(), dekoder = new TextDecoder(), puffer = "";
@@ -117,12 +126,15 @@ async function geminiAnfrage(modell, schluessel, koerper, signal, cb) {
   return { parts: parts, quellen: quellen, grund: grund, sperre: sperre };
 }
 
+function kurz(t) { t = String(t || "").replace(/\s+/g, " "); return t.length > 160 ? t.slice(0, 160) + " …" : t; }
+
 function geminiFehlerText(e) {
   if (e && e.name === "AbortError") return "Abgebrochen.";
   if (e.status === 400 && /api key/i.test(e.message)) return "Der Gemini-Schlüssel stimmt nicht. Prüfe ihn unter „Ich“.";
   if (e.status === 403) return "Dein Gemini-Schlüssel darf dieses Modell nicht nutzen. Wähle unter „Ich“ ein anderes Modell.";
   if (e.status === 404) return "Dieses Gemini-Modell gibt es nicht mehr. Tipp unter „Ich“ auf „Modelle laden“.";
-  if (e.status === 429) return "Alle Gratis-Modelle von Gemini haben ihr Limit erreicht. Warte ein paar Minuten oder versuch es morgen wieder. Rechner, Geldbuch und Vorbilder funktionieren weiter.";
+  if (e.status === 429 && e.keinGratis) return "Google gibt deinem Konto für diese Modelle kein Gratis-Kontingent (Meldung „limit: 0“). Warten hilft hier nicht. Nimm die lokale KI: unbegrenzt, kostenlos und ohne Konto (unter „Ich“ → KI-Anbieter → Lokal).";
+  if (e.status === 429) return "Google hat dein Gratis-Limit erreicht. Google meldet: „" + kurz(e.message) + "“. Unbegrenzt und kostenlos geht es mit der lokalen KI (unter „Ich“ → KI-Anbieter → Lokal).";
   if (e.status >= 500) return "Google hat gerade Probleme. Versuch es gleich nochmal.";
   if (e instanceof TypeError) return "Keine Verbindung. Prüfe dein Internet.";
   return "Fehler von Gemini: " + (e.message || e.status);
@@ -149,6 +161,10 @@ async function geminiKandidaten(e) {
   var ids = _geminiListe.filter(function (m) { return !m.vorschau; }).concat(_geminiListe.filter(function (m) { return m.vorschau; }))
     .map(function (m) { return m.id; });
   var liste = [e.geminiModell].concat(ids).filter(function (id, i, a) { return id && a.indexOf(id) === i; });
+  // Modelle ohne Gratis-Kontingent nie mehr versuchen (ausser es gibt sonst keine).
+  var ohne = e.geminiKeinGratis || [];
+  var mitGratis = liste.filter(function (id) { return ohne.indexOf(id) === -1; });
+  if (mitGratis.length) liste = mitGratis;
   var leer = e.geminiErschoepft && e.geminiErschoepft.datum === heuteISO() ? e.geminiErschoepft.ids : [];
   liste = liste.filter(function (id) { return leer.indexOf(id) === -1; }).concat(liste.filter(function (id) { return leer.indexOf(id) !== -1; }));
   return liste.slice(0, 6);
@@ -171,7 +187,9 @@ function antwortGemini(chat, cb) {
       var kandidaten = await geminiKandidaten(e);
       if (!kandidaten.length) throw Object.assign(new Error("Kein passendes Modell gefunden."), { status: 404 });
       var nr = 0, modell = kandidaten[0];
-      var mitSuche = e.websuche !== false;
+      // Web-Suche nur, wenn sie für dieses Konto schon einmal ging (sie kann ein eigenes Limit haben).
+      var mitSuche = e.websuche !== false && e.geminiSucheOk !== false;
+      var gewartet = {}, versuche = 0;
 
       for (var runde = 0; runde < 6 && !gestoppt; runde++) {
         var koerper = {
@@ -184,21 +202,39 @@ function antwortGemini(chat, cb) {
         try {
           erg = await geminiAnfrage(modell, e.geminiSchluessel, koerper, steuerung.signal, cb);
         } catch (f) {
-          // Manche Modelle erlauben Web-Suche und eigene Werkzeuge nicht zusammen: dann ohne Suche.
-          if (f.status === 400 && mitSuche && !/api key/i.test(f.message)) {
+          if (++versuche > 8 || gestoppt) throw f;
+          // Manche Modelle erlauben Web-Suche und eigene Werkzeuge nicht zusammen,
+          // oder die Suche hat kein Gratis-Kontingent: dann ohne Suche, gleiches Modell.
+          if ((f.status === 400 || f.status === 429) && mitSuche && !/api key/i.test(f.message)) {
             mitSuche = false;
+            e.geminiSucheOk = false;
+            speichern();
             runde--;
             continue;
           }
-          // Tageslimit erreicht oder Modell weg: zum nächsten Gratis-Modell wechseln.
+          if (f.status === 429 && f.keinGratis) {
+            e.geminiKeinGratis = (e.geminiKeinGratis || []).concat([modell]);
+            speichern();
+          } else if (f.status === 429 && f.warten > 0 && f.warten <= 40 && !gewartet[modell]) {
+            // Minutenlimit: kurz warten statt alle Modelle durchzuprobieren.
+            gewartet[modell] = true;
+            for (var s = Math.ceil(f.warten); s > 0 && !gestoppt; s--) {
+              cb.status("Google bremst kurz, noch " + s + " Sekunden …");
+              await new Promise(function (r) { setTimeout(r, 1000); });
+            }
+            runde--;
+            continue;
+          } else if (f.status === 429) {
+            geminiErschoepftMerken(modell);
+          }
+          // Zum nächsten Modell wechseln, mit kurzer Pause, damit Google nicht noch mehr bremst.
           if ((f.status === 429 || f.status === 404 || f.status === 503) && nr + 1 < kandidaten.length) {
-            if (f.status === 429) geminiErschoepftMerken(modell);
             modell = kandidaten[++nr];
-            cb.status("Limit erreicht, wechsle zu " + modell + " …");
+            cb.status("wechsle zu " + modell + " …");
+            await new Promise(function (r) { setTimeout(r, 1200); });
             runde--;
             continue;
           }
-          if (f.status === 429) geminiErschoepftMerken(modell);
           throw f;
         }
 
