@@ -7,6 +7,38 @@
  * Die KI handelt automatisch bis zum Tageslimit; darüber wartet die Order auf Freigabe.
  */
 
+// SHA-256 des Besitzer-Codes. Der Code selbst steht nirgends im Programm.
+var BESITZER_HASH = "c67da2576ce17843d0803fd0d5b0ae96b3db7cab9f146f3be12372b9ea3d4eaa";
+
+// Kleine SHA-256-Funktion (funktioniert auch, wenn crypto.subtle fehlt, z. B. bei file://).
+function sha256(text) {
+  var K = [], H = [], i, j, isPrime = function (n) { for (var f = 2; f * f <= n; f++) if (n % f === 0) return false; return true; };
+  for (var n = 2, c = 0; c < 64; n++) if (isPrime(n)) { if (c < 8) H[c] = (Math.pow(n, 1 / 2) * 4294967296) | 0; K[c++] = (Math.pow(n, 1 / 3) * 4294967296) | 0; }
+  var bytes = unescape(encodeURIComponent(text)), w = [], l = bytes.length * 8;
+  for (i = 0; i < bytes.length; i++) w[i >> 2] |= bytes.charCodeAt(i) << ((3 - i) % 4) * 8;
+  w[l >> 5] |= 0x80 << (24 - l % 32);
+  w[((l + 64 >> 9) << 4) + 15] = l;
+  for (j = 0; j < w.length; j += 16) {
+    var a = H.slice(0), W = [];
+    for (i = 0; i < 64; i++) {
+      if (i < 16) W[i] = w[j + i] | 0;
+      else {
+        var x = W[i - 15], y = W[i - 2];
+        W[i] = (((x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ (x >>> 3)) + W[i - 7] + ((y >>> 17 | y << 15) ^ (y >>> 19 | y << 13) ^ (y >>> 10)) + W[i - 16]) | 0;
+      }
+      var e = a[4], t1 = a[7] + ((e >>> 6 | e << 26) ^ (e >>> 11 | e << 21) ^ (e >>> 25 | e << 7)) + ((e & a[5]) ^ (~e & a[6])) + K[i] + W[i];
+      var b = a[0], t2 = ((b >>> 2 | b << 30) ^ (b >>> 13 | b << 19) ^ (b >>> 22 | b << 10)) + ((b & a[1]) ^ (b & a[2]) ^ (a[1] & a[2]));
+      a = [(t1 + t2) | 0].concat(a.slice(0, 7));
+      a[4] = (a[4] + t1) | 0;
+    }
+    for (i = 0; i < 8; i++) H[i] = (H[i] + a[i]) | 0;
+  }
+  return H.map(function (v) { return ("00000000" + (v >>> 0).toString(16)).slice(-8); }).join("");
+}
+function besitzerCodePruefen(code) {
+  return sha256(String(code || "").trim().toUpperCase()) === BESITZER_HASH;
+}
+
 var FINNHUB_URL = "https://finnhub.io/api/v1/";
 var BRANCHE_VERBOTEN = /bank|insurance|tobacco|casino|gambling|brewer|distill|wine|spirit|alcohol|financial services|mortgage|lending|consumer finance|capital markets|adult/i;
 var BRANCHE_PRUEFEN = /beverage|media|hotel|restaurant|leisure|entertainment|food|real estate|reit|diversified/i;
@@ -226,6 +258,7 @@ var DEPOT_WERKZEUGE = [
 ];
 
 async function depotWerkzeug(name, input) {
+  if (!istBesitzer()) return null; // Kunden: diese Werkzeuge gibt es nicht
   try {
     if (name === "kurs_abfragen") {
       var k = await kursHolen(input.symbol);

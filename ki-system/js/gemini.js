@@ -14,9 +14,11 @@ function geminiSchema(s) {
   if (s.required) t.required = s.required;
   return t;
 }
-var GEMINI_FUNKTIONEN = EIGENE_WERKZEUGE.map(function (w) {
-  return { name: w.name, description: w.description, parameters: geminiSchema(w.input_schema) };
-});
+function geminiFunktionen() {
+  return eigeneWerkzeuge().map(function (w) {
+    return { name: w.name, description: w.description, parameters: geminiSchema(w.input_schema) };
+  });
+}
 
 // Holt die Liste der Modelle, die mit diesem Schlüssel Text erzeugen können.
 // Die Namen ändern sich oft, darum fragen wir Google statt sie fest einzutragen.
@@ -195,7 +197,7 @@ function antwortGemini(chat, cb) {
         var koerper = {
           systemInstruction: { parts: [{ text: chat.system }] },
           contents: geminiVerlauf(chat.nachrichten),
-          tools: [{ functionDeclarations: GEMINI_FUNKTIONEN }].concat(mitSuche ? [{ google_search: {} }] : []),
+          tools: [{ functionDeclarations: geminiFunktionen() }].concat(mitSuche ? [{ google_search: {} }] : []),
           generationConfig: { maxOutputTokens: 8192 }
         };
         var erg;

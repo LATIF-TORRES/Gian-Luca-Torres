@@ -36,7 +36,7 @@
     if (name === "geld") geldZeigen();
     if (name === "chat") { verlaufZeigen(); setTimeout(function () { $("#frage").focus(); }, 50); }
     if (name === "einstellungen") einstellungenZeigen();
-    if (name === "depot") Depot.zeigen();
+    if (name === "depot") { if (!istBesitzer()) return zeigeTab("heute"); Depot.zeigen(); }
     window.scrollTo(0, 0);
   }
   $("#tabs").addEventListener("click", function (ev) {
@@ -147,7 +147,9 @@
   /* ---------- Chat ---------- */
   function modusFuellen() {
     var sel = $("#modus");
+    sel.innerHTML = "";
     Object.keys(MODI).forEach(function (k) {
+      if (MODI[k].besitzer && !istBesitzer()) return; // nur für den Besitzer
       var o = document.createElement("option");
       o.value = k;
       o.textContent = MODI[k].titel;
@@ -545,7 +547,7 @@
       li.querySelector("button").onclick = function () { Z.buchungen = Z.buchungen.filter(function (x) { return x !== b; }); speichern(); geldZeigen(); };
       ul.appendChild(li);
     });
-    Depot.ueberweisungenZeigen();
+    if (istBesitzer()) Depot.ueberweisungenZeigen(); else $("#ueberweisungen-karte").classList.add("versteckt");
     rechnen();
   }
   window.geldNeuZeigen = function () { geldZeigen(); };
@@ -797,9 +799,48 @@
   }
   $("#einrichtung-neu").onclick = function () { Einrichtung.start(function () { alles(); zeigeTab("heute"); }); };
 
-  modusFuellen();
+  // Besitzer-Modus: Depot, Halal-Trader und Überweisungen nur für den Besitzer.
+  function besitzerAnzeigen() {
+    var an = istBesitzer();
+    $("#tabs button[data-tab=depot]").classList.toggle("versteckt", !an);
+    $("#tab-depot").classList.toggle("versteckt-immer", !an);
+    $("#besitzer-aus").classList.toggle("versteckt", !an);
+    if (an) $("#besitzer-form").classList.add("versteckt");
+    $("#app-version").textContent = "A&T Version " + APP_VERSION + (an ? " · Besitzer-Modus" : "");
+    var gewaehlt = $("#modus").value;
+    modusFuellen();
+    $("#modus").value = MODI[gewaehlt] && (!MODI[gewaehlt].besitzer || an) ? gewaehlt : "stratege";
+    modusInfo();
+  }
+  var versionKlicks = 0;
+  $("#app-version").onclick = function () {
+    if (istBesitzer()) return;
+    if (++versionKlicks >= 5) { $("#besitzer-form").classList.remove("versteckt"); $("#besitzer-code").focus(); }
+  };
+  $("#besitzer-form").onsubmit = function (ev) {
+    ev.preventDefault();
+    if (besitzerCodePruefen($("#besitzer-code").value)) {
+      Z.einstellungen.besitzer = true;
+      speichern();
+      $("#besitzer-code").value = "";
+      besitzerAnzeigen();
+      toast("Besitzer-Modus an: Depot und Überweisungen sind freigeschaltet.");
+    } else {
+      toast("Code falsch.");
+    }
+  };
+  $("#besitzer-aus").onclick = function () {
+    Z.einstellungen.besitzer = false;
+    speichern();
+    versionKlicks = 0;
+    besitzerAnzeigen();
+    geldZeigen();
+    toast("Besitzer-Modus aus. Deine Depot-Daten bleiben gespeichert.");
+  };
+
   vorbilderZeigen();
   Depot.verbinden();
+  besitzerAnzeigen();
   alles();
   $("#b-art").onchange.call($("#b-art"));
   Neuigkeiten.beimStart();

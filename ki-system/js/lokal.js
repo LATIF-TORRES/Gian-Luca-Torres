@@ -37,9 +37,11 @@ async function lokalPruefen() {
   }
 }
 
-var LOKAL_WERKZEUGE = EIGENE_WERKZEUGE.map(function (w) {
-  return { type: "function", function: { name: w.name, description: w.description, parameters: w.input_schema } };
-});
+function lokalWerkzeuge() {
+  return eigeneWerkzeuge().map(function (w) {
+    return { type: "function", function: { name: w.name, description: w.description, parameters: w.input_schema } };
+  });
+}
 
 // Ohne interne Felder (_anzeige) an Ollama schicken.
 function lokalVerlauf(chat) {
@@ -122,7 +124,7 @@ function antwortLokal(chat, cb) {
           think: mitDenken,
           options: { num_ctx: mitDenken ? 12288 : 8192 }
         };
-        if (mitWerkzeugen) koerper.tools = LOKAL_WERKZEUGE;
+        if (mitWerkzeugen) koerper.tools = lokalWerkzeuge();
         var erg;
         try {
           cb.status("denkt nach …");

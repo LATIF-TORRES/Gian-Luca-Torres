@@ -55,15 +55,17 @@ var EIGENE_WERKZEUGE = [
   }
 ];
 
-// Depot- und Überweisungs-Werkzeuge (depot.js) gehören dazu.
-if (typeof DEPOT_WERKZEUGE !== "undefined") EIGENE_WERKZEUGE = EIGENE_WERKZEUGE.concat(DEPOT_WERKZEUGE);
+// Depot- und Überweisungs-Werkzeuge (depot.js) gibt es nur im Besitzer-Modus.
+function eigeneWerkzeuge() {
+  return istBesitzer() && typeof DEPOT_WERKZEUGE !== "undefined" ? EIGENE_WERKZEUGE.concat(DEPOT_WERKZEUGE) : EIGENE_WERKZEUGE;
+}
 
 function werkzeugeFuer(modell) {
   // Die Liste bleibt in einem Gespräch immer gleich, sonst verfällt das Nachdenken früherer Antworten.
   var suche = modell === "claude-haiku-5-5"
     ? { type: "web_search_20250305", name: "web_search", max_uses: 5 }
     : { type: "web_search_20260209", name: "web_search", max_uses: 5 };
-  return EIGENE_WERKZEUGE.concat([suche]);
+  return eigeneWerkzeuge().concat([suche]);
 }
 
 async function werkzeugAusfuehren(name, input) {

@@ -270,3 +270,5 @@ a.knopf { text-decoration: none; display: inline-block; }
 @media (max-width: 380px) {
   .tabs button { padding: 6px 6px; }
 }
+.tab.versteckt-immer, .tab.versteckt-immer.aktiv { display: none; }
+.versionszeile { cursor: default; user-select: none; }

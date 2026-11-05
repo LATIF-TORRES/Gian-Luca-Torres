@@ -8,7 +8,7 @@ var VOLLER_NAME = "Amanah & Tijara";
 function leererZustand() {
   return {
     einstellungen: {
-      eingerichtet: false,
+      eingerichtet: false, besitzer: false,
       name: "", kiName: STANDARD_NAME, waehrung: "CHF", ziel: 0, warum: "",
       anbieter: "gemini", anbieterManuell: false, lokalModell: "", geminiSchluessel: "", geminiModell: "",
       schluessel: "", modell: "claude-opus-5-5", sprache: "de-CH",
@@ -167,7 +167,7 @@ function kontextFuerKi() {
   if (Z.gedaechtnis.length) {
     teile.push("Was du über die Person weisst:\n" + Z.gedaechtnis.map(function (g) { return "- " + g.text; }).join("\n"));
   }
-  if (typeof depotKurzFuerKi === "function") teile.push(depotKurzFuerKi());
+  if (istBesitzer() && typeof depotKurzFuerKi === "function") teile.push(depotKurzFuerKi());
   var offen = Z.aufgaben.filter(function (a) { return !a.erledigt; });
   if (offen.length) {
     teile.push("Offene Aufgaben:\n" + offen.slice(-15).map(function (a) { return "- " + a.text + (a.wichtig ? " (wichtigste)" : ""); }).join("\n"));
@@ -180,3 +180,6 @@ function hatSchluessel() {
   if (e.anbieter === "lokal") return true; // braucht keinen Schlüssel
   return e.anbieter === "claude" ? !!e.schluessel : !!e.geminiSchluessel;
 }
+
+// Besitzer-Modus: Depot und Überweisungen gibt es nur für den Besitzer, Kunden sehen sie nicht.
+function istBesitzer() { return Z.einstellungen.besitzer === true; }

@@ -21,7 +21,10 @@ Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt u
 - Bei Vorbildern mit verbotenen Geschäftsfeldern (z. B. Alkohol bei LVMH, Banken bei Buffett) steht ein Halal-Hinweis: Du übernimmst nur das Prinzip.
 - Wo die Gelehrten verschiedener Meinung sind (z. B. Krypto), sagt der Mentor das offen. Er gibt keine Fatwa und verweist auf einen Gelehrten.
 
-## Übungs-Depot und Überweisungen (nur in deiner Version gedacht)
+## Übungs-Depot und Überweisungen (nur im Besitzer-Modus)
+
+Kunden sehen davon nichts: kein Depot-Tab, keine Rolle „Halal-Trader“, keine Überweisungen. Auch die KI bekommt diese Werkzeuge und Anweisungen nicht. Freischalten: **Ich → Daten**, 5-mal auf die Versionsnummer tippen, Besitzer-Code eingeben. Im Programm steht nur der SHA-256-Hash des Codes (`BESITZER_HASH` in `js/depot.js`), nicht der Code selbst. Ausschalten geht unter **Ich**, die Depot-Daten bleiben dabei gespeichert.
+
 
 - **Depot-Tab:** Spielgeld (Start 10 000 USD, einstellbar) mit echten US-Kursen von [Finnhub](https://finnhub.io) (kostenloser Schlüssel, nur für privaten Gebrauch).
 - **Die KI handelt selbst** (Rolle „Halal-Trader“, Werkzeug `order_aufgeben`): bis zum Tageslimit sofort, darüber landet die Order unter „Wartet auf deine Freigabe“.

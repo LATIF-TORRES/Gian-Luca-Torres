@@ -1,13 +1,14 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "3.3"; // muss mit version.json übereinstimmen
+var APP_VERSION = "3.4"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
-  { titel: "Übungs-Depot: die KI handelt für dich", text: "Neuer Bereich „Depot“: echte Kurse, Spielgeld. Die Rolle „Halal-Trader“ analysiert Aktien und handelt selbst, bis zu deinem Tageslimit sofort, darüber nur mit deiner Freigabe. Halal ist fest eingebaut: nur Aktien von deiner Halal-Liste, kein Hebel, keine Leerverkäufe. Für Kurse brauchst du einen kostenlosen Schlüssel von finnhub.io." },
-  { titel: "Überweisungen vorbereiten (Revolut)", text: "Sag dem Mentor, wem du wie viel überweisen willst. Er prüft die IBAN und legt alles unter „Geld → Überweisungen“ zum Kopieren bereit. Senden musst du in der Revolut-App, weil Revolut für Privatkonten keine Schnittstelle anbietet." },
+  { titel: "Besser auf kleinen Handys", text: "Die Bereiche oben passen jetzt auch auf schmale Bildschirme, ohne dass etwas abgeschnitten wird." },
+  { besitzer: true, titel: "Übungs-Depot: die KI handelt für dich", text: "Neuer Bereich „Depot“: echte Kurse, Spielgeld. Die Rolle „Halal-Trader“ analysiert Aktien und handelt selbst, bis zu deinem Tageslimit sofort, darüber nur mit deiner Freigabe. Halal ist fest eingebaut: nur Aktien von deiner Halal-Liste, kein Hebel, keine Leerverkäufe. Für Kurse brauchst du einen kostenlosen Schlüssel von finnhub.io." },
+  { besitzer: true, titel: "Überweisungen vorbereiten (Revolut)", text: "Sag dem Mentor, wem du wie viel überweisen willst. Er prüft die IBAN und legt alles unter „Geld → Überweisungen“ zum Kopieren bereit. Senden musst du in der Revolut-App, weil Revolut für Privatkonten keine Schnittstelle anbietet." },
   { titel: "Klüger und direkter", text: "A&T denkt jetzt wie ein erfahrener Unternehmer: prüft Nachfrage, Marge und Konkurrenz, sagt offen, wenn eine Idee schwach ist, nennt konkrete Anbieter und Preise und antwortet ohne unnötige Warnhinweise. Neue Gespräche nutzen das sofort." },
   { titel: "Gründlich-Modus bei der lokalen KI", text: "Stellst du im Mentor unten „Gründlich“ ein, denkt die lokale KI vor der Antwort nach. Das dauert länger, die Antworten werden aber besser." },
   { titel: "Grösseres Modell für starke PCs", text: "Hat dein PC 32 GB Arbeitsspeicher oder mehr, lädt „A&T - Lokale KI einrichten“ (Startmenü) jetzt das grössere Modell qwen3:14b. A&T nimmt automatisch das beste vorhandene Modell." },
@@ -30,7 +31,7 @@ var Neuigkeiten = (function () {
 
   function zeigen() {
     $("#neu-version").textContent = "Version " + APP_VERSION;
-    $("#neu-liste").innerHTML = NEUIGKEITEN.map(function (n) {
+    $("#neu-liste").innerHTML = NEUIGKEITEN.filter(function (n) { return !n.besitzer || istBesitzer(); }).map(function (n) {
       return "<li><strong>" + n.titel.replace(/</g, "&lt;") + "</strong><br><span class='leise'>" + n.text.replace(/</g, "&lt;") + "</span></li>";
     }).join("");
     $("#neuigkeiten").classList.remove("versteckt");
