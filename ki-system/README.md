@@ -21,6 +21,13 @@ Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt u
 - Bei Vorbildern mit verbotenen Geschäftsfeldern (z. B. Alkohol bei LVMH, Banken bei Buffett) steht ein Halal-Hinweis: Du übernimmst nur das Prinzip.
 - Wo die Gelehrten verschiedener Meinung sind (z. B. Krypto), sagt der Mentor das offen. Er gibt keine Fatwa und verweist auf einen Gelehrten.
 
+## Für bestehende Kunden und Updates
+
+- **Version:** steht in `js/neuigkeiten.js` (`APP_VERSION`) und in `version.json`. Bei jedem neuen Paket beide erhöhen und die Liste `NEUIGKEITEN` anpassen.
+- **„Das ist neu“:** Kunden, die A&T schon eingerichtet haben, sehen nach einem Update einmal ein Fenster mit den Änderungen. Neue Kunden sehen stattdessen den Einrichtungs-Assistenten. Später jederzeit unter **Ich → Was ist neu?**
+- **Update-Hinweis:** Die Windows-Version schaut einmal am Tag in `version.json` nach. Ist dort eine höhere Version eingetragen, erscheint auf der Startseite ein Download-Knopf. Die Online-Version (GitHub Pages) aktualisiert sich von selbst.
+- **Daten bleiben:** Gespräche, Gedächtnis, Aufgaben und Geldbuch bleiben bei jedem Update erhalten. Alte Einträge werden bei Bedarf umgestellt (z. B. „Reinigung“ → Ausgabe). Niemand wird ungefragt auf einen anderen KI-Anbieter umgestellt. Nur wenn eine lokale KI gefunden wird und man vorher nichts selbst gewählt hat, nutzt A&T sie.
+
 ## KI ohne Limit: lokal auf deinem PC
 
 Jede KI im Internet (Google, OpenAI, Anthropic) begrenzt die Gratis-Nutzung. Bei manchen Google-Konten gibt es für einzelne Modelle sogar gar kein Gratis-Kontingent (Meldung „limit: 0“). **Wirklich unbegrenzt und kostenlos geht es nur, wenn die KI auf deinem eigenen PC läuft.** A&T nutzt dafür das kostenlose Programm [Ollama](https://ollama.com) mit dem freien Modell Qwen3.

@@ -254,3 +254,7 @@ body.gesperrt { overflow: hidden; }
 .liste li.buchung > .wachsen { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .liste li.buchung > strong { white-space: nowrap; }
 .gold-zahl { color: var(--gold); }
+.neu-liste { padding-left: 18px; margin: 12px 0; }
+.neu-liste li { margin: 0 0 12px; }
+.neu-liste li span { font-size: .92rem; }
+a.knopf { text-decoration: none; display: inline-block; }

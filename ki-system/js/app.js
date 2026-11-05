@@ -791,7 +791,15 @@
   vorbilderZeigen();
   alles();
   $("#b-art").onchange.call($("#b-art"));
+  Neuigkeiten.beimStart();
   if (!Z.einstellungen.eingerichtet) Einrichtung.start(function () { alles(); zeigeTab("heute"); });
+  $("#neu-zeigen").onclick = Neuigkeiten.zeigen;
+  $("#update-link").href = DOWNLOAD_URL;
+  Neuigkeiten.updatePruefen(false).then(function (v) {
+    if (!v) return;
+    $("#update-version").textContent = v;
+    $("#hinweis-update").classList.remove("versteckt");
+  });
   // Läuft eine lokale KI (Ollama) und hat man nichts anderes gewählt, wird sie automatisch genutzt.
   lokalStatusPruefen(true).then(function (p) {
     if (p.ok && p.modelle.length && Z.einstellungen.anbieter !== "lokal" && !Z.einstellungen.anbieterManuell) {
