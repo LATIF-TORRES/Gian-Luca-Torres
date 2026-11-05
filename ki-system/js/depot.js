@@ -71,10 +71,10 @@ async function finnhub(pfad) {
   if (!r.ok) throw new Error("Finnhub antwortet nicht (" + r.status + ").");
   return r.json();
 }
-async function kursHolen(symbol) {
+async function kursHolen(symbol, frisch) {
   symbol = symbolSauber(symbol);
   var c = _kursCache[symbol];
-  if (c && Date.now() - c.zeit < 15000) return c;
+  if (!frisch && c && Date.now() - c.zeit < 15000) return c;
   var q = await finnhub("quote?symbol=" + encodeURIComponent(symbol));
   if (!q || !(q.c > 0)) throw new Error("Kein Kurs für „" + symbol + "“ gefunden. Stimmt das Kürzel (z. B. AAPL)?");
   c = { symbol: symbol, kurs: q.c, aenderung: q.dp, hoch: q.h, tief: q.l, vortag: q.pc, zeit: Date.now() };
@@ -100,14 +100,15 @@ function aufHalalListe(symbol) {
 
 function heuteAutomatisch() {
   var heute = heuteISO();
-  return depot().orders.filter(function (o) { return o.quelle === "ki" && o.zeit.slice(0, 10) === heute; })
+  return depot().orders.filter(function (o) { return (o.quelle === "ki" || o.quelle === "auto") && o.zeit.slice(0, 10) === heute; })
     .reduce(function (s, o) { return s + o.wert; }, 0);
 }
 
 // Prüft alle festen Regeln. Gibt einen Fehlertext zurück oder null.
 function orderRegeln(symbol, seite, anzahl, kurs) {
   var d = depot();
-  if (!aufHalalListe(symbol)) return "„" + symbol + "“ ist nicht auf deiner Halal-Liste. Nur geprüfte Aktien dürfen gehandelt werden.";
+  // Kaufen nur von der Halal-Liste. Verkaufen (aussteigen) geht immer, auch wenn eine Aktie von der Liste entfernt wurde.
+  if (seite === "kauf" && !aufHalalListe(symbol)) return "„" + symbol + "“ ist nicht auf deiner Halal-Liste. Nur geprüfte Aktien dürfen gekauft werden.";
   if (seite !== "kauf" && seite !== "verkauf") return "Seite muss kauf oder verkauf sein.";
   if (!(anzahl >= 1) || Math.floor(anzahl) !== anzahl) return "Anzahl muss eine ganze Zahl ab 1 sein.";
   var wert = kurs * anzahl;
@@ -145,7 +146,7 @@ async function orderAufgeben(symbol, seite, anzahl, quelle, begruendung) {
   var fehler = orderRegeln(symbol, seite, anzahl, k.kurs);
   if (fehler) return { fehler: true, text: fehler };
   var d = depot(), wert = k.kurs * anzahl;
-  if (quelle === "ki" && heuteAutomatisch() + wert > d.tageslimit) {
+  if ((quelle === "ki" || quelle === "auto") && heuteAutomatisch() + wert > d.tageslimit) {
     d.offen.push({ id: neueId(), zeit: new Date().toISOString(), symbol: symbol, seite: seite, anzahl: anzahl, kurs: k.kurs, begruendung: begruendung || "" });
     speichern();
     return { text: "Order über dem Tageslimit (" + usd(d.tageslimit) + "): " + seite + " " + anzahl + " " + symbol + " zu etwa " + usd(k.kurs) + " wartet im Depot auf die Freigabe der Person. Nicht ausgeführt." };
@@ -275,12 +276,130 @@ async function depotWerkzeug(name, input) {
       return { text: text };
     }
     if (name === "depot_anzeigen") return { text: input.mit_kursen === false ? depotKurzFuerKi() : await depotText() };
-    if (name === "order_aufgeben") return await orderAufgeben(input.symbol, input.seite, Number(input.anzahl), "ki", input.begruendung);
+    if (name === "order_aufgeben") {
+      if (!AUTO.laeuft) return await orderAufgeben(input.symbol, input.seite, Number(input.anzahl), "ki", input.begruendung);
+      // Selbstständige Runde: feste Grenzen im Programm
+      var a = autoEinstellungen();
+      if (AUTO.orders >= 1) return { fehler: true, text: "Pro selbstständiger Runde ist nur eine Order erlaubt." };
+      if (autoTradesHeute() >= a.maxTrades) return { fehler: true, text: "Höchstzahl selbstständiger Trades für heute (" + a.maxTrades + ") erreicht." };
+      var r = await orderAufgeben(input.symbol, input.seite, Number(input.anzahl), "auto", "[Auto] " + (input.begruendung || ""));
+      if (!r.fehler) AUTO.orders++;
+      return r;
+    }
     if (name === "ueberweisung_vorbereiten") return ueberweisungVorbereiten(input.empfaenger, input.iban, input.betrag, input.waehrung, input.zweck);
   } catch (e) {
     return { fehler: true, text: e.message };
   }
   return null;
+}
+
+/* ---------- Selbstständiger Handel ---------- */
+
+var AUTO = { laeuft: false, orders: 0, letzteRegel: 0 };
+
+function autoEinstellungen() {
+  var d = depot();
+  if (!d.auto) d.auto = {};
+  var std = { an: false, intervall: 30, stop: 3, ziel: 5, maxTrades: 3, letzte: 0, protokoll: [] };
+  Object.keys(std).forEach(function (k) { if (d.auto[k] === undefined) d.auto[k] = std[k]; });
+  return d.auto;
+}
+function autoTradesHeute() {
+  var heute = heuteISO();
+  return depot().orders.filter(function (o) { return o.quelle === "auto" && o.zeit.slice(0, 10) === heute; }).length;
+}
+// US-Börse (New York) offen? Mo bis Fr, 9:30 bis 16:00 Ortszeit. Feiertage sind nicht berücksichtigt.
+function boerseOffen(jetzt) {
+  var teile = {};
+  new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false })
+    .formatToParts(jetzt || new Date()).forEach(function (t) { teile[t.type] = t.value; });
+  if (teile.weekday === "Sat" || teile.weekday === "Sun") return false;
+  var min = (Number(teile.hour) % 24) * 60 + Number(teile.minute);
+  return min >= 570 && min < 960;
+}
+function autoNotiz(text) {
+  var a = autoEinstellungen();
+  a.protokoll.push({ zeit: new Date().toISOString(), text: text });
+  if (a.protokoll.length > 60) a.protokoll.splice(0, a.protokoll.length - 60);
+  speichern();
+}
+
+// Stop-Loss und Gewinnziel: entscheidet das Programm, nicht die KI.
+async function regelnPruefen() {
+  var d = depot(), a = autoEinstellungen(), syms = Object.keys(d.positionen), meldungen = [];
+  for (var i = 0; i < syms.length; i++) {
+    var p = d.positionen[syms[i]], k;
+    try { k = (await kursHolen(syms[i], true)).kurs; } catch (e) { continue; }
+    var prozent = (k - p.einstand) / p.einstand * 100;
+    var grund = prozent <= -a.stop ? "Stop-Loss " + prozent.toFixed(1) + " %" : prozent >= a.ziel ? "Gewinnziel " + prozent.toFixed(1) + " %" : "";
+    if (!grund) continue;
+    var r = await orderAufgeben(syms[i], "verkauf", p.anzahl, "regel", grund);
+    meldungen.push(grund + ": " + r.text);
+  }
+  meldungen.forEach(autoNotiz);
+  return meldungen;
+}
+
+function autoFrage() {
+  var a = autoEinstellungen();
+  return "Selbstständige Handelsrunde (" + new Date().toLocaleString("de-CH") + "). " +
+    "Hol mit kurs_abfragen die Kurse der Aktien auf der Halal-Liste und schau mit depot_anzeigen ins Depot. " +
+    "Handle NUR, wenn du die Gewinnchance als hoch einschätzt: Zuversicht mindestens 8 von 10 und ein konkreter Grund aus den Kursdaten. " +
+    "Nichtstun ist die Regel und völlig in Ordnung. Höchstens eine Order, höchstens 20 % des Bargelds. " +
+    "Das Programm verkauft selbst bei " + a.stop + " % Verlust (Stop-Loss) oder " + a.ziel + " % Gewinn. " +
+    "Schreib zum Schluss genau eine Zeile: „Entscheidung: … | Zuversicht: x/10 | Grund: …“.";
+}
+
+async function autoRunde(test) {
+  var a = autoEinstellungen();
+  if (AUTO.laeuft || !istBesitzer()) return;
+  if (!test && !a.an) return;
+  if (!test && !boerseOffen()) return;
+  AUTO.laeuft = true; AUTO.orders = 0;
+  a.letzte = Date.now(); speichern();
+  try {
+    if (!depot().finnhubSchluessel) { autoNotiz("Übersprungen: Finnhub-Schlüssel fehlt."); return; }
+    if (!depot().halalListe.length) { autoNotiz("Übersprungen: Halal-Liste ist leer."); return; }
+    await regelnPruefen();
+    if (autoTradesHeute() >= a.maxTrades) { autoNotiz("Höchstzahl Trades für heute erreicht. Nur Stop-Loss und Gewinnziel geprüft."); return; }
+    if (!hatSchluessel()) { autoNotiz("Übersprungen: keine KI verbunden."); return; }
+    var e = Z.einstellungen;
+    var chat = { id: "auto", anbieter: e.anbieter, modus: "trader", system: grundauftrag(e.kiName || STANDARD_NAME), nachrichten: [], kosten: 0 };
+    var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + MODI.trader.auftrag + "\n" + kontextFuerKi() + "\n</kontext>";
+    var frage = autoFrage();
+    if (chat.anbieter === "gemini") chat.nachrichten.push({ role: "user", parts: [{ text: kontext }, { text: frage }] });
+    else if (chat.anbieter === "lokal") chat.nachrichten.push({ role: "user", content: kontext + "\n\n" + frage });
+    else chat.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: frage }] });
+    var text = "", aktionen = [], fehler = "";
+    await new Promise(function (fertig) {
+      antwortHolen(chat, {
+        text: function (t) { text += t; }, status: function () {}, quelle: function () {},
+        werkzeug: function (name, ergebnis) { if (name === "order_aufgeben") aktionen.push(ergebnis); },
+        fertig: fertig, fehler: function (f) { fehler = f; fertig(); }
+      });
+    });
+    if (fehler) { autoNotiz("Fehler: " + fehler); return; }
+    var zeile = (text.match(/Entscheidung:[^\n]*/) || [""])[0] || text.replace(/\s+/g, " ").slice(-200);
+    autoNotiz((aktionen.length ? aktionen.join(" ") + " " : "Keine Order. ") + zeile.trim());
+  } catch (f) {
+    autoNotiz("Fehler: " + (f && f.message ? f.message : f));
+  } finally {
+    AUTO.laeuft = false;
+    if (typeof Depot !== "undefined" && document.querySelector("#tab-depot.aktiv")) Depot.zeigen();
+  }
+}
+
+// Läuft, solange A&T offen ist: jede Minute prüfen, ob eine Runde fällig ist.
+function autoTakt() {
+  if (!istBesitzer()) return;
+  var a = autoEinstellungen();
+  if (!a.an || !boerseOffen()) return;
+  if (Date.now() - a.letzte >= a.intervall * 60000) { autoRunde(false); return; }
+  // Stop-Loss und Gewinnziel zusätzlich alle 5 Minuten prüfen
+  if (!AUTO.laeuft && Object.keys(depot().positionen).length && Date.now() - AUTO.letzteRegel >= 300000) {
+    AUTO.letzteRegel = Date.now();
+    regelnPruefen().catch(function () {});
+  }
 }
 
 /* ---------- Oberfläche: Depot-Tab und Überweisungen ---------- */
@@ -356,12 +475,32 @@ var Depot = (function () {
       hl.appendChild(li);
     });
 
+    var a = autoEinstellungen();
+    $("#auto-an").checked = !!a.an;
+    $("#auto-intervall").value = String(a.intervall);
+    $("#auto-stop").value = a.stop;
+    $("#auto-ziel").value = a.ziel;
+    $("#auto-max").value = a.maxTrades;
+    var offen = boerseOffen();
+    $("#auto-status").textContent = (a.an ? "An" : "Aus") + " · US-Börse " + (offen ? "offen" : "geschlossen (offen Mo bis Fr, 15:30 bis 22:00 Schweizer Zeit)") +
+      " · Heute selbstständig: " + autoTradesHeute() + " von " + a.maxTrades + " Trades" +
+      (a.an && offen ? " · nächste Runde in etwa " + Math.max(0, Math.ceil((a.letzte + a.intervall * 60000 - Date.now()) / 60000)) + " Min." : "") +
+      (Z.einstellungen.anbieter === "gemini" ? " · Tipp: Mit Gemini verbraucht jede Runde Gratis-Anfragen, die lokale KI hat kein Limit." : "");
+    var pl = $("#auto-protokoll");
+    var eintraege = a.protokoll.slice(-12).reverse();
+    pl.innerHTML = eintraege.length ? "" : "<li class='leise'>Noch keine Runde.</li>";
+    eintraege.forEach(function (x) {
+      var li = document.createElement("li"); li.className = "buchung";
+      li.innerHTML = "<span class='leise datum'>" + esc(new Date(x.zeit).toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })) + "</span><span class='wachsen klein-text'>" + esc(x.text) + "</span>";
+      pl.appendChild(li);
+    });
+
     var ol = $("#depot-orders");
     var letzte = d.orders.slice(-15).reverse();
     ol.innerHTML = letzte.length ? "" : "<li class='leise'>Noch keine Orders.</li>";
     letzte.forEach(function (o) {
       var li = document.createElement("li"); li.className = "buchung";
-      li.innerHTML = "<span class='leise datum'>" + esc(o.zeit.slice(5, 10).split("-").reverse().join(".")) + "</span><span class='wachsen'>" + (o.seite === "kauf" ? "Kauf " : "Verkauf ") + o.anzahl + " " + esc(o.symbol) + " · " + (o.quelle === "ki" ? "<em class='marke-klein mittel'>KI</em>" : "<em class='marke-klein gut'>du</em>") +
+      li.innerHTML = "<span class='leise datum'>" + esc(o.zeit.slice(5, 10).split("-").reverse().join(".")) + "</span><span class='wachsen'>" + (o.seite === "kauf" ? "Kauf " : "Verkauf ") + o.anzahl + " " + esc(o.symbol) + " · " + ({ ki: "<em class='marke-klein mittel'>KI</em>", auto: "<em class='marke-klein mittel'>Auto</em>", regel: "<em class='marke-klein schlecht'>Stop/Ziel</em>" }[o.quelle] || "<em class='marke-klein gut'>du</em>") +
         (o.begruendung ? "<br><span class='leise klein-text'>" + esc(o.begruendung) + "</span>" : "") + "</span><strong>" + usd(o.wert) + "</strong>";
       ol.appendChild(li);
     });
@@ -369,6 +508,23 @@ var Depot = (function () {
   function kurs(s, p) { return kurse[s] || p.einstand; }
 
   function verbinden() {
+    $("#auto-an").onchange = function () {
+      var a = autoEinstellungen();
+      if (this.checked && !confirm("Selbstständigen Handel einschalten? A&T handelt dann ohne Rückfrage bis zu deinem Tageslimit, solange A&T offen ist.")) { this.checked = false; return; }
+      a.an = this.checked; if (a.an) a.letzte = 0; speichern();
+      autoNotiz(a.an ? "Selbstständiger Handel eingeschaltet." : "Selbstständiger Handel ausgeschaltet.");
+      zeigen();
+    };
+    $("#auto-intervall").onchange = function () { autoEinstellungen().intervall = Number(this.value) || 30; speichern(); zeigen(); };
+    $("#auto-stop").onchange = function () { autoEinstellungen().stop = Math.min(50, Math.max(0.5, parseFloat(this.value) || 3)); speichern(); zeigen(); };
+    $("#auto-ziel").onchange = function () { autoEinstellungen().ziel = Math.min(100, Math.max(0.5, parseFloat(this.value) || 5)); speichern(); zeigen(); };
+    $("#auto-max").onchange = function () { autoEinstellungen().maxTrades = Math.min(20, Math.max(0, parseInt(this.value, 10) || 0)); speichern(); zeigen(); };
+    $("#auto-jetzt").onclick = async function () {
+      this.disabled = true; meldung("Runde läuft …");
+      await autoRunde(true);
+      this.disabled = false; meldung("Runde fertig. Siehe Protokoll."); zeigen();
+    };
+    setInterval(autoTakt, 60000);
     $("#depot-hinweis-ok").onclick = function () { depot().hinweisGesehen = true; speichern(); zeigen(); };
     $("#d-finnhub").onchange = function () { depot().finnhubSchluessel = this.value.trim(); _kursCache = {}; speichern(); meldung("Finnhub-Schlüssel gespeichert."); aktualisieren(); };
     $("#d-limit").onchange = function () { depot().tageslimit = Math.max(0, parseFloat(this.value) || 0); speichern(); zeigen(); };

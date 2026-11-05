@@ -23,6 +23,8 @@ Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt u
 
 ## Übungs-Depot und Überweisungen (nur im Besitzer-Modus)
 
+**Selbstständiger Handel (ab 3.5):** Im Depot einschaltbar. Solange A&T offen ist und die US-Börse offen hat, macht A&T alle 15, 30 oder 60 Minuten eine Handelsrunde mit der gewählten KI (am besten die lokale, wegen des fehlenden Limits). Fest im Programm: höchstens 1 Order pro Runde, Höchstzahl Trades pro Tag, Tageslimit, Halal-Liste für Käufe. Stop-Loss und Gewinnziel (Standard −3 % / +5 %, einstellbar) setzt das Programm selbst um und prüft sie alle 5 Minuten mit frischen Kursen. Jede Runde steht im Protokoll. Verkaufen (aussteigen) ist immer erlaubt, auch wenn eine Aktie von der Halal-Liste entfernt wurde.
+
 Kunden sehen davon nichts: kein Depot-Tab, keine Rolle „Halal-Trader“, keine Überweisungen. Auch die KI bekommt diese Werkzeuge und Anweisungen nicht. Freischalten: **Ich → Daten**, 5-mal auf die Versionsnummer tippen, Besitzer-Code eingeben. Im Programm steht nur der SHA-256-Hash des Codes (`BESITZER_HASH` in `js/depot.js`), nicht der Code selbst. Ausschalten geht unter **Ich**, die Depot-Daten bleiben dabei gespeichert.
 
 

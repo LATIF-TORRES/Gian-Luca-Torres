@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "3.4"; // muss mit version.json übereinstimmen
+var APP_VERSION = "3.5"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { besitzer: true, titel: "Selbstständiger Handel", text: "Im Depot kannst du einschalten, dass A&T alle 15, 30 oder 60 Minuten selbst eine Handelsrunde macht, solange A&T offen ist und die US-Börse offen hat. Gehandelt wird nur bei hoher Zuversicht. Stop-Loss und Gewinnziel setzt das Programm selbst um. Alles steht im Protokoll." },
   { titel: "Besser auf kleinen Handys", text: "Die Bereiche oben passen jetzt auch auf schmale Bildschirme, ohne dass etwas abgeschnitten wird." },
   { besitzer: true, titel: "Übungs-Depot: die KI handelt für dich", text: "Neuer Bereich „Depot“: echte Kurse, Spielgeld. Die Rolle „Halal-Trader“ analysiert Aktien und handelt selbst, bis zu deinem Tageslimit sofort, darüber nur mit deiner Freigabe. Halal ist fest eingebaut: nur Aktien von deiner Halal-Liste, kein Hebel, keine Leerverkäufe. Für Kurse brauchst du einen kostenlosen Schlüssel von finnhub.io." },
   { besitzer: true, titel: "Überweisungen vorbereiten (Revolut)", text: "Sag dem Mentor, wem du wie viel überweisen willst. Er prüft die IBAN und legt alles unter „Geld → Überweisungen“ zum Kopieren bereit. Senden musst du in der Revolut-App, weil Revolut für Privatkonten keine Schnittstelle anbietet." },
