@@ -82,7 +82,7 @@ function shell(root, g, level, { onExit, onDone, onAgain }) {
       const l = $('.g-lives', el); l.hidden = false;
       l.innerHTML = Array.from({ length: max }, (_, i) => `<span class="life${i >= left ? ' lost' : ''}">${icon}</span>`).join('');
     },
-    // Für schnelle Spiele: Flocke freut sich bei 5 und 10 richtigen in Folge
+    // Für schnelle Spiele: Pasha freut sich bei 5 und 10 richtigen in Folge
     hit(ok) {
       if (!ok) { streak = 0; return; }
       streak++;

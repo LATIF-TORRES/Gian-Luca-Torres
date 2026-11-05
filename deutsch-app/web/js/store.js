@@ -14,7 +14,7 @@ const empty = () => ({
   learned: {},    // "u01:w3": true
   settings: { sound: true, speak: true },
   games: {},      // "memory": { easy: Bestwert, medium: …, hard: … }
-  lastSeen: 0,    // letzter Besuch (für Flockes Begrüssung)
+  lastSeen: 0,    // letzter Besuch (für Pashas Begrüssung)
   catIntro: false,
   speakOffUntil: 0,
   updatedAt: 0,

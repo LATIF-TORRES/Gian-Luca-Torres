@@ -20,7 +20,7 @@ const h = (html) => { const d = document.createElement('div'); d.innerHTML = htm
 
 let user = null;
 let data = null; // { course, premium, whatsapp }
-let daysAway = null; // Tage seit dem letzten Besuch (für Flockes Begrüssung)
+let daysAway = null; // Tage seit dem letzten Besuch (für Pashas Begrüssung)
 let greeting = null; // Begrüssung bleibt während des Besuchs gleich
 
 setLang(detectLang());
@@ -153,7 +153,7 @@ function wireTabs(el) {
   }));
 }
 
-// ---------- Flocke auf der Startseite
+// ---------- Pasha auf der Startseite
 
 function greetingCard() {
   const s = store.get();
@@ -273,7 +273,7 @@ function home() {
     if (ui === 0) path.append(practiceCards());
   });
 
-  // Nach einer Pause oder beim ersten Besuch oben bleiben, damit man Flocke sieht. Danach zur aktuellen Lektion.
+  // Nach einer Pause oder beim ersten Besuch oben bleiben, damit man Pasha sieht. Danach zur aktuellen Lektion.
   if (greeting?.special && !greeting.seen) greeting.seen = true;
   else setTimeout(() => $('.node.current', el)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
 }

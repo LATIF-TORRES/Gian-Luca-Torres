@@ -133,8 +133,8 @@ const T = {
     restartText: 'All progress, points, mistakes and your unlock code on this device will be deleted.',
     restartYes: 'Yes, delete everything',
     restartDone: 'Everything is reset. Start with lesson 1.',
-    // ---- Flocke, die Katze (immer freundlich, nie streng)
-    catGreetFirst: 'Hallo! I’m Flocke – that means “snowflake” in German. I’ll be with you all the way. Let’s learn German together! 🐾',
+    // ---- Pasha, die Katze (immer freundlich, nie streng, geschlechtsneutral)
+    catGreetFirst: 'Hallo! I’m Pasha, your German buddy. I’ll be with you all the way. Let’s learn German together! 🐾',
     catGreetBack: [
       'You’re back! I missed you. I kept your seat warm. 🐾',
       'There you are! I took a few naps while I waited. Shall we do a little German?',
@@ -179,8 +179,8 @@ const T = {
     catReminder: 'Want me to remind you? A little German every 2–3 days works wonders.',
     catReminderBtn: 'Add a reminder to my calendar',
     catReminderNote: 'Opens Google Calendar with a reminder every 2 days. You can change the time there.',
-    catReminderTitle: '🐱 German with Flocke (5 minutes)',
-    catReminderText: 'Flocke is waiting for you! Just 5 minutes of German:',
+    catReminderTitle: '🐱 German with Pasha (5 minutes)',
+    catReminderText: 'Pasha is waiting for you! Just 5 minutes of German:',
     // ---- Navigation und Spiele
     navLearn: 'Learn',
     navGames: 'Games',
@@ -361,7 +361,7 @@ const T = {
     restartText: 'Toute la progression, les points, les erreurs et ton code sur cet appareil seront effacés.',
     restartYes: 'Oui, tout effacer',
     restartDone: 'Tout est remis à zéro. Commence par la leçon 1.',
-    catGreetFirst: 'Hallo ! Je suis Flocke – ça veut dire « flocon de neige » en allemand. Je t’accompagne jusqu’au bout. On apprend l’allemand ensemble ! 🐾',
+    catGreetFirst: 'Hallo ! Moi, c’est Pasha. Je t’accompagne dans ton allemand jusqu’au bout. On apprend ensemble ! 🐾',
     catGreetBack: [
       'Te revoilà ! Tu m’as manqué. J’ai gardé ta place au chaud. 🐾',
       'Ah, te voilà ! J’ai fait quelques siestes en t’attendant. On fait un peu d’allemand ?',
@@ -406,8 +406,8 @@ const T = {
     catReminder: 'Tu veux que je te le rappelle ? Un peu d’allemand tous les 2–3 jours, ça fait des miracles.',
     catReminderBtn: 'Ajouter un rappel à mon agenda',
     catReminderNote: 'Ouvre Google Agenda avec un rappel tous les 2 jours. Tu peux y changer l’heure.',
-    catReminderTitle: '🐱 Allemand avec Flocke (5 minutes)',
-    catReminderText: 'Flocke t’attend ! Seulement 5 minutes d’allemand :',
+    catReminderTitle: '🐱 Allemand avec Pasha (5 minutes)',
+    catReminderText: 'Pasha t’attend ! Seulement 5 minutes d’allemand :',
     navLearn: 'Apprendre',
     navGames: 'Jeux',
     navProfile: 'Profil',

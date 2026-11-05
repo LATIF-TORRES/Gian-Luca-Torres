@@ -1,5 +1,5 @@
-// Flocke: die weisse, flauschige Katze, die durch den Kurs begleitet.
-// Flocke ist neutral (weder männlich noch weiblich): in den Texten nie „er/sie“, „fier/fière“ usw.
+// Pasha: die cremefarbene, flauschige Katze, die durch den Kurs begleitet.
+// Pasha ist neutral (weder männlich noch weiblich): in den Texten nie „er/sie“, „fier/fière“ usw.
 // Sie ist immer freundlich und motivierend, egal ob richtig, falsch oder nach einer Pause.
 //
 // catSvg(mood, size)   Zeichnung als SVG. Stimmungen: idle, happy, cheer, love, comfort, sleepy, wave
@@ -10,10 +10,12 @@
 import { t } from './i18n.js';
 import { esc, pick } from './util.js';
 
+export const CAT_NAME = 'Pasha';
+
 let uid = 0;
 
 const INK = '#2B2440';
-const PINK = '#FFCDB8'; // warmer Pfirsichton für Ohren und Bäckchen
+const PINK = '#F6C9A8'; // Ohren und Bäckchen
 const NOSE = '#FF8FAB';
 
 function eyes(mood) {
@@ -56,8 +58,8 @@ function extras(mood) {
 function paws(mood, fur) {
   const paw = (cx, cy, rot = 0) => `
     <g transform="rotate(${rot} ${cx} ${cy})">
-      <ellipse cx="${cx}" cy="${cy}" rx="15" ry="12" fill="${fur}" stroke="#DCD6EC" stroke-width="2"/>
-      <path d="M${cx - 5} ${cy - 3} v5 M${cx + 5} ${cy - 3} v5" stroke="#CFC8E3" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="${cx}" cy="${cy}" rx="15" ry="12" fill="${fur}" stroke="#E2CFAE" stroke-width="2"/>
+      <path d="M${cx - 5} ${cy - 3} v5 M${cx + 5} ${cy - 3} v5" stroke="#D9C3A0" stroke-width="2" stroke-linecap="round"/>
     </g>`;
   let up = '';
   if (mood === 'cheer') up = paw(30, 108, -25) + paw(170, 108, 25);
@@ -66,16 +68,16 @@ function paws(mood, fur) {
   return { up, down: paw(78, 188) + (mood === 'comfort' ? '' : paw(122, 188)) };
 }
 
-export function catSvg(mood = 'idle', size = 96, label = 'Flocke') {
+export function catSvg(mood = 'idle', size = 96, label = CAT_NAME) {
   const id = `fl${++uid}`;
   const fur = `url(#${id}g)`;
-  const p = paws(mood, '#FFFFFF');
+  const p = paws(mood, '#FFF8EC');
   return `<svg class="cat cat-${mood}" width="${size}" height="${size}" viewBox="0 0 200 210" role="img" aria-label="${esc(label)}">
   <defs>
     <radialGradient id="${id}g" cx="45%" cy="35%" r="75%">
-      <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="0.7" stop-color="#FAF8FF"/>
-      <stop offset="1" stop-color="#E7E2F4"/>
+      <stop offset="0" stop-color="#FFF8EC"/>
+      <stop offset="0.7" stop-color="#FCEFD9"/>
+      <stop offset="1" stop-color="#EBD9BC"/>
     </radialGradient>
     <filter id="${id}f" x="-10%" y="-10%" width="120%" height="120%">
       <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="2" seed="7" result="n"/>
@@ -84,12 +86,12 @@ export function catSvg(mood = 'idle', size = 96, label = 'Flocke') {
   </defs>
   <g class="cat-body">
     <g filter="url(#${id}f)">
-      <path d="M146 176 C190 172 196 126 170 112" fill="none" stroke="#DCD6EC" stroke-width="24" stroke-linecap="round"/>
-      <path d="M146 176 C190 172 196 126 170 112" fill="none" stroke="#FFFFFF" stroke-width="19" stroke-linecap="round"/>
-      <ellipse cx="100" cy="160" rx="54" ry="42" fill="${fur}" stroke="#DCD6EC" stroke-width="2.5"/>
-      <path d="M50 66 L44 16 L90 44 Z" fill="${fur}" stroke="#E4DFF1" stroke-width="5" stroke-linejoin="round"/>
-      <path d="M150 66 L156 16 L110 44 Z" fill="${fur}" stroke="#E4DFF1" stroke-width="5" stroke-linejoin="round"/>
-      <ellipse cx="100" cy="94" rx="64" ry="55" fill="${fur}" stroke="#DCD6EC" stroke-width="2.5"/>
+      <path d="M146 176 C190 172 196 126 170 112" fill="none" stroke="#E2CFAE" stroke-width="24" stroke-linecap="round"/>
+      <path d="M146 176 C190 172 196 126 170 112" fill="none" stroke="#FFF8EC" stroke-width="19" stroke-linecap="round"/>
+      <ellipse cx="100" cy="160" rx="54" ry="42" fill="${fur}" stroke="#E2CFAE" stroke-width="2.5"/>
+      <path d="M50 66 L44 16 L90 44 Z" fill="${fur}" stroke="#E2CFAE" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M150 66 L156 16 L110 44 Z" fill="${fur}" stroke="#E2CFAE" stroke-width="5" stroke-linejoin="round"/>
+      <ellipse cx="100" cy="94" rx="64" ry="55" fill="${fur}" stroke="#E2CFAE" stroke-width="2.5"/>
       <circle cx="44" cy="112" r="15" fill="${fur}"/>
       <circle cx="156" cy="112" r="15" fill="${fur}"/>
     </g>
@@ -102,7 +104,7 @@ export function catSvg(mood = 'idle', size = 96, label = 'Flocke') {
     <ellipse cx="140" cy="113" rx="10" ry="5.5" fill="${PINK}" opacity="0.75"/>
     <path d="M95.5 106.5 Q100 103 104.5 106.5 Q100 113 95.5 106.5 Z" fill="${NOSE}"/>
     ${mouth(mood)}
-    <path d="M46 106 L24 101 M46 113 L22 115 M154 106 L176 101 M154 113 L178 115" stroke="#C9C2DE" stroke-width="2" stroke-linecap="round"/>
+    <path d="M46 106 L24 101 M46 113 L22 115 M154 106 L176 101 M154 113 L178 115" stroke="#CDBB9C" stroke-width="2" stroke-linecap="round"/>
     <path d="M62 136 Q100 150 138 136" fill="none" stroke="#E11D2E" stroke-width="6" stroke-linecap="round"/>
     <circle cx="100" cy="146" r="6.5" fill="#FFCE00" stroke="#D9A400" stroke-width="2"/>
     ${p.down}
@@ -122,7 +124,7 @@ export function catSays(mood, text, size = 92, extraHtml = '') {
   return `
     <div class="cat-says">
       ${catSvg(mood, size)}
-      <div class="cat-bubble"><b class="cat-name">Flocke</b><span>${esc(text)}</span>${extraHtml}</div>
+      <div class="cat-bubble"><b class="cat-name">${CAT_NAME}</b><span>${esc(text)}</span>${extraHtml}</div>
     </div>`;
 }
 
@@ -134,7 +136,7 @@ export function catPop(mood, text, ms = 3200) {
   const el = document.createElement('div');
   el.className = 'cat-pop';
   el.setAttribute('role', 'status');
-  el.innerHTML = `${catSvg(mood, 74)}<div class="cat-bubble"><b class="cat-name">Flocke</b><span>${esc(text)}</span></div>`;
+  el.innerHTML = `${catSvg(mood, 74)}<div class="cat-bubble"><b class="cat-name">${CAT_NAME}</b><span>${esc(text)}</span></div>`;
   el.onclick = () => el.remove();
   document.body.append(el);
   requestAnimationFrame(() => el.classList.add('show'));

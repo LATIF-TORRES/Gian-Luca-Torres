@@ -375,7 +375,7 @@ input { font: inherit; }
 .tabbar button.on { color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); }
 .tabbar button.on span { transform: scale(1.12); }
 
-/* ---------- Flocke */
+/* ---------- Pasha */
 .cat { display: block; flex: none; overflow: visible; }
 .cat .cat-body { transform-origin: 50% 95%; animation: breathe 3.2s ease-in-out infinite; }
 .cat-cheer .cat-body, .cat-happy .cat-body { animation: hop 1.1s ease-in-out infinite; }
