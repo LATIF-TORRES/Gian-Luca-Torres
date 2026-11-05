@@ -18,7 +18,9 @@ if (!existsSync(keyFile)) writeFileSync(keyFile, b64(crypto.getRandomValues(new 
 const keyB64 = readFileSync(keyFile, 'utf8').trim();
 const key = unb64(keyB64);
 
-const out = new URL('preview/', root);
+// OPEN_ALL=1: Version ohne Sperre (ganzer Kurs offen, kein Code) im Ordner preview-open/
+const OPEN = !!process.env.OPEN_ALL;
+const out = new URL(OPEN ? 'preview-open/' : 'preview/', root);
 const web = new URL('web/', root);
 rmSync(out, { recursive: true, force: true });
 mkdirSync(new URL('js/', out), { recursive: true });
@@ -27,6 +29,7 @@ for (const f of readdirSync(new URL('js/', web))) {
   let src = readFileSync(new URL(`js/${f}`, web), 'utf8');
   if (f === 'config.js') {
     src = src.replace('preview: false', 'preview: true');
+    if (OPEN) src = src.replace('openAll: false', 'openAll: true');
     const wa = (process.env.WHATSAPP || '').replace(/\D/g, '');
     if (wa) src = src.replace("contactWhatsapp: ''", `contactWhatsapp: '${wa}'`);
     if (process.env.COURSE_URL) src = src.replace("courseUrl: ''", `courseUrl: '${process.env.COURSE_URL.replace(/[^\w:/.?=&-]/g, '')}'`);
@@ -35,11 +38,12 @@ for (const f of readdirSync(new URL('js/', web))) {
 }
 writeFileSync(new URL('js/course-preview.js', out),
   `// Nur die Gratis-Lektion (automatisch erzeugt)\nexport const PREVIEW_COURSE = ${JSON.stringify(trialCourse())};\n`);
+if (OPEN) writeFileSync(new URL('js/course-full.js', out), `// Ganzer Kurs, offen (automatisch erzeugt)\nexport const FULL_COURSE = ${JSON.stringify(COURSE)};\n`);
 writeFileSync(new URL('js/course-locked.js', out),
   `// Ganzer Kurs, verschlüsselt. Öffnet sich nur mit einem Freischalt-Code.\nexport const LOCKED_COURSE = ${JSON.stringify(await encryptCourse(COURSE, key))};\n`);
 writeFileSync(new URL('styles.css', out), readFileSync(new URL('styles.css', web)));
 // Seiten ohne <html>/<head>/<body>: claude.ai ergänzt das Gerüst beim Veröffentlichen.
-writeFileSync(new URL('index.html', out), `<title>Hallo Deutsch!</title>
+writeFileSync(new URL('index.html', out), `<title>${OPEN ? 'Hallo Deutsch Komplett' : 'Hallo Deutsch!'}</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,6 +54,7 @@ writeFileSync(new URL('index.html', out), `<title>Hallo Deutsch!</title>
 `);
 
 // ---------- Admin-Seite
+if (OPEN) { console.log('preview-open/ erstellt (alles offen).'); process.exit(0); }
 const admin = new URL('preview-admin/', root);
 rmSync(admin, { recursive: true, force: true });
 mkdirSync(admin, { recursive: true });

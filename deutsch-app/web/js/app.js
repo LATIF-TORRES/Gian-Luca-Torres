@@ -221,7 +221,7 @@ function lessonState(ui, li) {
   if (li > 0) prevDone = store.isDone(u.id, li - 1);
   else if (ui > 0) prevDone = store.isDone(data.course.units[ui - 1].id, LESSONS.length - 1);
   if (!paid) return prevDone ? 'pay' : 'locked';
-  return prevDone || unlockAll ? 'open' : 'locked';
+  return prevDone || unlockAll || CONFIG.openAll ? 'open' : 'locked';
 }
 
 function home() {
@@ -394,7 +394,7 @@ function progressMessage(last) {
   const s = store.get();
   const total = data.course.units.length * LESSONS.length;
   const done = Object.keys(s.done).length;
-  const name = data.unlockedFor ? prettyName(data.unlockedFor) : 'Gratis-Lektion (noch kein Code)';
+  const name = data.unlockedFor ? prettyName(data.unlockedFor) : CONFIG.openAll ? 'Offener Link (ohne Code)' : 'Gratis-Lektion (noch kein Code)';
   const lines = [
     '📊 Hallo Deutsch! – mein Fortschritt',
     `👤 ${name}`,
@@ -429,6 +429,7 @@ function gamePool() {
   const units = data.course.units;
   let maxU = 0;
   units.forEach((u, ui) => { if (LESSONS.some((_, li) => store.isDone(u.id, li))) maxU = Math.max(maxU, ui); });
+  if (CONFIG.openAll) maxU = units.length - 1; // Offener Link: alle Wörter
   const words = [], sentences = [];
   units.slice(0, maxU + 1).forEach((u) => { const it = unitItems(u); words.push(...it.words); sentences.push(...it.sentences); });
   return makePool(words, sentences);
@@ -578,7 +579,7 @@ function profile() {
       <header class="topbar"><div class="brand">${logoMark(34)} <span>${t('profile')}</span></div><span></span></header>
       <div class="card who">
         <div class="avatar-big">👤</div>
-        <div><b>${esc(backend.preview ? (data.premium ? prettyName(data.unlockedFor) : t('free')) : user?.email || '')}</b><br><span class="plan ${data.premium ? 'pro' : ''}" ${backend.preview ? 'hidden' : ''}>${data.premium ? `💎 ${t('premium')}` : t('free')}</span></div>
+        <div><b>${esc(backend.preview ? (data.premium ? (data.unlockedFor ? prettyName(data.unlockedFor) : t('premium')) : t('free')) : user?.email || '')}</b><br><span class="plan ${data.premium ? 'pro' : ''}" ${backend.preview ? 'hidden' : ''}>${data.premium ? `💎 ${t('premium')}` : t('free')}</span></div>
       </div>
       <div class="stat-grid">
         <div class="stat"><b>🔥 ${store.currentStreak()}</b><span>${t('streak')}</span></div>
@@ -586,7 +587,7 @@ function profile() {
         <div class="stat"><b>${lessons}</b><span>${t('lessonsDone')}</span></div>
         <div class="stat"><b>${words}</b><span>${t('wordsLearned')}</span></div>
       </div>
-      ${backend.preview ? (data.premium
+      ${backend.preview && !CONFIG.openAll ? (data.premium
         ? `<div class="card unlocked">🔓 ${t('unlockedFor')} <b>${esc(prettyName(data.unlockedFor))}</b></div>`
         : `<div class="card">${codeForm()}</div>`) : ''}
       ${progressButton(null)}

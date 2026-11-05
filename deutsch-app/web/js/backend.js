@@ -68,6 +68,11 @@ export const backend = {
 
   // Kurs laden. Zahlende bekommen alles, alle anderen nur die Gratis-Lektion.
   async getCourse() {
+    if (PREVIEW && CONFIG.openAll) {
+      // Offener Link: alles frei, ohne Code
+      const { FULL_COURSE } = await import('./course-full.js');
+      return { course: FULL_COURSE, premium: true, whatsapp: contactWa(), unlockedFor: '' };
+    }
     if (PREVIEW) {
       // Mit gespeichertem Freischalt-Code: ganzer Kurs (entschlüsselt). Sonst nur die Gratis-Lektion.
       let code = null;

@@ -33,4 +33,6 @@ export const CONFIG = {
   contactWhatsapp: '',
   // Adresse des Kurs-Links (für die Kalender-Erinnerung). Setzt scripts/build-preview.mjs aus COURSE_URL=….
   courseUrl: '',
+  // Offener Link: ganzer Kurs ohne Code (eigene Version, siehe scripts/build-preview.mjs mit OPEN_ALL=1).
+  openAll: false,
 };
