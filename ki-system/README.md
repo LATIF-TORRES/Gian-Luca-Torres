@@ -38,6 +38,18 @@ Der Mentor **handelt selbst**:
 
 Unter „Ich“ siehst und löschst du alles, was er gespeichert hat.
 
+## Download für Windows
+
+**[A-und-T-Windows.zip herunterladen](https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip)** (etwa 70 KB, Windows 10 und 11)
+
+1. ZIP herunterladen, Rechtsklick → „Alle extrahieren“.
+2. Doppelklick auf **Installieren.cmd**. A&T kommt auf den Desktop und ins Startmenü und öffnet sich in einem eigenen Fenster (Microsoft Edge im App-Modus). Adminrechte braucht es nicht.
+3. In A&T unter **Ich** den kostenlosen Gemini-Schlüssel eintragen.
+
+Ohne Installieren: Doppelklick auf **A-und-T starten.cmd**. Die Skripte sind nicht von Microsoft signiert, darum kann Windows einmal nachfragen. Dann auf „Ausführen“ bzw. „Weitere Informationen → Trotzdem ausführen“ klicken.
+
+Das Paket wird mit `python3 windows/paket-bauen.py` gebaut. Nach jeder Änderung an der App neu bauen und die ZIP einchecken.
+
 ## Starten (kostenlos)
 
 1. **Online stellen (gratis, einmalig):** Auf GitHub im Repository auf **Settings → Pages**. Bei „Source“ wählst du „Deploy from a branch“, dann den Branch `claude/epic-hypatia-7apja5` und den Ordner `/ (root)`, und tippst auf **Save**. Nach 1 bis 2 Minuten läuft die App unter **https://latif-torres.github.io/Gian-Luca-Torres/ki-system/**. Du kannst sie auch ohne Internet-Adresse nutzen: einfach `ki-system/index.html` im Browser öffnen.
@@ -119,6 +131,8 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 | `js/speicher.js` | Speichern im Browser, Gedächtnis, Aufgaben, Geldbuch |
 | `js/ki.js` | Verbindung zu Claude, Werkzeuge, Kosten |
 | `js/gemini.js` | Kostenlose Verbindung zu Google Gemini |
+| `windows/` | Start- und Installationsskript, Symbol, Bauskript für das Windows-Paket |
+| `download/A-und-T-Windows.zip` | Fertiges Windows-Paket |
 | `js/stimme.js` | Sprechen, Zuhören, Weckwort |
 | `js/app.js` | Oberfläche |
 
