@@ -42,14 +42,28 @@ function boot() {
       store.onChange((s) => backend.saveProgress(u.uid, s));
       setSound(store.get().settings.sound !== false);
       await handleCheckoutReturn();
+      const linkUnlock = await unlockFromLink();
       data = await backend.getCourse();
       daysAway = store.visit();
       home();
+      if (linkUnlock?.ok) toast(`${t('codeOk')} ${prettyName(linkUnlock.name)}! 🎉`, 5000);
+      if (linkUnlock && !linkUnlock.ok) toast(t('codeWrong'), 6000);
     } catch (e) {
       console.error(e);
       app.innerHTML = `<div class="center-msg"><p>${t('offline')}</p><button class="btn primary" onclick="location.reload()">↻</button></div>`;
     }
   });
+}
+
+// Persönlicher Link: …/artifact/…#ANNA-MULLER-XXXX schaltet den Kurs direkt frei.
+async function unlockFromLink() {
+  if (!backend.preview) return null;
+  let code = '';
+  try { code = decodeURIComponent(location.hash.slice(1)); } catch {}
+  if (!/^[A-Za-z0-9-]{12,}$/.test(code)) return null;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch {}
+  const r = await backend.unlock(code);
+  return r ? { ok: true, name: r.unlockedFor } : { ok: false };
 }
 
 function splash() {

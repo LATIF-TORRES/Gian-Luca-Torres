@@ -56,17 +56,20 @@
   </form>
 
   <section class="card" id="result" hidden>
-    <label>Code</label>
+    <label>Persönlicher Link (öffnet direkt alle 48 Lektionen)</label>
+    <div class="code" id="plink"></div>
+    <label>Code (falls die Person ihn von Hand eingeben will)</label>
     <div class="code" id="code"></div>
     <label>Nachricht zum Kopieren</label>
     <div class="row tabs" role="group" aria-label="Sprache der Nachricht">
-      <button class="secondary" type="button" data-lang="fr" aria-pressed="true">Französisch</button>
-      <button class="secondary" type="button" data-lang="en" aria-pressed="false">Englisch</button>
+      <button class="secondary" type="button" data-lang="all" aria-pressed="true">Begrüssung DE · EN · FR</button>
+      <button class="secondary" type="button" data-lang="fr" aria-pressed="false">Nur Französisch</button>
+      <button class="secondary" type="button" data-lang="en" aria-pressed="false">Nur Englisch</button>
     </div>
     <div class="msg" id="msg"></div>
     <div class="row">
       <button class="primary" type="button" id="copyMsg">Nachricht kopieren</button>
-      <button class="secondary" type="button" id="copyCode">Nur Code kopieren</button>
+      <button class="secondary" type="button" id="copyLink">Nur Link kopieren</button>
     </div>
     <p class="done" id="done" role="status"></p>
   </section>
@@ -76,8 +79,8 @@
     <ol>
       <li>Du teilst den Kurs-Link. Lektion 1 ist gratis.</li>
       <li>Die Person schreibt dir auf WhatsApp und bezahlt dich.</li>
-      <li>Du erstellst hier den Code und schickst die Nachricht.</li>
-      <li>Die Person gibt den Code im Kurs ein (nach Lektion 1 oder im Profil 👤).</li>
+      <li>Du gibst hier den Namen ein und kopierst die Begrüssung.</li>
+      <li>Die Person tippt auf ihren persönlichen Link, und alles ist offen. Den Code kann sie auch von Hand eingeben (nach Lektion 1 oder im Profil 👤).</li>
     </ol>
   </section>
 
@@ -93,12 +96,55 @@
   const KEY = unb64('__KEY__');
   const LINK = '__LINK__';
   const $ = (id) => document.getElementById(id);
-  let current = null, lang = 'fr';
+  let current = null, lang = 'all';
 
+  // Begrüssung nach der Zahlung: locker, freundlich, motivierend, neutral formuliert
+  const de = (n, l) => `🇩🇪 *Hey ${n}, willkommen bei Hallo Deutsch!* 🎉
+
+Mega schön, dass du dabei bist! Dein Kurs ist jetzt komplett freigeschaltet: Alle 48 Lektionen und alle Spiele gehören dir. 🔓
+
+Kleiner Tipp: Lieber jeden Tag 5 Minuten als einmal pro Woche eine Stunde. So bleibt’s im Kopf hängen. Und unsere Katze Pasha 🐱 feuert dich die ganze Zeit an.
+
+Du schaffst das! Schritt für Schritt, ganz entspannt. 💪
+
+👉 Dein persönlicher Link:
+${l}
+Einfach antippen, und los geht’s! Bitte nicht weitergeben, der Link ist nur für dich.
+
+Fragen? Schreib uns einfach hier, jederzeit. Wir helfen dir gern! 😊`;
+  const en = (n, l) => `🇬🇧 *Hey ${n}, welcome to Hallo Deutsch!* 🎉
+
+So great to have you here! Your course is now fully unlocked: all 48 lessons and all the games are yours. 🔓
+
+Little tip: 5 minutes every day works way better than one hour once a week. That’s how it sticks. And our cat Pasha 🐱 will cheer you on the whole way.
+
+You’ve got this! Step by step, nice and easy. 💪
+
+👉 Your personal link:
+${l}
+Just tap it and off you go! Please don’t share it, it’s just for you.
+
+Questions? Just message us here, anytime. We’re happy to help! 😊`;
+  const fr = (n, l) => `🇫🇷 *Coucou ${n}, bienvenue chez Hallo Deutsch !* 🎉
+
+Trop cool de t’avoir avec nous ! Ton cours est maintenant entièrement débloqué : les 48 leçons et tous les jeux sont à toi. 🔓
+
+Petit conseil : 5 minutes chaque jour, c’est bien mieux qu’une heure une fois par semaine. C’est comme ça que ça rentre. Et notre chat Pasha 🐱 t’encourage tout du long.
+
+Tu vas y arriver ! Petit à petit, tranquille. 💪
+
+👉 Ton lien perso :
+${l}
+Clique dessus et c’est parti ! Ne le partage pas, il est rien que pour toi.
+
+Une question ? Écris-nous ici quand tu veux. On t’aide avec plaisir ! 😊`;
+  const LINE = '\n\n━━━━━━━━━━━━━━━\n\n';
   const texts = {
-    fr: (n, c) => `Bonjour ${n} ! Merci pour ton paiement 🙏\n\nVoici ton code pour débloquer tout le cours d'allemand :\n\n${c}\n\nOuvre le cours${LINK ? ` (${LINK})` : ''}, touche 👤 (Profil) et entre le code. Bon apprentissage – viel Spass !`,
-    en: (n, c) => `Hi ${n}! Thank you for your payment 🙏\n\nHere is your code to unlock the whole German course:\n\n${c}\n\nOpen the course${LINK ? ` (${LINK})` : ''}, tap 👤 (Profile) and enter the code. Have fun – viel Spass!`,
+    all: (n, l) => de(n, l) + LINE + en(n, l) + LINE + fr(n, l),
+    fr: (n, l) => fr(n, l),
+    en: (n, l) => en(n, l),
   };
+  const personalLink = (code) => (LINK ? `${LINK}#${code}` : code);
 
   function load() { try { return JSON.parse(localStorage.getItem('hd-admin-codes') || '[]'); } catch { return []; } }
   function save(list) { try { localStorage.setItem('hd-admin-codes', JSON.stringify(list)); } catch {} }
@@ -116,7 +162,7 @@
 
   function renderMsg() {
     if (!current) return;
-    $('msg').textContent = texts[lang](current.first, current.code);
+    $('msg').textContent = texts[lang](current.first, personalLink(current.code));
     document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
   }
 
@@ -127,6 +173,7 @@
     const code = await makeCode(name, KEY);
     current = { code, first: name.split(/\s+/)[0] };
     $('code').textContent = code;
+    $('plink').textContent = personalLink(code);
     $('result').hidden = false;
     $('done').textContent = '';
     renderMsg();
@@ -142,6 +189,6 @@
     catch { $('done').textContent = 'Kopieren ging nicht. Text markieren und von Hand kopieren.'; }
   }
   $('copyMsg').addEventListener('click', () => copy($('msg').textContent, 'Nachricht'));
-  $('copyCode').addEventListener('click', () => copy($('code').textContent, 'Code'));
+  $('copyLink').addEventListener('click', () => copy($('plink').textContent, 'Link'));
   renderList();
 </script>
