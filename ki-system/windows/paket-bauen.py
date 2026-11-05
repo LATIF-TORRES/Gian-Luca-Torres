@@ -37,6 +37,11 @@ def symbol_zeichnen(groesse=256):
 
 
 def main():
+    import json, re
+    v_json = json.load(open(os.path.join(KI, "version.json")))["version"]
+    v_app = re.search(r'APP_VERSION = "([^"]+)"', open(os.path.join(KI, "js", "neuigkeiten.js"), encoding="utf-8").read()).group(1)
+    if v_json != v_app:
+        raise SystemExit("Version passt nicht: version.json %s, neuigkeiten.js %s" % (v_json, v_app))
     # Symbole für die installierbare Web-App (Handy, Chrome, Edge)
     for g in (192, 512):
         symbol_zeichnen(g).save(os.path.join(KI, "a-und-t-%d.png" % g))
@@ -51,6 +56,8 @@ def main():
         zf.write(SYMBOL, wurzel + "app/a-und-t.ico")
         zf.write(os.path.join(HIER, "installieren.ps1"), wurzel + "app/installieren.ps1")
         zf.write(os.path.join(HIER, "lokale-ki.ps1"), wurzel + "app/lokale-ki.ps1")
+        zf.write(os.path.join(HIER, "starten.ps1"), wurzel + "app/starten.ps1")
+        zf.write(os.path.join(KI, "version.json"), wurzel + "app/version.json")
     print("Gebaut:", ZIEL, os.path.getsize(ZIEL), "Bytes")
 
 

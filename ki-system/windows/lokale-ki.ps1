@@ -1,6 +1,7 @@
 # Lokale KI fuer A und T einrichten: Ollama installieren, Zugriff erlauben, Modell laden.
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 function Schritt($text) { Write-Host ''; Write-Host $text -ForegroundColor Yellow }
 
 function Finde-Ollama {

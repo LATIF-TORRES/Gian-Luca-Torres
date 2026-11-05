@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "3.0";
+var APP_VERSION = "3.1"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "Updates kommen von selbst", text: "A&T aktualisiert sich ab jetzt beim Start automatisch, wenn du es über die Verknüpfung auf dem Desktop oder im Startmenü öffnest. Du musst nie mehr selbst etwas herunterladen." },
   { titel: "KI ohne Limit auf deinem PC", text: "Neu kann A&T auf deinem eigenen PC rechnen: kostenlos, ohne Tageslimit, ohne Konto. Unter Windows: Doppelklick auf „Lokale KI installieren.cmd“ im A&T-Ordner. A&T findet die lokale KI danach selbst." },
   { titel: "Gemini zuverlässiger", text: "Bei Google-Limits zeigt A&T jetzt den echten Grund, wartet kurz statt abzubrechen und lässt Modelle ohne Gratis-Kontingent weg." },
   { titel: "Sadaqa-Vorschlag statt „Reinigung“", text: "Im Geldbuch gibt es keine „Reinigung“ mehr. Stattdessen zeigt A&T einen Sadaqa-Vorschlag (wählbar unter „Ich“). Das ist nur ein Vorschlag, es wird nie etwas abgezogen. Frühere Reinigungs-Einträge stehen jetzt als normale Ausgaben im Geldbuch." },

@@ -25,6 +25,9 @@ Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt u
 
 - **Version:** steht in `js/neuigkeiten.js` (`APP_VERSION`) und in `version.json`. Bei jedem neuen Paket beide erhöhen und die Liste `NEUIGKEITEN` anpassen.
 - **„Das ist neu“:** Kunden, die A&T schon eingerichtet haben, sehen nach einem Update einmal ein Fenster mit den Änderungen. Neue Kunden sehen stattdessen den Einrichtungs-Assistenten. Später jederzeit unter **Ich → Was ist neu?**
+- **Automatische Updates (ab 3.1):** Die Verknüpfung auf Desktop und Startmenü startet A&T über `starten.ps1`. Das Skript prüft bei jedem Start `version.json`. Gibt es eine höhere Version, lädt es die ZIP herunter, ersetzt die App-Dateien in `%LOCALAPPDATA%\A-und-T\app` und startet dann. Ohne Internet startet einfach die vorhandene Version. Protokoll: `%LOCALAPPDATA%\A-und-T\update.log`. Wichtig: Jeder Push mit höherer Version landet automatisch bei allen Kunden.
+- **Ein neues Update veröffentlichen:** Version in `js/neuigkeiten.js` und `version.json` erhöhen (Format `3.2`), `NEUIGKEITEN` ergänzen, `python3 windows/paket-bauen.py` ausführen (prüft, dass beide Versionen gleich sind), committen und pushen.
+- **Kunden mit Version 3.0 oder älter** haben das automatische Update noch nicht. Sie laden die ZIP einmal neu und starten **Installieren.cmd**. Danach geht es von selbst.
 - **Update-Hinweis:** Die Windows-Version schaut einmal am Tag in `version.json` nach. Ist dort eine höhere Version eingetragen, erscheint auf der Startseite ein Download-Knopf. Die Online-Version (GitHub Pages) aktualisiert sich von selbst.
 - **Daten bleiben:** Gespräche, Gedächtnis, Aufgaben und Geldbuch bleiben bei jedem Update erhalten. Alte Einträge werden bei Bedarf umgestellt (z. B. „Reinigung“ → Ausgabe). Niemand wird ungefragt auf einen anderen KI-Anbieter umgestellt. Nur wenn eine lokale KI gefunden wird und man vorher nichts selbst gewählt hat, nutzt A&T sie.
 
