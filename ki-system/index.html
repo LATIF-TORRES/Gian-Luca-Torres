@@ -213,12 +213,12 @@
         <p class="klein-text leise" id="auto-status"></p>
         <div class="formular">
           <label>Runde alle <select id="auto-intervall"><option value="15">15 Minuten</option><option value="30">30 Minuten</option><option value="60">60 Minuten</option></select></label>
-          <label>Stop-Loss (%) <input id="auto-stop" type="number" min="0.5" max="50" step="0.5"></label>
-          <label>Gewinnziel (%) <input id="auto-ziel" type="number" min="0.5" max="100" step="0.5"></label>
+          <label>Höchstverlust pro Trade (%) <input id="auto-stop" type="number" min="0.5" max="50" step="0.5"></label>
+          <label>Gewinnziel mindestens (%) <input id="auto-ziel" type="number" min="0.5" max="100" step="0.5"></label>
           <label>Höchstens Trades pro Tag <input id="auto-max" type="number" min="0" max="20" step="1"></label>
           <button class="knopf klein zart" id="auto-jetzt" type="button">Runde jetzt starten (Test)</button>
         </div>
-        <p class="leise klein-text">A&amp;T handelt nur bei hoher Zuversicht (mindestens 8 von 10), höchstens eine Order pro Runde, nur Aktien der Halal-Liste und nur bis zum Tageslimit. Stop-Loss und Gewinnziel setzt das Programm selbst um (Prüfung alle 5 Minuten). Keine KI erkennt Gewinnchancen zuverlässig: Beobachte das Protokoll einige Wochen mit Spielgeld, bevor du echtes Geld einsetzt.</p>
+        <p class="leise klein-text">A&amp;T handelt nur bei hoher Zuversicht (mindestens 8 von 10), höchstens eine Order pro Runde, nur Aktien der Halal-Liste und nur bis zum Tageslimit. Jede Position schützt das Programm selbst, angepasst an die Aktie (Prüfung alle 2 Minuten, auch bei Käufen von Hand): Der Start-Stop richtet sich nach der üblichen Tagesschwankung, höchstens dein Höchstverlust. Danach zieht der Stop mit dem Höchstkurs nach oben. Sobald genug Gewinn da ist, liegt er beim Kaufkurs. Beim Gewinnziel wird die Hälfte verkauft, der Rest läuft weiter. Keine KI erkennt Gewinnchancen zuverlässig: Beobachte das Protokoll einige Wochen mit Spielgeld, bevor du echtes Geld einsetzt.</p>
         <h3>Protokoll</h3>
         <ul id="auto-protokoll" class="liste"></ul>
       </div>

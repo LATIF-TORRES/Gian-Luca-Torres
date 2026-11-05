@@ -78,6 +78,7 @@ async function kursHolen(symbol, frisch) {
   var q = await finnhub("quote?symbol=" + encodeURIComponent(symbol));
   if (!q || !(q.c > 0)) throw new Error("Kein Kurs für „" + symbol + "“ gefunden. Stimmt das Kürzel (z. B. AAPL)?");
   c = { symbol: symbol, kurs: q.c, aenderung: q.dp, hoch: q.h, tief: q.l, vortag: q.pc, zeit: Date.now() };
+  schwankungMerken(symbol, q);
   _kursCache[symbol] = c;
   return c;
 }
@@ -87,6 +88,37 @@ async function firmaHolen(symbol) {
   var branche = p.finnhubIndustry || "";
   return { name: p.name, branche: branche, land: p.country || "",
     verboten: BRANCHE_VERBOTEN.test(branche), pruefen: BRANCHE_PRUEFEN.test(branche) };
+}
+
+/* ---------- Schwankung pro Aktie (für den individuellen Stop) ---------- */
+
+// Tagesspanne in % = (Hoch − Tief) / Vortagesschluss. Pro Tag der grösste Wert, die letzten 15 Tage.
+function schwankungMerken(symbol, q) {
+  if (!(q.h > 0 && q.l > 0 && q.pc > 0)) return;
+  var d = depot();
+  if (!d.schwankung) d.schwankung = {};
+  var tage = d.schwankung[symbol] || (d.schwankung[symbol] = {});
+  var heute = heuteISO(), spanne = Math.round((q.h - q.l) / q.pc * 10000) / 100;
+  if (!(tage[heute] >= spanne)) tage[heute] = spanne;
+  var daten = Object.keys(tage).sort();
+  while (daten.length > 15) delete tage[daten.shift()];
+}
+// Übliche Tagesschwankung in %: Schnitt der letzten bis zu 10 Tage, mindestens die heutige Spanne.
+function schwankung(symbol) {
+  var tage = (depot().schwankung || {})[symbolSauber(symbol)] || {}, heute = heuteISO();
+  var frueher = Object.keys(tage).filter(function (t) { return t !== heute; }).sort().slice(-10).map(function (t) { return tage[t]; });
+  var schnitt = frueher.length ? frueher.reduce(function (a, b) { return a + b; }, 0) / frueher.length : 0;
+  var v = Math.max(schnitt, tage[heute] || 0);
+  return v > 0 ? v : 2; // ohne Daten: 2 % als vorsichtige Annahme
+}
+function begrenzt(x, min, max) { return Math.min(max, Math.max(min, x)); }
+// Individuelle Schutzwerte einer Aktie (alles in %).
+function schutzWerte(symbol) {
+  var a = autoEinstellungen(), v = schwankung(symbol);
+  var abstand = begrenzt(1.5 * v, 1.5, Math.max(1.5, a.stop));   // Start-Stop unter dem Kaufkurs
+  var nachziehen = begrenzt(v, 1.2, abstand);                    // Abstand zum Höchstkurs
+  var ziel = Math.max(a.ziel, 2.5 * abstand);                    // Gewinnziel: Hälfte sichern
+  return { schwankung: v, abstand: abstand, nachziehen: nachziehen, ziel: ziel };
 }
 
 /* ---------- Halal-Liste ---------- */
@@ -124,6 +156,9 @@ function orderBuchen(symbol, seite, anzahl, kurs, quelle, begruendung) {
   if (seite === "kauf") {
     pos.einstand = (pos.einstand * pos.anzahl + wert) / (pos.anzahl + anzahl);
     pos.anzahl += anzahl;
+    pos.hoch = Math.max(pos.hoch || 0, kurs);
+    pos.teilVerkauft = false;
+    delete pos.stopKurs;
     d.bargeld -= wert;
   } else {
     pos.anzahl -= anzahl;
@@ -163,7 +198,9 @@ async function depotText() {
     try { kurs = (await kursHolen(syms[i])).kurs; } catch (e) {}
     var wert = kurs * p.anzahl;
     gesamt += wert;
-    zeilen.push(syms[i] + ": " + p.anzahl + " Stück, Einstand " + usd(p.einstand) + ", Kurs " + usd(kurs) + ", Wert " + usd(wert) + ", Ergebnis " + usd(wert - p.einstand * p.anzahl));
+    var sb = stopBerechnen(syms[i], p);
+    zeilen.push(syms[i] + ": " + p.anzahl + " Stück, Einstand " + usd(p.einstand) + ", Kurs " + usd(kurs) + ", Wert " + usd(wert) + ", Ergebnis " + usd(wert - p.einstand * p.anzahl) +
+      ", Stop " + usd(p.stopKurs || sb.stop) + " (Tagesschwankung ca. " + sb.werte.schwankung.toFixed(1) + " %" + (p.teilVerkauft ? ", Hälfte schon gesichert" : "") + ")");
   }
   return "Übungs-Depot (Spielgeld, USD). Bargeld " + usd(d.bargeld) + ". Gesamtwert " + usd(gesamt) + " (Start " + usd(d.start) + ", Ergebnis " + usd(gesamt - d.start) + ").\n" +
     (zeilen.length ? zeilen.join("\n") : "Keine Positionen.") +
@@ -300,7 +337,8 @@ var AUTO = { laeuft: false, orders: 0, letzteRegel: 0 };
 function autoEinstellungen() {
   var d = depot();
   if (!d.auto) d.auto = {};
-  var std = { an: false, intervall: 30, stop: 3, ziel: 5, maxTrades: 3, letzte: 0, protokoll: [] };
+  var std = { an: false, intervall: 30, stop: 3, ziel: 8, maxTrades: 3, letzte: 0, protokoll: [], schutzVersion: 2 };
+  if (d.auto.ziel === 5 && !d.auto.schutzVersion) d.auto.ziel = 8; // alter Standard → neuer Standard
   Object.keys(std).forEach(function (k) { if (d.auto[k] === undefined) d.auto[k] = std[k]; });
   return d.auto;
 }
@@ -324,18 +362,51 @@ function autoNotiz(text) {
   speichern();
 }
 
-// Stop-Loss und Gewinnziel: entscheidet das Programm, nicht die KI.
+// Schutz jeder Position: entscheidet das Programm, nicht die KI.
+//  1. Start-Stop: 1,5 × übliche Tagesschwankung unter dem Kaufkurs, höchstens der eingestellte Höchstverlust
+//  2. Nachziehender Stop: wandert mit dem Höchstkurs, Abstand = 1 × Tagesschwankung
+//  3. Ohne Verlust: ab Gewinn = Start-Abstand liegt der Stop mindestens beim Kaufkurs
+//  4. Gewinnziel: Hälfte verkaufen, Rest läuft mit halbem Abstand weiter
+function stopBerechnen(symbol, p) {
+  var w = schutzWerte(symbol);
+  var hoch = Math.max(p.hoch || p.einstand, p.einstand);
+  var stop = p.einstand * (1 - w.abstand / 100);
+  var abstandNach = p.teilVerkauft ? w.nachziehen / 2 : w.nachziehen;
+  stop = Math.max(stop, hoch * (1 - abstandNach / 100));
+  if (hoch >= p.einstand * (1 + w.abstand / 100)) stop = Math.max(stop, p.einstand * 1.002); // +0,2 % deckt Gebühren
+  return { stop: Math.round(stop * 100) / 100, werte: w, abstandNach: abstandNach };
+}
+
 async function regelnPruefen() {
-  var d = depot(), a = autoEinstellungen(), syms = Object.keys(d.positionen), meldungen = [];
+  var d = depot(), syms = Object.keys(d.positionen), meldungen = [];
   for (var i = 0; i < syms.length; i++) {
-    var p = d.positionen[syms[i]], k;
-    try { k = (await kursHolen(syms[i], true)).kurs; } catch (e) { continue; }
-    var prozent = (k - p.einstand) / p.einstand * 100;
-    var grund = prozent <= -a.stop ? "Stop-Loss " + prozent.toFixed(1) + " %" : prozent >= a.ziel ? "Gewinnziel " + prozent.toFixed(1) + " %" : "";
-    if (!grund) continue;
-    var r = await orderAufgeben(syms[i], "verkauf", p.anzahl, "regel", grund);
-    meldungen.push(grund + ": " + r.text);
+    var sym = syms[i], p = d.positionen[sym], k;
+    try { k = (await kursHolen(sym, true)).kurs; } catch (e) { continue; }
+    p.hoch = Math.max(p.hoch || p.einstand, k);
+    var s = stopBerechnen(sym, p), r;
+    // Gewinnziel erreicht: Hälfte sichern (bei 1 Aktie: Stop enger ziehen)
+    if (!p.teilVerkauft && k >= p.einstand * (1 + s.werte.ziel / 100)) {
+      p.teilVerkauft = true;
+      var haelfte = Math.floor(p.anzahl / 2);
+      if (haelfte >= 1) {
+        r = await orderAufgeben(sym, "verkauf", haelfte, "regel", "Gewinnziel +" + s.werte.ziel.toFixed(1) + " %: Hälfte gesichert");
+        meldungen.push(sym + " Gewinnziel: " + r.text + " Rest läuft mit nachziehendem Stop weiter.");
+      } else {
+        meldungen.push(sym + " Gewinnziel erreicht: Stop wird enger nachgezogen.");
+      }
+      p = d.positionen[sym];
+      if (!p) continue;
+      s = stopBerechnen(sym, p);
+    }
+    p.stopKurs = s.stop;
+    if (k <= s.stop) {
+      var gewinn = s.stop >= p.einstand;
+      r = await orderAufgeben(sym, "verkauf", p.anzahl, "regel",
+        (gewinn ? "Nachziehender Stop: Gewinn gesichert" : "Stop-Loss") + " bei " + usd(k) + " (Stop " + usd(s.stop) + ")");
+      meldungen.push(sym + " " + (gewinn ? "nachziehender Stop" : "Stop-Loss") + ": " + r.text);
+    }
   }
+  speichern();
   meldungen.forEach(autoNotiz);
   return meldungen;
 }
@@ -346,7 +417,7 @@ function autoFrage() {
     "Hol mit kurs_abfragen die Kurse der Aktien auf der Halal-Liste und schau mit depot_anzeigen ins Depot. " +
     "Handle NUR, wenn du die Gewinnchance als hoch einschätzt: Zuversicht mindestens 8 von 10 und ein konkreter Grund aus den Kursdaten. " +
     "Nichtstun ist die Regel und völlig in Ordnung. Höchstens eine Order, höchstens 20 % des Bargelds. " +
-    "Das Programm verkauft selbst bei " + a.stop + " % Verlust (Stop-Loss) oder " + a.ziel + " % Gewinn. " +
+    "Das Programm schützt jede Position selbst: individueller Stop nach Schwankung (höchstens " + a.stop + " % Verlust), nachziehender Stop, ab " + a.ziel + " % Gewinn wird die Hälfte gesichert. " +
     "Schreib zum Schluss genau eine Zeile: „Entscheidung: … | Zuversicht: x/10 | Grund: …“.";
 }
 
@@ -393,10 +464,10 @@ async function autoRunde(test) {
 function autoTakt() {
   if (!istBesitzer()) return;
   var a = autoEinstellungen();
-  if (!a.an || !boerseOffen()) return;
-  if (Date.now() - a.letzte >= a.intervall * 60000) { autoRunde(false); return; }
-  // Stop-Loss und Gewinnziel zusätzlich alle 5 Minuten prüfen
-  if (!AUTO.laeuft && Object.keys(depot().positionen).length && Date.now() - AUTO.letzteRegel >= 300000) {
+  if (!boerseOffen() || !depot().finnhubSchluessel) return;
+  if (a.an && Date.now() - a.letzte >= a.intervall * 60000) { autoRunde(false); return; }
+  // Schutz (Stop, nachziehender Stop, Gewinnziel) für alle Positionen alle 2 Minuten
+  if (!AUTO.laeuft && Object.keys(depot().positionen).length && Date.now() - AUTO.letzteRegel >= 120000) {
     AUTO.letzteRegel = Date.now();
     regelnPruefen().catch(function () {});
   }
@@ -440,7 +511,10 @@ var Depot = (function () {
     syms.forEach(function (s) {
       var p = d.positionen[s], k = kurs(s, p), w = k * p.anzahl, e = w - p.einstand * p.anzahl;
       var li = document.createElement("li"); li.className = "buchung";
-      li.innerHTML = "<span class='datum'><strong>" + esc(s) + "</strong></span><span class='wachsen'>" + p.anzahl + " × " + usd(k) + "<br><span class='leise klein-text'>Einstand " + usd(p.einstand) + "</span></span><strong class='" + (e >= 0 ? "plus" : "minus") + "'>" + usd(w) + "<br><span class='klein-text'>" + (e >= 0 ? "+" : "") + usd(e) + "</span></strong>";
+      var sb = stopBerechnen(s, p), stopK = p.stopKurs || sb.stop;
+      li.innerHTML = "<span class='datum'><strong>" + esc(s) + "</strong></span><span class='wachsen'>" + p.anzahl + " × " + usd(k) + "<br><span class='leise klein-text'>Einstand " + usd(p.einstand) +
+        " · Stop " + usd(stopK) + (stopK >= p.einstand ? " (ohne Verlust)" : "") + (p.teilVerkauft ? " · Hälfte gesichert" : "") +
+        "<br>Schwankung ca. " + sb.werte.schwankung.toFixed(1) + " %/Tag · Ziel +" + sb.werte.ziel.toFixed(1) + " %</span></span><strong class='" + (e >= 0 ? "plus" : "minus") + "'>" + usd(w) + "<br><span class='klein-text'>" + (e >= 0 ? "+" : "") + usd(e) + "</span></strong>";
       ul.appendChild(li);
     });
 
