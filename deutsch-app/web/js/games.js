@@ -67,7 +67,9 @@ function shell(root, g, level, { onExit, onDone, onAgain }) {
       <main class="p-body g-area"></main>
     </div>`);
   root.append(el);
-  const cleanups = [];
+  // In Spielen erscheint Pasha ganz unten, unter den Tasten (siehe .in-game in styles.css)
+  document.body.classList.add('in-game');
+  const cleanups = [() => document.body.classList.remove('in-game')];
   let over = false, streak = 0;
   const api = {
     el,
