@@ -327,11 +327,12 @@ function anagram(api, P, level, lang) {
     if (level === 'hard') say(w);
     const line = $('.ana-line', api.area), bank = $('.bank', api.area);
     const chosen = [];
+    let solved = false;
     const tiles = letters.map((ch, i) => {
       const b = h(`<button class="tile letter">${esc(ch)}</button>`);
       b._i = i;
       b.onclick = () => {
-        if (api.over) return;
+        if (api.over || solved) return;
         sfx.tap();
         const at = chosen.indexOf(b);
         if (at >= 0) { chosen.splice(at, 1); bank.append(b); [...bank.children].sort((a, c) => a._i - c._i).forEach((x) => bank.append(x)); }
@@ -343,6 +344,7 @@ function anagram(api, P, level, lang) {
     });
     function check() {
       if (chosen.map((b) => b.textContent).join('') === word) {
+        solved = true;
         score += hintUsed ? 7 : 15; api.setScore(score); sfx.correct(); say(w);
         line.classList.add('win'); r++; api.timeout(round, 900);
       } else {
@@ -352,13 +354,20 @@ function anagram(api, P, level, lang) {
     }
     $('.hint', api.area)?.addEventListener('click', () => {
       // Nächsten richtigen Buchstaben einsetzen
+      if (solved) return;
       hintUsed = true;
+      let k = 0;
+      while (k < chosen.length && chosen[k].textContent === word[k]) k++;
       chosen.splice(0).forEach((b) => bank.append(b));
-      const need = word[0];
-      const b = tiles.find((x) => x.textContent === need);
-      b?.click();
+      [...bank.children].sort((a, c) => a._i - c._i).forEach((x) => bank.append(x));
+      for (let i = 0; i <= Math.min(k, word.length - 1); i++) {
+        const b = tiles.find((x) => x.textContent === word[i] && !chosen.includes(x));
+        b?.click();
+      }
     });
     $('.skip', api.area).onclick = () => {
+      if (solved) return;
+      solved = true;
       line.innerHTML = `<span class="reveal">${t('solutionWas')} <b>${esc(w.de)}</b></span>`;
       bank.innerHTML = '';
       say(w); r++; api.timeout(round, 1500);
@@ -503,7 +512,7 @@ function truefalse(api, P, level, lang) {
     let shown = w.de, ok = Math.random() < 0.5;
     if (!ok) {
       if (level === 'hard' && article(w) && Math.random() < 0.6) shown = `${pick(ARTS.filter((a) => a !== article(w)))} ${bare(w)}`;
-      else shown = pick(src.filter((x) => x.key !== w.key)).de;
+      else shown = pick(src.filter((x) => x.key !== w.key && !(w.alt || []).includes(x.de))).de;
     }
     cur = { w, ok };
     const promptHtml = level === 'medium' || !hasPic(w)
@@ -582,17 +591,19 @@ function sentence(api, P, level, lang) {
     if (level === 'hard') speak(s.de);
     const line = $('.answer-line', api.area), bank = $('.bank', api.area);
     const chosen = [];
+    let solved = false;
     tilesArr.forEach((w, i) => {
       const b = h(`<button class="tile">${esc(w)}</button>`);
       b._i = i;
       b.onclick = () => {
-        if (api.over) return;
+        if (api.over || solved) return;
         sfx.tap();
         const at = chosen.indexOf(b);
         if (at >= 0) { chosen.splice(at, 1); bank.append(b); [...bank.children].sort((a, c) => a._i - c._i).forEach((x) => bank.append(x)); }
         else { chosen.push(b); line.append(b); }
         if (chosen.length === own.length) {
           if (chosen.map((x) => x.textContent).join(' ').toLowerCase() === own.join(' ').toLowerCase()) {
+            solved = true;
             score += 20; api.setScore(score); sfx.correct(); speak(s.de); line.classList.add('win'); r++; api.timeout(round, 900);
           } else {
             sfx.wrong(); shake(line);
@@ -638,7 +649,7 @@ function typing(api, P, level, lang) {
   form.onsubmit = (e) => {
     e.preventDefault();
     if (api.over || !input.value.trim()) return;
-    const r = checkTyped(input.value, w.de);
+    const r = [w.de, ...(w.alt || [])].map((x) => checkTyped(input.value, x)).find((x) => x.ok) || { ok: false };
     if (r.ok) { score += 10; api.setScore(score); sfx.correct(); msg.textContent = `✓ ${w.de}`; msg.className = 'tt-msg good'; say(w); api.hit(true); next(); }
     else { sfx.wrong(); shake(input); msg.textContent = `${t('solutionWas')} ${w.de}`; msg.className = 'tt-msg bad'; api.hit(false); say(w); next(); }
   };

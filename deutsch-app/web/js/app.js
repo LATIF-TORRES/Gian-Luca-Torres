@@ -620,6 +620,8 @@ function confirmRestart() {
     m.remove();
     store.reset();
     store.bindUser(user?.uid);
+    greeting = null;
+    daysAway = null;
     try { localStorage.removeItem('hd-code'); } catch {}
     data = await backend.getCourse();
     home();

@@ -404,7 +404,7 @@ input { font: inherit; }
 .cat-bubble .link-btn { margin: 0; padding: 4px 0; text-align: left; }
 .rem-note { color: var(--muted); font-weight: 600; font-size: 13px; }
 .cat-pop {
-  position: fixed; z-index: 90; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom));
+  position: fixed; z-index: 90; left: 50%; bottom: calc(196px + env(safe-area-inset-bottom));
   transform: translate(-50%, 30px) scale(.9); opacity: 0; transition: .3s cubic-bezier(.2, 1.4, .4, 1);
   display: flex; align-items: flex-end; gap: 2px; width: min(420px, calc(100% - 32px)); pointer-events: auto;
 }

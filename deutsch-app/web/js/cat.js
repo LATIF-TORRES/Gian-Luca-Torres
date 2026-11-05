@@ -1,4 +1,5 @@
 // Flocke: die weisse, flauschige Katze, die durch den Kurs begleitet.
+// Flocke ist neutral (weder männlich noch weiblich): in den Texten nie „er/sie“, „fier/fière“ usw.
 // Sie ist immer freundlich und motivierend, egal ob richtig, falsch oder nach einer Pause.
 //
 // catSvg(mood, size)   Zeichnung als SVG. Stimmungen: idle, happy, cheer, love, comfort, sleepy, wave
@@ -12,7 +13,7 @@ import { esc, pick } from './util.js';
 let uid = 0;
 
 const INK = '#2B2440';
-const PINK = '#FFB3C7';
+const PINK = '#FFCDB8'; // warmer Pfirsichton für Ohren und Bäckchen
 const NOSE = '#FF8FAB';
 
 function eyes(mood) {
