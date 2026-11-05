@@ -251,6 +251,7 @@ function openLesson(ui, li, st) {
     lang: getLang(),
     debug: backend.demo && !backend.preview,
     hooks: playerHooks(),
+    afterResults: ({ acc }) => progressButton({ ui, li, acc }),
     onDone: ({ xp }) => {
       store.finishLesson(u.id, li, xp);
       const keys = exercises.flatMap((e) => (e.item ? [e.item.key] : (e.items || []).map((i) => i.key)));
@@ -309,6 +310,43 @@ function startSprint() {
   const words = Object.keys(store.get().learned).map((k) => map.get(k)).filter((i) => i && i.kind === 'w');
   if (words.length < 5) return toast(t('sprintEmpty'));
   runSprint(app, words, { lang: getLang(), onDone: ({ xp }) => xp && store.addXp(xp), onExit: home });
+}
+
+// ---------- Fortschritt per WhatsApp an die Lehrperson (nur im Link mit Freischalt-Code)
+
+const LESSON_DE = ['Neue Wörter 1', 'Neue Wörter 2', 'Sätze', 'Hören und Sprechen'];
+
+// Die Nachricht ist auf Deutsch, damit die Lehrperson sie lesen kann.
+function progressMessage(last) {
+  const s = store.get();
+  const total = data.course.units.length * LESSONS.length;
+  const done = Object.keys(s.done).length;
+  const name = data.unlockedFor ? prettyName(data.unlockedFor) : 'Gratis-Lektion (noch kein Code)';
+  const lines = [
+    '📊 Hallo Deutsch! – mein Fortschritt',
+    `👤 ${name}`,
+    `📚 Lektionen fertig: ${done} von ${total}`,
+  ];
+  if (last) {
+    const u = data.course.units[last.ui];
+    lines.push(`✅ Gerade fertig: Einheit ${last.ui + 1} „${u.title.de}“ – ${LESSON_DE[last.li]} (${last.acc} % richtig)`);
+  }
+  const streak = store.currentStreak();
+  lines.push(`⭐ ${s.xp} XP · 🔥 ${streak} ${streak === 1 ? 'Tag' : 'Tage'} in Folge`);
+  const nMistakes = Object.keys(s.mistakes).length;
+  if (nMistakes) lines.push(`🔁 Wörter zum Wiederholen: ${nMistakes}`);
+  lines.push(`🌐 Sprache: ${getLang() === 'fr' ? 'Französisch' : 'Englisch'}`);
+  return lines.join('\n');
+}
+
+function progressButton(last) {
+  if (!backend.preview || !data.whatsapp) return '';
+  const href = `https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(progressMessage(last))}`;
+  return `
+    <div class="send-progress">
+      <p>${t('sendProgressHint')}</p>
+      <a class="btn whatsapp" target="_blank" rel="noopener" href="${href}">📊 ${t('sendProgress')}</a>
+    </div>`;
 }
 
 // ---------- Bezahlseite
@@ -429,6 +467,7 @@ function profile() {
       ${backend.preview ? (data.premium
         ? `<div class="card unlocked">🔓 ${t('unlockedFor')} <b>${esc(prettyName(data.unlockedFor))}</b></div>`
         : `<div class="card">${codeForm()}</div>`) : ''}
+      ${progressButton(null)}
       ${(data.premium || backend.preview) && data.whatsapp ? `<a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(t('whatsappText'))}">💬 ${t('whatsapp')}</a>` : ''}
       <div class="card settings">
         <h3>${t('settings')}</h3>

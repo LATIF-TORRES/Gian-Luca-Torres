@@ -478,6 +478,9 @@ export function runLesson(root, exercises, opts) {
           <div class="stat acc"><b>${acc}%</b><span>${t('accuracy')}</span></div>
         </div>
       </div>`));
+    // Zusatz unter dem Ergebnis (z. B. „Fortschritt per WhatsApp senden“)
+    const extra = opts.afterResults?.({ acc, xp });
+    if (extra) $('.results', body).append(h(extra));
     btn.disabled = false;
     btn.textContent = t('continue');
     btn.onclick = () => onExit();
