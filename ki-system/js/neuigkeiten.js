@@ -1,15 +1,17 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "3.1"; // muss mit version.json übereinstimmen
+var APP_VERSION = "3.2"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
-  { titel: "Updates kommen von selbst", text: "A&T aktualisiert sich ab jetzt beim Start automatisch, wenn du es über die Verknüpfung auf dem Desktop oder im Startmenü öffnest. Du musst nie mehr selbst etwas herunterladen." },
-  { titel: "KI ohne Limit auf deinem PC", text: "Neu kann A&T auf deinem eigenen PC rechnen: kostenlos, ohne Tageslimit, ohne Konto. Unter Windows: Doppelklick auf „Lokale KI installieren.cmd“ im A&T-Ordner. A&T findet die lokale KI danach selbst." },
-  { titel: "Gemini zuverlässiger", text: "Bei Google-Limits zeigt A&T jetzt den echten Grund, wartet kurz statt abzubrechen und lässt Modelle ohne Gratis-Kontingent weg." },
-  { titel: "Sadaqa-Vorschlag statt „Reinigung“", text: "Im Geldbuch gibt es keine „Reinigung“ mehr. Stattdessen zeigt A&T einen Sadaqa-Vorschlag (wählbar unter „Ich“). Das ist nur ein Vorschlag, es wird nie etwas abgezogen. Frühere Reinigungs-Einträge stehen jetzt als normale Ausgaben im Geldbuch." },
+  { titel: "Klüger und direkter", text: "A&T denkt jetzt wie ein erfahrener Unternehmer: prüft Nachfrage, Marge und Konkurrenz, sagt offen, wenn eine Idee schwach ist, nennt konkrete Anbieter und Preise und antwortet ohne unnötige Warnhinweise. Neue Gespräche nutzen das sofort." },
+  { titel: "Gründlich-Modus bei der lokalen KI", text: "Stellst du im Mentor unten „Gründlich“ ein, denkt die lokale KI vor der Antwort nach. Das dauert länger, die Antworten werden aber besser." },
+  { titel: "Grösseres Modell für starke PCs", text: "Hat dein PC 32 GB Arbeitsspeicher oder mehr, lädt „A&T - Lokale KI einrichten“ (Startmenü) jetzt das grössere Modell qwen3:14b. A&T nimmt automatisch das beste vorhandene Modell." },
+  { titel: "Updates kommen von selbst", text: "A&T aktualisiert sich beim Start automatisch, wenn du es über die Verknüpfung auf dem Desktop oder im Startmenü öffnest." },
+  { titel: "KI ohne Limit auf deinem PC", text: "A&T kann auf deinem eigenen PC rechnen: kostenlos, ohne Tageslimit, ohne Konto. Unter Windows: „A&T - Lokale KI einrichten“ im Startmenü oder „Lokale KI installieren.cmd“ im A&T-Ordner." },
+  { titel: "Sadaqa-Vorschlag statt „Reinigung“", text: "Im Geldbuch gibt es keine „Reinigung“ mehr, sondern einen Sadaqa-Vorschlag (wählbar unter „Ich“). Es wird nie etwas abgezogen." },
   { titel: "Deine Daten bleiben", text: "Gespräche, Gedächtnis, Aufgaben und Geldbuch sind unverändert da. Du musst nichts neu einrichten." }
 ];
 
