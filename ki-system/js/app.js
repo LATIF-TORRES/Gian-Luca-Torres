@@ -36,6 +36,7 @@
     if (name === "geld") geldZeigen();
     if (name === "chat") { verlaufZeigen(); setTimeout(function () { $("#frage").focus(); }, 50); }
     if (name === "einstellungen") einstellungenZeigen();
+    if (name === "depot") Depot.zeigen();
     window.scrollTo(0, 0);
   }
   $("#tabs").addEventListener("click", function (ev) {
@@ -283,6 +284,11 @@
     input = input || {};
     if (name === "merken") return "🧠 Gemerkt: " + (input.text || "");
     if (name === "aufgabe_anlegen") return "✅ Aufgabe: " + (input.text || "") + (input.wichtig ? " ★" : "");
+    if (name === "kurs_abfragen") return "📈 Kurs " + (input.symbol || "");
+    if (name === "halal_pruefen") return "🔎 Halal-Prüfung " + (input.symbol || "");
+    if (name === "depot_anzeigen") return "📊 Depot angesehen";
+    if (name === "order_aufgeben") return "🧾 Order: " + (input.seite || "") + " " + (input.anzahl || "") + " " + (input.symbol || "");
+    if (name === "ueberweisung_vorbereiten") return "💸 Überweisung vorbereitet: " + (Number(input.betrag) || 0).toFixed(2) + " " + (input.waehrung || "") + " an " + (input.empfaenger || "");
     if (name === "buchung_eintragen") return (input.art === "sadaqa" ? "🤲 " : "💰 ") + (BUCHUNGSARTEN[input.art] || "Buchung") + " " + geld(input.betrag) + " · " + (input.quelle || "") + (input.halal === "nicht_halal" ? " · nicht halal" : "");
     return name;
   }
@@ -419,6 +425,7 @@
         span.textContent = erg;
         live.querySelector(".aktionen").appendChild(span);
         if (name === "buchung_eintragen" || name === "aufgabe_anlegen") heuteZeigen();
+        if (name === "ueberweisung_vorbereiten") geldZeigen();
       },
       fertig: function () {
         laeuft = null;
@@ -538,8 +545,10 @@
       li.querySelector("button").onclick = function () { Z.buchungen = Z.buchungen.filter(function (x) { return x !== b; }); speichern(); geldZeigen(); };
       ul.appendChild(li);
     });
+    Depot.ueberweisungenZeigen();
     rechnen();
   }
+  window.geldNeuZeigen = function () { geldZeigen(); };
   function kachel(titel, wert, art, notiz) {
     return "<div class='karte kachel'><div class='leise klein-text'>" + esc(titel) + "</div><div class='gross " + art + "'>" + esc(wert) + "</div>" +
       (notiz ? "<div class='leise klein-text'>" + esc(notiz) + "</div>" : "") + "</div>";
@@ -731,6 +740,7 @@
     var kopie = JSON.parse(JSON.stringify(Z));
     kopie.einstellungen.schluessel = ""; // Schlüssel nie in die Datei
     kopie.einstellungen.geminiSchluessel = "";
+    if (kopie.depot) kopie.depot.finnhubSchluessel = "";
     var blob = new Blob([JSON.stringify(kopie, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -789,6 +799,7 @@
 
   modusFuellen();
   vorbilderZeigen();
+  Depot.verbinden();
   alles();
   $("#b-art").onchange.call($("#b-art"));
   Neuigkeiten.beimStart();

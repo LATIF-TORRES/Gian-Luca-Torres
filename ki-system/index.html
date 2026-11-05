@@ -26,6 +26,7 @@
       <button data-tab="chat">Mentor</button>
       <button data-tab="vorbilder">Vorbilder</button>
       <button data-tab="geld">Geld</button>
+      <button data-tab="depot">Depot</button>
       <button data-tab="einstellungen">Ich</button>
     </nav>
   </header>
@@ -136,6 +137,12 @@
         <ul id="buchungen" class="liste"></ul>
       </div>
 
+      <div class="karte versteckt" id="ueberweisungen-karte">
+        <h2>Überweisungen (Revolut)</h2>
+        <p class="leise klein-text">Vom Mentor vorbereitet und geprüft. Revolut hat für Privatkonten keine Schnittstelle: Tippe die Felder an, um sie zu kopieren, und sende die Zahlung in der Revolut-App (Bezahlen → Neuer Empfänger → Bankverbindung).</p>
+        <ul id="ueberweisungen" class="liste"></ul>
+      </div>
+
       <div class="raster">
         <div class="karte">
           <h2>Sparziel ohne Zinsen</h2>
@@ -173,6 +180,69 @@
           </div>
           <div id="s-ergebnis" class="ergebnis"></div>
         </div>
+      </div>
+    </section>
+
+    <!-- DEPOT -->
+    <section id="tab-depot" class="tab">
+      <h1>Übungs-Depot</h1>
+      <p class="leise">Echte Kurse, Spielgeld. Der Mentor kann hier selbst handeln: bis zu deinem Tageslimit sofort, darüber nur mit deiner Freigabe.</p>
+
+      <div id="depot-hinweis" class="karte warnung">
+        <div><strong>Halal-Regeln im Depot (fest eingebaut):</strong> nur Aktien von deiner Halal-Liste, nur eigenes Geld (kein Hebel, kein Kredit), keine Leerverkäufe, keine Optionen und keine CFDs. Banken, Versicherungen, Alkohol, Tabak und Glücksspiel werden automatisch blockiert. Viele Gelehrte sehen schnelles Day Trading kritisch (Nähe zu Spekulation, Verkauf vor der Abwicklung). Längerfristiges Halten geprüfter Aktien gilt als unbedenklicher.</div>
+        <button class="knopf klein" id="depot-hinweis-ok">Verstanden</button>
+      </div>
+
+      <div class="raster drei" id="depot-kacheln"></div>
+
+      <div class="karte versteckt" id="depot-offen-karte">
+        <h2>Wartet auf deine Freigabe</h2>
+        <p class="leise klein-text">Diese Orders des Mentors liegen über deinem Tageslimit.</p>
+        <ul id="depot-offen" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Positionen</h2>
+        <ul id="depot-positionen" class="liste"></ul>
+        <button class="knopf klein" id="d-aktualisieren" type="button">Kurse aktualisieren</button>
+      </div>
+
+      <div class="karte">
+        <h2>Selbst handeln</h2>
+        <form id="order-form" class="formular">
+          <label>Aktie <select id="o-symbol"></select></label>
+          <label>Kauf oder Verkauf <select id="o-seite"><option value="kauf">Kauf</option><option value="verkauf">Verkauf</option></select></label>
+          <label>Anzahl <input id="o-anzahl" type="number" min="1" step="1" value="1"></label>
+          <button class="knopf">Order ausführen</button>
+        </form>
+      </div>
+
+      <div class="karte">
+        <h2>Halal-Liste</h2>
+        <p class="leise klein-text">Nur diese Aktien dürfen gehandelt werden, auch vom Mentor. A&amp;T prüft die Branche, du prüfst Schulden, Zinseinnahmen und Produkte (z. B. mit Zoya oder Musaffa) und bestätigst.</p>
+        <form id="halal-form" class="zeile">
+          <input id="h-symbol" placeholder="Kürzel, z. B. AAPL" autocomplete="off">
+          <button class="knopf">Prüfen</button>
+        </form>
+        <p id="h-info" class="klein-text leise"></p>
+        <button class="knopf klein versteckt" id="h-bestaetigen" type="button">Ich habe sie geprüft: aufnehmen</button>
+        <ul id="halal-liste" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Letzte Orders</h2>
+        <ul id="depot-orders" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Einstellungen</h2>
+        <div class="formular">
+          <label>Finnhub-Schlüssel (für echte Kurse) <input id="d-finnhub" type="password" placeholder="kostenlos auf finnhub.io" autocomplete="off"></label>
+          <label>Tageslimit für automatische Orders (USD) <input id="d-limit" type="number" min="0" step="50"></label>
+          <label>Startkapital (Spielgeld, USD) <input id="d-start" type="number" min="100" step="1000"></label>
+          <button class="knopf klein rot" id="d-zuruecksetzen" type="button">Depot neu starten</button>
+        </div>
+        <p class="leise klein-text">Den kostenlosen Finnhub-Schlüssel bekommst du auf finnhub.io (Registrieren, E-Mail bestätigen, „API Key“ kopieren). Er liefert Kurse für US-Aktien. Echtes Geld kommt erst dazu, wenn du einen Broker mit Schnittstelle anschliesst.</p>
       </div>
     </section>
 
@@ -339,6 +409,7 @@
 
   <script src="js/daten.js"></script>
   <script src="js/speicher.js"></script>
+  <script src="js/depot.js"></script>
   <script src="js/ki.js"></script>
   <script src="js/gemini.js"></script>
   <script src="js/lokal.js"></script>

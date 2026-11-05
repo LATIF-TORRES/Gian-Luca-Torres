@@ -258,3 +258,15 @@ body.gesperrt { overflow: hidden; }
 .neu-liste li { margin: 0 0 12px; }
 .neu-liste li span { font-size: .92rem; }
 a.knopf { text-decoration: none; display: inline-block; }
+.kopierfelder { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.kopierfelder .chip { font-size: .8rem; padding: 5px 10px; overflow-wrap: anywhere; }
+.liste li.ueberweisung { align-items: flex-start; }
+.liste li.ueberweisung.erledigt { opacity: .65; }
+.liste li > .wachsen { flex: 1; min-width: 0; }
+@media (max-width: 560px) {
+  .tabs { gap: 2px; }
+  .tabs button { padding: 6px 8px; font-size: .8rem; }
+}
+@media (max-width: 380px) {
+  .tabs button { padding: 6px 6px; }
+}

@@ -259,14 +259,15 @@ function antwortGemini(chat, cb) {
         var aufrufe = erg.parts.filter(function (p) { return p.functionCall; });
         if (!aufrufe.length) break;
 
-        var antworten = aufrufe.map(function (p) {
-          var fc = p.functionCall;
-          var r = werkzeugAusfuehren(fc.name, fc.args || {});
+        var antworten = [];
+        for (var ai = 0; ai < aufrufe.length; ai++) {
+          var fc = aufrufe[ai].functionCall;
+          var r = await werkzeugAusfuehren(fc.name, fc.args || {});
           cb.werkzeug(fc.name, r.text);
           var fr = { name: fc.name, response: r.fehler ? { error: r.text } : { result: r.text } };
           if (fc.id) fr.id = fc.id;
-          return { functionResponse: fr };
-        });
+          antworten.push({ functionResponse: fr });
+        }
         chat.nachrichten.push({ role: "user", parts: antworten });
         speichern();
       }

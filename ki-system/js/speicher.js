@@ -18,6 +18,8 @@ function leererZustand() {
     aufgaben: [],      // {id, text, erledigt, wichtig, datum}
     buchungen: [],     // {id, art: "ein"|"aus", betrag, quelle, datum}
     chats: [],         // {id, titel, modus, nachrichten: [API-Nachrichten], kosten}
+    depot: null,       // Übungs-Depot, siehe depot.js
+    ueberweisungen: [],// vorbereitete Überweisungen (Revolut)
     aktiverChat: null
   };
 }
@@ -165,6 +167,7 @@ function kontextFuerKi() {
   if (Z.gedaechtnis.length) {
     teile.push("Was du über die Person weisst:\n" + Z.gedaechtnis.map(function (g) { return "- " + g.text; }).join("\n"));
   }
+  if (typeof depotKurzFuerKi === "function") teile.push(depotKurzFuerKi());
   var offen = Z.aufgaben.filter(function (a) { return !a.erledigt; });
   if (offen.length) {
     teile.push("Offene Aufgaben:\n" + offen.slice(-15).map(function (a) { return "- " + a.text + (a.wichtig ? " (wichtigste)" : ""); }).join("\n"));

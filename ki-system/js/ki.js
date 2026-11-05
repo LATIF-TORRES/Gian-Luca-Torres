@@ -55,6 +55,9 @@ var EIGENE_WERKZEUGE = [
   }
 ];
 
+// Depot- und Überweisungs-Werkzeuge (depot.js) gehören dazu.
+if (typeof DEPOT_WERKZEUGE !== "undefined") EIGENE_WERKZEUGE = EIGENE_WERKZEUGE.concat(DEPOT_WERKZEUGE);
+
 function werkzeugeFuer(modell) {
   // Die Liste bleibt in einem Gespräch immer gleich, sonst verfällt das Nachdenken früherer Antworten.
   var suche = modell === "claude-haiku-5-5"
@@ -63,7 +66,7 @@ function werkzeugeFuer(modell) {
   return EIGENE_WERKZEUGE.concat([suche]);
 }
 
-function werkzeugAusfuehren(name, input) {
+async function werkzeugAusfuehren(name, input) {
   if (!input || typeof input !== "object") return { fehler: true, text: "Eingabe fehlt oder ist unvollständig." };
   if (name === "merken") {
     if (typeof input.text !== "string" || !input.text.trim()) return { fehler: true, text: "Feld 'text' fehlt." };
@@ -76,6 +79,10 @@ function werkzeugAusfuehren(name, input) {
   if (name === "buchung_eintragen") {
     var antwort = buchungEintragen(input.art, input.betrag, input.quelle, input.datum, input.halal);
     return { text: antwort, fehler: /fehlt|ungültig|muss/.test(antwort) };
+  }
+  if (typeof depotWerkzeug === "function") {
+    var d = await depotWerkzeug(name, input);
+    if (d) return d;
   }
   return { fehler: true, text: "Unbekanntes Werkzeug: " + name };
 }
@@ -180,12 +187,13 @@ function antwortClaude(chat, cb) {
         if (msg.stop_reason !== "tool_use") break;
 
         var ergebnisse = [];
-        msg.content.forEach(function (block) {
-          if (block.type !== "tool_use") return;
-          var erg = werkzeugAusfuehren(block.name, block.input);
+        for (var bi = 0; bi < msg.content.length; bi++) {
+          var block = msg.content[bi];
+          if (block.type !== "tool_use") continue;
+          var erg = await werkzeugAusfuehren(block.name, block.input);
           cb.werkzeug(block.name, erg.text);
           ergebnisse.push({ type: "tool_result", tool_use_id: block.id, content: erg.text, is_error: !!erg.fehler });
-        });
+        }
         if (!ergebnisse.length) break;
         chat.nachrichten.push({ role: "user", content: ergebnisse });
         speichern();

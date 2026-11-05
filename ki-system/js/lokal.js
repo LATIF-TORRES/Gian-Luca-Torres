@@ -143,14 +143,14 @@ function antwortLokal(chat, cb) {
         if (erg.grund === "length") { cb.text("\n\n_Die Antwort war zu lang und wurde abgeschnitten. Schreib „weiter“._"); break; }
         if (!erg.aufrufe.length) break;
 
-        erg.aufrufe.forEach(function (a) {
-          var fn = a.function || {};
+        for (var ai = 0; ai < erg.aufrufe.length; ai++) {
+          var fn = erg.aufrufe[ai].function || {};
           var args = fn.arguments;
           if (typeof args === "string") { try { args = JSON.parse(args); } catch (x) { args = null; } }
-          var r = werkzeugAusfuehren(fn.name, args || {});
+          var r = await werkzeugAusfuehren(fn.name, args || {});
           cb.werkzeug(fn.name, r.text);
           chat.nachrichten.push({ role: "tool", content: r.text, tool_name: fn.name });
-        });
+        }
         speichern();
       }
       cb.fertig();

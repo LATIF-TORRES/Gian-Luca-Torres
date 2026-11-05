@@ -21,6 +21,14 @@ Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt u
 - Bei Vorbildern mit verbotenen Geschäftsfeldern (z. B. Alkohol bei LVMH, Banken bei Buffett) steht ein Halal-Hinweis: Du übernimmst nur das Prinzip.
 - Wo die Gelehrten verschiedener Meinung sind (z. B. Krypto), sagt der Mentor das offen. Er gibt keine Fatwa und verweist auf einen Gelehrten.
 
+## Übungs-Depot und Überweisungen (nur in deiner Version gedacht)
+
+- **Depot-Tab:** Spielgeld (Start 10 000 USD, einstellbar) mit echten US-Kursen von [Finnhub](https://finnhub.io) (kostenloser Schlüssel, nur für privaten Gebrauch).
+- **Die KI handelt selbst** (Rolle „Halal-Trader“, Werkzeug `order_aufgeben`): bis zum Tageslimit sofort, darüber landet die Order unter „Wartet auf deine Freigabe“.
+- **Halal fest im Programm** (`js/depot.js`), nicht nur im Auftrag an die KI: nur Aktien von der Halal-Liste, die du selbst bestätigt hast. Banken, Versicherungen, Alkohol, Tabak und Glücksspiel werden über die Branche automatisch blockiert. Gekauft wird nur mit vorhandenem Geld (kein Hebel), Leerverkäufe gehen nicht, ganze Stückzahlen.
+- **Überweisungen:** Revolut hat für Privatkonten keine Schnittstelle. Die KI bereitet Überweisungen vor (`ueberweisung_vorbereiten`) und prüft die IBAN-Prüfziffer. Unter **Geld → Überweisungen** kopierst du die Felder und sendest in der Revolut-App. „In Revolut gesendet“ trägt die Ausgabe ins Geldbuch ein.
+- **Echtes Geld:** kommt erst mit einem Broker mit Schnittstelle dazu (z. B. Interactive Brokers oder Alpaca), automatische Überweisungen nur mit Revolut Business (Business-API). An Kunden weitergegeben wäre automatischer Handel bewilligungspflichtig (FINMA/MiFID).
+
 ## Für bestehende Kunden und Updates
 
 - **Version:** steht in `js/neuigkeiten.js` (`APP_VERSION`) und in `version.json`. Bei jedem neuen Paket beide erhöhen und die Liste `NEUIGKEITEN` anpassen.
