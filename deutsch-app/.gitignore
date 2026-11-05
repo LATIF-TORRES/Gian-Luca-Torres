@@ -4,3 +4,4 @@ functions/.env*
 preview/
 scripts/.unlock-key
 preview-admin/
+preview-open/
