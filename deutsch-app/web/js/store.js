@@ -13,6 +13,9 @@ const empty = () => ({
   mistakes: {},   // "u01:w3": Anzahl
   learned: {},    // "u01:w3": true
   settings: { sound: true, speak: true },
+  games: {},      // "memory": { easy: Bestwert, medium: …, hard: … }
+  lastSeen: 0,    // letzter Besuch (für Flockes Begrüssung)
+  catIntro: false,
   speakOffUntil: 0,
   updatedAt: 0,
 });
@@ -49,6 +52,7 @@ export const store = {
       done: { ...(remote.done || {}), ...state.done },
       learned: { ...(remote.learned || {}), ...state.learned },
       settings: { ...empty().settings, ...(newer.settings || {}) },
+      games: { ...(remote.games || {}), ...(state.games || {}) },
     };
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
   },
@@ -106,6 +110,30 @@ export const store = {
       delete state.mistakes[key];
       save();
     }
+  },
+
+  // Gibt die Tage seit dem letzten Besuch zurück und merkt sich diesen Besuch.
+  visit() {
+    const before = state.lastSeen || 0;
+    state.lastSeen = Date.now();
+    save();
+    return before ? (Date.now() - before) / 86400000 : null;
+  },
+
+  // Spielergebnis speichern. Gibt true zurück, wenn es ein neuer Rekord ist.
+  saveGame(id, level, score) {
+    const g = (state.games[id] = state.games[id] || {});
+    const record = score > (g[level] || 0);
+    if (record) g[level] = score;
+    save();
+    return record;
+  },
+
+  bestGame: (id, level) => (state.games?.[id]?.[level] || 0),
+
+  setFlag(k, v) {
+    state[k] = v;
+    save();
   },
 
   setSetting(k, v) {

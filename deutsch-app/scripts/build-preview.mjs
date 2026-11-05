@@ -29,6 +29,7 @@ for (const f of readdirSync(new URL('js/', web))) {
     src = src.replace('preview: false', 'preview: true');
     const wa = (process.env.WHATSAPP || '').replace(/\D/g, '');
     if (wa) src = src.replace("contactWhatsapp: ''", `contactWhatsapp: '${wa}'`);
+    if (process.env.COURSE_URL) src = src.replace("courseUrl: ''", `courseUrl: '${process.env.COURSE_URL.replace(/[^\w:/.?=&-]/g, '')}'`);
   }
   writeFileSync(new URL(`js/${f}`, out), src);
 }

@@ -3,6 +3,7 @@
 import { t } from './i18n.js';
 import { speak, listen, canListen, stopListening } from './speech.js';
 import { sfx, confetti } from './fx.js';
+import { catSvg, catLine, catPop } from './cat.js';
 import { checkTyped, checkSpoken, tokens, shuffle, esc, pick } from './util.js';
 
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -424,6 +425,8 @@ export function runLesson(root, exercises, opts) {
         if (!ex._retry) correctFirst++;
         combo++;
         hooks.correct?.(ex);
+        if (combo === 5) catPop('happy', catLine('catStreak5'));
+        if (combo >= 10 && combo % 5 === 0) catPop('cheer', catLine('catStreak10'));
       } else {
         combo = 0;
         hooks.mistake?.(ex);
@@ -446,6 +449,7 @@ export function runLesson(root, exercises, opts) {
     if (r.note && notes[r.note] && (r.ok || r.note === 'wrongArticle')) lines.push(`<div class="fb-line">${notes[r.note]}</div>`);
     if (r.heard && !r.ok) lines.push(`<div class="fb-line">${t('heard')} „${esc(r.heard)}“</div>`);
     if (r.meaning) lines.push(`<div class="fb-line muted">${t('meaning')} ${esc(r.meaning)}</div>`);
+    if (!r.ok) lines.push(`<div class="fb-cat">${catSvg('comfort', 52)}<span>${esc(catLine('catWrong'))}</span></div>`);
     fbEl.innerHTML = `
       <div class="fb-title">${r.ok ? `✅ ${esc(pick(t('great')))}` : `❌ ${t('wrong')}`}</div>
       ${lines.join('')}`;
@@ -471,8 +475,9 @@ export function runLesson(root, exercises, opts) {
     fbEl.innerHTML = '';
     body.append(h(`
       <div class="ex results">
-        <div class="trophy">🏆</div>
+        <div class="trophy">${catSvg('cheer', 150)}</div>
         <h2>${t('lessonDone')}</h2>
+        <div class="cat-quote">„${esc(catLine('catDone'))}“</div>
         <div class="stats">
           <div class="stat xp"><b>+${xp}</b><span>${t('earned')}</span></div>
           <div class="stat acc"><b>${acc}%</b><span>${t('accuracy')}</span></div>
@@ -488,106 +493,4 @@ export function runLesson(root, exercises, opts) {
   }
 
   show();
-}
-
-// ---------- Schnell-Spiel: 60 Sekunden Paare finden
-
-export function runSprint(root, words, { lang, onExit, onDone }) {
-  root.innerHTML = '';
-  const el = h(`
-    <div class="player">
-      <header class="p-top">
-        <button class="icon-btn quit" aria-label="Quit">✕</button>
-        <div class="bar timer"><i style="width:100%"></i></div>
-        <span class="combo sprint-score">0</span>
-      </header>
-      <main class="p-body"><div class="ex">
-        <h2 class="q">${t('sprintSub')}</h2>
-        <div class="match"><div class="col left"></div><div class="col right"></div></div>
-      </div></main>
-      <footer class="p-foot hidden"><button class="btn primary main-btn">${t('continue')}</button></footer>
-    </div>`);
-  root.append(el);
-  const left = $('.left', el), right = $('.right', el), bar = $('.bar i', el), scoreEl = $('.sprint-score', el);
-  let deck = shuffle(words);
-  let score = 0, selL = null, selR = null, over = false;
-  const START = Date.now(), DUR = 60000;
-
-  const nextWord = () => { if (!deck.length) deck = shuffle(words); return deck.pop(); };
-  const active = new Set();
-
-  function tile(it, side) {
-    const b = h(`<button class="tile">${esc(side === 'l' ? it.de : it[lang])}</button>`);
-    b.dataset.key = it.key;
-    b.onclick = () => {
-      if (over || b.disabled) return;
-      if (side === 'l') { selL?.classList.remove('sel'); selL = b; } else { selR?.classList.remove('sel'); selR = b; }
-      b.classList.add('sel');
-      if (!selL || !selR) return;
-      const a = selL, c = selR;
-      selL = selR = null;
-      if (a.dataset.key === c.dataset.key) {
-        score++;
-        scoreEl.textContent = `⚡ ${score}`;
-        sfx.correct();
-        active.delete(a.dataset.key);
-        [a, c].forEach((x) => { x.classList.remove('sel'); x.classList.add('ok'); x.disabled = true; });
-        setTimeout(() => replace(a, c), 300);
-      } else {
-        sfx.wrong();
-        [a, c].forEach((x) => { x.classList.remove('sel'); x.classList.add('bad'); setTimeout(() => x.classList.remove('bad'), 400); });
-      }
-    };
-    return b;
-  }
-
-  function replace(a, c) {
-    let it = nextWord();
-    for (let i = 0; i < 20 && active.has(it.key); i++) it = nextWord();
-    active.add(it.key);
-    a.replaceWith(tile(it, 'l'));
-    // Neue rechte Kachel an zufälliger Stelle, damit man nicht einfach die gleiche Position tippt
-    c.remove();
-    const kids = right.children;
-    const pos = Math.floor(Math.random() * (kids.length + 1));
-    right.insertBefore(tile(it, 'r'), kids[pos] || null);
-  }
-
-  const first = [];
-  while (first.length < Math.min(5, words.length)) {
-    const it = nextWord();
-    if (!active.has(it.key)) { active.add(it.key); first.push(it); }
-  }
-  first.forEach((it) => left.append(tile(it, 'l')));
-  shuffle(first).forEach((it) => right.append(tile(it, 'r')));
-
-  const timer = setInterval(() => {
-    const leftMs = DUR - (Date.now() - START);
-    bar.style.width = `${Math.max(0, (leftMs / DUR) * 100)}%`;
-    if (leftMs <= 0) end();
-  }, 100);
-
-  function end() {
-    if (over) return;
-    over = true;
-    clearInterval(timer);
-    const xp = Math.min(30, score);
-    onDone?.({ score, xp });
-    sfx.done();
-    if (score > 0) confetti();
-    $('.p-body', el).innerHTML = `
-      <div class="ex results">
-        <div class="trophy">⚡</div>
-        <h2>${t('sprintDone')}</h2>
-        <div class="stats">
-          <div class="stat acc"><b>${score}</b><span>${t('sprintScore')}</span></div>
-          <div class="stat xp"><b>+${xp}</b><span>${t('earned')}</span></div>
-        </div>
-      </div>`;
-    const foot = $('.p-foot', el);
-    foot.classList.remove('hidden');
-    $('.main-btn', el).onclick = onExit;
-  }
-
-  $('.quit', el).onclick = () => { over = true; clearInterval(timer); onExit(); };
 }

@@ -6,10 +6,13 @@ import { t, setLang, getLang, detectLang } from './i18n.js';
 import { backend } from './backend.js';
 import { store } from './store.js';
 import { LESSONS, buildLesson, buildReview, allItems } from './lessons.js';
-import { runLesson, runSprint } from './player.js';
+import { runLesson } from './player.js';
 import { setSound, sfx } from './fx.js';
 import { hasGermanVoice } from './speech.js';
 import { esc, richText, shuffle } from './util.js';
+import { catSvg, catSays, catLine } from './cat.js';
+import { GAMES, LEVELS, makePool, gameAvailable, startGame } from './games.js';
+import { unitItems } from './lessons.js';
 
 const app = document.getElementById('app');
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -17,6 +20,8 @@ const h = (html) => { const d = document.createElement('div'); d.innerHTML = htm
 
 let user = null;
 let data = null; // { course, premium, whatsapp }
+let daysAway = null; // Tage seit dem letzten Besuch (für Flockes Begrüssung)
+let greeting = null; // Begrüssung bleibt während des Besuchs gleich
 
 setLang(detectLang());
 // Im Vorschau-Link ist das Mikrofon gesperrt: keine Sprechübungen.
@@ -38,6 +43,7 @@ function boot() {
       setSound(store.get().settings.sound !== false);
       await handleCheckoutReturn();
       data = await backend.getCourse();
+      daysAway = store.visit();
       home();
     } catch (e) {
       console.error(e);
@@ -132,6 +138,62 @@ function authScreen(mode = 'signup') {
   });
 }
 
+// ---------- Untere Leiste: Lernen · Spiele · Profil
+
+function tabbar(active) {
+  const tab = (id, icon, key) => `<button data-tab="${id}" class="${active === id ? 'on' : ''}" ${active === id ? 'aria-current="page"' : ''}><span>${icon}</span>${t(key)}</button>`;
+  return `<nav class="tabbar">${tab('learn', '📚', 'navLearn')}${tab('games', '🎮', 'navGames')}${tab('profile', '👤', 'navProfile')}</nav>`;
+}
+
+function wireTabs(el) {
+  el.querySelectorAll('[data-tab]').forEach((b) => (b.onclick = () => {
+    sfx.tap();
+    ({ learn: home, games: gamesScreen, profile })[b.dataset.tab]();
+    window.scrollTo(0, 0);
+  }));
+}
+
+// ---------- Flocke auf der Startseite
+
+function greetingCard() {
+  const s = store.get();
+  const total = data.course.units.length * LESSONS.length;
+  if (!greeting) {
+    if (!s.catIntro) { greeting = { mood: 'wave', text: catLine('catGreetFirst'), special: true }; store.setFlag('catIntro', true); }
+    else if (data.premium && Object.keys(s.done).length >= total) greeting = { mood: 'cheer', text: catLine('catAllDone') };
+    else if (daysAway !== null && daysAway >= 2) greeting = { mood: 'love', text: catLine('catGreetBack'), special: true };
+    else greeting = { mood: pickMood(), text: catLine('catGreetDay') };
+  }
+  const askReminder = Object.keys(s.done).length >= 1 && !s.reminderAsked;
+  const extra = askReminder
+    ? `<span class="cat-rem">${esc(t('catReminder'))}</span>${reminderLink('btn-mini')}<button class="link-btn rem-later">${t('later')}</button>`
+    : '';
+  return `<section class="cat-card">${catSays(greeting.mood, greeting.text, 96, extra)}</section>`;
+}
+
+const pickMood = () => ['idle', 'happy', 'wave', 'love'][Math.floor(Math.random() * 4)];
+
+// Kalender-Erinnerung alle 2 Tage (Google Kalender öffnet sich in einem neuen Tab).
+// Echte Push-Nachrichten gehen auf claude.ai nicht, dafür braucht es einen eigenen Server.
+function reminderLink(cls = '') {
+  const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(18, 0, 0, 0);
+  const f = (x) => `${x.getFullYear()}${String(x.getMonth() + 1).padStart(2, '0')}${String(x.getDate()).padStart(2, '0')}T${String(x.getHours()).padStart(2, '0')}${String(x.getMinutes()).padStart(2, '0')}00`;
+  const end = new Date(d.getTime() + 15 * 60000);
+  const url = 'https://calendar.google.com/calendar/render?' + new URLSearchParams({
+    action: 'TEMPLATE',
+    text: t('catReminderTitle'),
+    details: `${t('catReminderText')} ${CONFIG.courseUrl || ''}`.trim(),
+    dates: `${f(d)}/${f(end)}`,
+    recur: 'RRULE:FREQ=DAILY;INTERVAL=2',
+  });
+  return `<a class="btn whatsapp cal ${cls}" target="_blank" rel="noopener" href="${esc(url)}">📅 ${t('catReminderBtn')}</a>`;
+}
+
+function wireReminder(el) {
+  el.querySelectorAll('.cal').forEach((a) => a.addEventListener('click', () => store.setFlag('reminderAsked', true)));
+  el.querySelector('.rem-later')?.addEventListener('click', () => { store.setFlag('reminderAsked', true); home(); });
+}
+
 // ---------- Lernpfad
 
 const unlockAll = backend.demo && new URLSearchParams(location.search).has('unlock');
@@ -159,7 +221,6 @@ function home() {
         <div class="chips">
           <span class="chip streak" title="${t('streak')}">🔥 ${store.currentStreak()}</span>
           <span class="chip xp">⭐ ${s.xp}</span>
-          <button class="chip avatar" aria-label="${t('profile')}">👤</button>
         </div>
       </header>
       ${backend.demo && !backend.preview ? `<div class="demo-banner">${t('demoBanner')}</div>` : ''}
@@ -169,10 +230,13 @@ function home() {
           <span class="wa-text"><b>${t('waBarTitle')}</b><small>WhatsApp · +${esc(fmtPhone(data.whatsapp))}</small></span>
           <span class="wa-go">›</span>
         </a>` : ''}
+      ${greetingCard()}
       <main class="path"></main>
+      ${tabbar('learn')}
     </div>`);
   app.append(el);
-  $('.avatar', el).onclick = profile;
+  wireTabs(el);
+  wireReminder(el);
   const path = $('.path', el);
   let currentFound = false;
 
@@ -209,7 +273,9 @@ function home() {
     if (ui === 0) path.append(practiceCards());
   });
 
-  setTimeout(() => $('.node.current', el)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
+  // Nach einer Pause oder beim ersten Besuch oben bleiben, damit man Flocke sieht. Danach zur aktuellen Lektion.
+  if (greeting?.special && !greeting.seen) greeting.seen = true;
+  else setTimeout(() => $('.node.current', el)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
 }
 
 function practiceCards() {
@@ -219,11 +285,11 @@ function practiceCards() {
       <h3>${t('practice')}</h3>
       <div class="practice-row">
         <button class="pcard review"><span class="pe">🔁</span><b>${t('review')}</b><small>${t('reviewSub')}</small>${nMistakes ? `<i class="count">${nMistakes}</i>` : ''}</button>
-        <button class="pcard sprint"><span class="pe">⚡</span><b>${t('sprint')}</b><small>${t('sprintSub')}</small></button>
+        <button class="pcard sprint"><span class="pe">🎮</span><b>${t('gamesTitle')}</b><small>${t('gamesSub')}</small></button>
       </div>
     </section>`);
   $('.review', el).onclick = startReview;
-  $('.sprint', el).onclick = startSprint;
+  $('.sprint', el).onclick = gamesScreen;
   return el;
 }
 
@@ -305,13 +371,6 @@ function startReview() {
   });
 }
 
-function startSprint() {
-  const map = availableItems();
-  const words = Object.keys(store.get().learned).map((k) => map.get(k)).filter((i) => i && i.kind === 'w');
-  if (words.length < 5) return toast(t('sprintEmpty'));
-  runSprint(app, words, { lang: getLang(), onDone: ({ xp }) => xp && store.addXp(xp), onExit: home });
-}
-
 // ---------- Fortschritt per WhatsApp an die Lehrperson (nur im Link mit Freischalt-Code)
 
 const LESSON_DE = ['Neue Wörter 1', 'Neue Wörter 2', 'Sätze', 'Hören und Sprechen'];
@@ -347,6 +406,55 @@ function progressButton(last) {
       <p>${t('sendProgressHint')}</p>
       <a class="btn whatsapp" target="_blank" rel="noopener" href="${href}">📊 ${t('sendProgress')}</a>
     </div>`;
+}
+
+// ---------- Spiele
+
+// Wörter aus allen Einheiten bis zur aktuellen (die Person kennt sie schon oder lernt sie gerade)
+function gamePool() {
+  const units = data.course.units;
+  let maxU = 0;
+  units.forEach((u, ui) => { if (LESSONS.some((_, li) => store.isDone(u.id, li))) maxU = Math.max(maxU, ui); });
+  const words = [], sentences = [];
+  units.slice(0, maxU + 1).forEach((u) => { const it = unitItems(u); words.push(...it.words); sentences.push(...it.sentences); });
+  return makePool(words, sentences);
+}
+
+function gamesScreen() {
+  const pool = gamePool();
+  app.innerHTML = '';
+  const el = h(`
+    <div class="games-page">
+      <header class="topbar"><div class="brand">${logoMark(34)} <span>${t('gamesTitle')}</span></div>
+        <div class="chips"><span class="chip xp">⭐ ${store.get().xp}</span></div></header>
+      <section class="cat-card">${catSays('cheer', t('gamesSub'), 84)}</section>
+      <main class="games-grid"></main>
+      ${tabbar('games')}
+    </div>`);
+  app.append(el);
+  wireTabs(el);
+  const grid = $('.games-grid', el);
+  GAMES.forEach((g) => {
+    const ok = gameAvailable(g, pool);
+    const card = h(`
+      <article class="game-card${ok ? '' : ' locked'}" style="--gc:${g.color}">
+        <div class="gc-head"><span class="gc-icon">${g.icon}</span><div><h3>${t('g_' + g.id)}</h3><p>${t('g_' + g.id + '_d')}</p></div></div>
+        ${ok ? `<div class="gc-levels">${LEVELS.map((lv) => `
+          <button class="lv" data-lv="${lv}"><b>${t({ easy: 'levelEasy', medium: 'levelMedium', hard: 'levelHard' }[lv])}</b><small>${store.bestGame(g.id, lv) ? `🏆 ${store.bestGame(g.id, lv)}` : '–'}</small></button>`).join('')}</div>`
+        : `<button class="gc-lock">${data.premium ? '🔒' : '💎'} ${t(data.premium ? 'gameNeedWords' : 'gameLocked')}</button>`}
+      </article>`);
+    card.querySelectorAll('[data-lv]').forEach((b) => (b.onclick = () => {
+      sfx.tap();
+      warnNoVoice();
+      startGame(app, g.id, b.dataset.lv, {
+        pool, lang: getLang(),
+        onDone: ({ xp }) => store.addXp(xp),
+        onExit: gamesScreen,
+      });
+    }));
+    card.querySelector('.gc-lock')?.addEventListener('click', () => (data.premium ? toast(t('gameNeedWords')) : paywall()));
+    grid.append(card);
+  });
 }
 
 // ---------- Bezahlseite
@@ -453,7 +561,7 @@ function profile() {
   app.innerHTML = '';
   const el = h(`
     <div class="profile">
-      <header class="topbar"><button class="icon-btn back" aria-label="${t('back')}">←</button><div class="brand">${t('profile')}</div><span></span></header>
+      <header class="topbar"><div class="brand">${logoMark(34)} <span>${t('profile')}</span></div><span></span></header>
       <div class="card who">
         <div class="avatar-big">👤</div>
         <div><b>${esc(backend.preview ? (data.premium ? prettyName(data.unlockedFor) : t('free')) : user?.email || '')}</b><br><span class="plan ${data.premium ? 'pro' : ''}" ${backend.preview ? 'hidden' : ''}>${data.premium ? `💎 ${t('premium')}` : t('free')}</span></div>
@@ -469,6 +577,7 @@ function profile() {
         : `<div class="card">${codeForm()}</div>`) : ''}
       ${progressButton(null)}
       ${(data.premium || backend.preview) && data.whatsapp ? `<a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${esc(data.whatsapp)}?text=${encodeURIComponent(t('whatsappText'))}">💬 ${t('whatsapp')}</a>` : ''}
+      <div class="card cat-card rem-card">${catSays('sleepy', t('catReminder'), 84, `${reminderLink()}<small class="rem-note">${esc(t('catReminderNote'))}</small>`)}</div>
       <div class="card settings">
         <h3>${t('settings')}</h3>
         <div class="row"><span>${t('uiLang')}</span>${langSwitch()}</div>
@@ -480,9 +589,11 @@ function profile() {
         : `<button class="btn primary upgrade">💎 ${t('subscribe')} – ${esc(CONFIG.priceLabel)} ${t('perWeek')}</button>`) : ''}
       ${!backend.demo ? `<button class="btn ghost-red logout">${t('logout')}</button>` : ''}
       ${backend.demo ? `<button class="btn ghost-red restart">↺ ${t('restart')}</button>` : ''}
+      ${tabbar('profile')}
     </div>`);
   app.append(el);
-  $('.back', el).onclick = home;
+  wireTabs(el);
+  wireReminder(el);
   if ($('.code-form', el)) wireCodeForm(el, () => {});
   wireLang(el, profile);
   el.querySelectorAll('[data-set]').forEach((c) => (c.onchange = () => {

@@ -31,4 +31,6 @@ export const CONFIG = {
   // Nur für den Link mit Freischalt-Code: deine WhatsApp-Nummer (nur Ziffern, mit Ländervorwahl).
   // Bleibt im Repo leer. scripts/build-preview.mjs setzt sie aus WHATSAPP=… ein.
   contactWhatsapp: '',
+  // Adresse des Kurs-Links (für die Kalender-Erinnerung). Setzt scripts/build-preview.mjs aus COURSE_URL=….
+  courseUrl: '',
 };
