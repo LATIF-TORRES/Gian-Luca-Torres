@@ -66,18 +66,18 @@
 
     var m = monatsZahlen();
     if (e.ziel > 0) {
-      var anteil = Math.min(1, m.ein / e.ziel);
-      $("#ziel-text").textContent = geld(m.ein) + " von " + geld(e.ziel);
+      var anteil = Math.min(1, m.einHalal / e.ziel);
+      $("#ziel-text").textContent = geld(m.einHalal) + " von " + geld(e.ziel);
       $("#ziel-balken").style.width = Math.round(anteil * 100) + "%";
       var jetzt = new Date();
       var tageImMonat = new Date(jetzt.getFullYear(), jetzt.getMonth() + 1, 0).getDate();
       var resttage = tageImMonat - jetzt.getDate() + 1;
-      var fehlt = Math.max(0, e.ziel - m.ein);
+      var fehlt = Math.max(0, e.ziel - m.einHalal);
       $("#ziel-detail").textContent = fehlt > 0
         ? "Es fehlen " + geld(fehlt) + (resttage > 1 ? ". Das sind " + geld(fehlt / resttage) + " pro Tag für die restlichen " + resttage + " Tage." : ". Heute ist der letzte Tag des Monats.")
         : "Ziel erreicht. Zeit, das Ziel zu erhöhen.";
     } else {
-      $("#ziel-text").textContent = geld(m.ein) + " diesen Monat";
+      $("#ziel-text").textContent = geld(m.einHalal) + " diesen Monat";
       $("#ziel-balken").style.width = "0%";
       $("#ziel-detail").innerHTML = "Setze unter <a href='#' data-gehe='einstellungen'>„Ich“</a> ein Monatsziel.";
     }
@@ -202,6 +202,20 @@
     speichern();
     verlaufZeigen();
   };
+  $("#chat-loeschen").onclick = function () {
+    var c = aktiverChat(false);
+    if (laeuft || !c) return;
+    if (!confirm("Dieses Gespräch löschen? Was A&T sich gemerkt hat, bleibt.")) return;
+    Z.chats = Z.chats.filter(function (x) { return x !== c; });
+    Z.aktiverChat = Z.chats.length ? Z.chats[Z.chats.length - 1].id : null;
+    speichern();
+    chatWahlFuellen();
+    var neu = aktiverChat(false);
+    if (neu && neu.modus) $("#modus").value = neu.modus;
+    modusInfo();
+    verlaufZeigen();
+    toast("Gespräch gelöscht.");
+  };
   $("#chat-neu").onclick = function () {
     if (laeuft) return;
     Z.aktiverChat = null;
@@ -255,7 +269,7 @@
     input = input || {};
     if (name === "merken") return "🧠 Gemerkt: " + (input.text || "");
     if (name === "aufgabe_anlegen") return "✅ Aufgabe: " + (input.text || "") + (input.wichtig ? " ★" : "");
-    if (name === "buchung_eintragen") return "💰 " + (input.art === "aus" ? "Ausgabe " : "Einnahme ") + geld(input.betrag) + " · " + (input.quelle || "");
+    if (name === "buchung_eintragen") return (input.art === "sadaqa" || input.art === "reinigung" ? "🤲 " : "💰 ") + (BUCHUNGSARTEN[input.art] || "Buchung") + " " + geld(input.betrag) + " · " + (input.quelle || "") + (input.halal === "nicht_halal" ? " · nicht halal" : "");
     return name;
   }
 
@@ -268,8 +282,20 @@
       html += "<details class='quellen'><summary>Quellen (" + b.quellen.length + ")</summary><ol>" +
         b.quellen.slice(0, 12).map(function (q) { return "<li><a href='" + esc(q.url) + "' target='_blank' rel='noopener'>" + esc(q.title) + "</a></li>"; }).join("") + "</ol></details>";
     }
-    if (b.text) html += "<button class='mini vorlesen' title='Vorlesen'>🔊</button>";
+    if (b.text) html += "<div class='blasen-knoepfe'><button class='mini kopieren' title='Kopieren'>📋</button><button class='mini vorlesen' title='Vorlesen'>🔊</button></div>";
     return html + "</div>";
+  }
+
+  function kopieren(text) {
+    function alt() {
+      var t = document.createElement("textarea");
+      t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+      document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); toast("Kopiert."); } catch (e) { toast("Kopieren ging nicht."); }
+      t.remove();
+    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { toast("Kopiert."); }, alt);
+    else alt();
   }
 
   function verlaufZeigen() {
@@ -283,7 +309,10 @@
       v.innerHTML = anzeigeAus(c.nachrichten).map(blaseHtml).join("");
     }
     v.querySelectorAll(".vorlesen").forEach(function (btn) {
-      btn.onclick = function () { Stimme.vorlesen(btn.parentNode.querySelector(".md").innerText); };
+      btn.onclick = function () { Stimme.vorlesen(btn.closest(".blase").querySelector(".md").innerText); };
+    });
+    v.querySelectorAll(".kopieren").forEach(function (btn) {
+      btn.onclick = function () { kopieren(btn.closest(".blase").querySelector(".md").innerText); };
     });
     $("#kosten").textContent = c && c.anbieter === "gemini" ? "Gemini · kostenlos" : c && c.kosten ? "Gespräch ca. $" + c.kosten.toFixed(3) : "";
     v.scrollTop = v.scrollHeight;
@@ -324,8 +353,17 @@
     var modus = MODI[$("#modus").value] || MODI.stratege;
     var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + modus.auftrag + "\n" + kontextFuerKi() +
       (e.websuche ? "" : "\nNutze diesmal keine Web-Suche.") + "\n</kontext>";
-    if (c.anbieter === "gemini") c.nachrichten.push({ role: "user", parts: [{ text: kontext }, { text: text }] });
-    else c.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: text }] });
+    // Endet der Verlauf schon mit einer Nutzer-Nachricht (z. B. nach einem Abbruch), dort anhängen:
+    // Beide Anbieter erwarten abwechselnd Nutzer und KI.
+    var letzteN = c.nachrichten[c.nachrichten.length - 1];
+    var neueTeile = c.anbieter === "gemini" ? [{ text: kontext }, { text: text }] : [{ type: "text", text: kontext }, { type: "text", text: text }];
+    var angehaengt = !!(letzteN && letzteN.role === "user");
+    if (angehaengt) {
+      var feld = c.anbieter === "gemini" ? "parts" : "content";
+      if (!Array.isArray(letzteN[feld])) letzteN[feld] = [{ type: "text", text: String(letzteN[feld]) }];
+      Array.prototype.push.apply(letzteN[feld], neueTeile);
+    } else if (c.anbieter === "gemini") c.nachrichten.push({ role: "user", parts: neueTeile });
+    else c.nachrichten.push({ role: "user", content: neueTeile });
     speichern();
     $("#frage").value = "";
     groesse();
@@ -380,8 +418,8 @@
         // aber nur, wenn noch keine Antwort darauf gespeichert ist (Verlauf bleibt sonst unverändert).
         var letzte = c.nachrichten[c.nachrichten.length - 1];
         var teile = letzte && (letzte.content || letzte.parts);
-        if (letzte && letzte.role === "user" && teile && teile[1] && teile[1].text === text) {
-          c.nachrichten.pop();
+        if (letzte && letzte.role === "user" && teile && teile.length >= 2 && teile[teile.length - 1].text === text) {
+          if (angehaengt) teile.splice(teile.length - 2, 2); else c.nachrichten.pop();
           speichern();
           $("#frage").value = text;
           groesse();
@@ -447,7 +485,13 @@
     $("#geld-kacheln").innerHTML =
       kachel("Einnahmen " + monat, geld(m.ein), "plus") +
       kachel("Ausgaben " + monat, geld(m.aus), "minus") +
-      kachel("Bleibt übrig", geld(m.saldo) + (m.ein > 0 ? " · " + Math.round(m.quote * 100) + " %" : ""), m.saldo >= 0 ? "plus" : "minus");
+      kachel("Bleibt übrig", geld(m.saldo) + (m.ein > 0 ? " · " + String(Math.round(m.quote * 100)).replace("-", "−") + " %" : ""), m.saldo >= 0 ? "plus" : "minus") +
+      kachel("Sadaqa " + monat, geld(m.sadaqa), "plus") +
+      (function () {
+        var r = reinigungStand();
+        return r.offen > 0 ? kachel("Noch zur Reinigung weggeben", geld(r.offen), "minus") :
+          kachel("Reinigung", r.nichtHalal > 0 ? "Erledigt ✓" : "Nichts offen ✓", "plus");
+      })();
 
     var q = Object.keys(m.quellen).sort(function (a, b) { return m.quellen[b] - m.quellen[a]; });
     var max = q.length ? m.quellen[q[0]] : 1;
@@ -463,7 +507,12 @@
     if (!liste.length) ul.innerHTML = "<li class='leise'>Noch keine Buchungen. Trag deine erste Einnahme ein.</li>";
     liste.forEach(function (b) {
       var li = document.createElement("li");
-      li.innerHTML = "<span class='leise'>" + esc(b.datum.split("-").reverse().join(".")) + "</span> <span>" + esc(b.quelle) + "</span>" +
+      var marke = b.art === "sadaqa" ? "<em class='marke-klein gut'>Sadaqa</em>" :
+        b.art === "reinigung" ? "<em class='marke-klein gut'>Reinigung</em>" :
+        b.halal === "nicht_halal" ? "<em class='marke-klein schlecht'>nicht halal</em>" :
+        b.halal === "zweifelhaft" ? "<em class='marke-klein mittel'>zweifelhaft</em>" : "";
+      li.className = "buchung";
+      li.innerHTML = "<span class='leise datum'>" + esc(b.datum.split("-").reverse().join(".").slice(0, 6)) + "</span><span class='wachsen'>" + esc(b.quelle) + " " + marke + "</span>" +
         "<strong class='" + (b.art === "ein" ? "plus" : "minus") + "'>" + (b.art === "ein" ? "+" : "−") + geld(b.betrag) + "</strong><button class='mini' title='Löschen'>✕</button>";
       li.querySelector("button").onclick = function () { Z.buchungen = Z.buchungen.filter(function (x) { return x !== b; }); speichern(); geldZeigen(); };
       ul.appendChild(li);
@@ -474,9 +523,13 @@
     return "<div class='karte kachel'><div class='leise klein-text'>" + esc(titel) + "</div><div class='gross " + art + "'>" + esc(wert) + "</div></div>";
   }
   $("#b-datum").value = heuteISO();
+  $("#b-art").onchange = function () {
+    $("#b-halal").classList.toggle("versteckt", this.value !== "ein");
+    $("#b-quelle").placeholder = { ein: "Woher? z. B. Nachhilfe", aus: "Wofür? z. B. Werbung", sadaqa: "An wen? z. B. Moschee", reinigung: "An wen? z. B. Hilfswerk" }[this.value];
+  };
   $("#buchung-form").onsubmit = function (ev) {
     ev.preventDefault();
-    toast(buchungEintragen($("#b-art").value, $("#b-betrag").value, $("#b-quelle").value, $("#b-datum").value));
+    toast(buchungEintragen($("#b-art").value, $("#b-betrag").value, $("#b-quelle").value, $("#b-datum").value, $("#b-halal").value));
     $("#b-betrag").value = "";
     $("#b-quelle").value = "";
     geldZeigen();
@@ -584,6 +637,7 @@
       speichern();
       namenSetzen();
       if ((k === "schluessel" || k === "geminiSchluessel") && wert) toast("Schlüssel gespeichert.");
+      if (k === "geminiSchluessel") { _geminiListe = null; Z.einstellungen.geminiErschoepft = null; speichern(); }
       if (k === "geminiSchluessel" && wert && !Z.einstellungen.geminiModell) $("#modelle-laden").click();
       if (k === "anbieter") { anbieterZeigen(); heuteZeigen(); }
     });
@@ -666,9 +720,23 @@
     geldZeigen();
   }
 
+  // Links in Antworten öffnen in einem neuen Fenster.
+  if (window.DOMPurify && DOMPurify.addHook) {
+    DOMPurify.addHook("afterSanitizeAttributes", function (node) {
+      if (node.tagName === "A") { node.setAttribute("target", "_blank"); node.setAttribute("rel", "noopener noreferrer"); }
+    });
+  }
+  $("#einrichtung-neu").onclick = function () { Einrichtung.start(function () { alles(); zeigeTab("heute"); }); };
+
   modusFuellen();
   vorbilderZeigen();
   alles();
+  $("#b-art").onchange.call($("#b-art"));
+  if (!Z.einstellungen.eingerichtet) Einrichtung.start(function () { alles(); zeigeTab("heute"); });
+  // Auf einer Internet-Adresse (z. B. GitHub Pages) als App installierbar und schneller beim Start.
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && location.hostname !== "localhost") {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  }
   if (Z.einstellungen.weckwort) Stimme.weckwort(true);
   var start = "heute";
   try { start = sessionStorage.getItem("aundt-tab") || "heute"; } catch (e) {}

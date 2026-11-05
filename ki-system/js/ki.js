@@ -38,16 +38,17 @@ var EIGENE_WERKZEUGE = [
   },
   {
     name: "buchung_eintragen",
-    description: "Trägt eine Einnahme oder Ausgabe ins Geldbuch der Person ein. Nur wenn die Person einen echten Betrag nennt.",
+    description: "Trägt eine Einnahme, Ausgabe, Sadaqa oder Reinigung ins Geldbuch der Person ein. Nur wenn die Person einen echten Betrag nennt.",
     input_schema: {
       type: "object",
       properties: {
-        art: { type: "string", enum: ["ein", "aus"], description: "ein = Einnahme, aus = Ausgabe" },
+        art: { type: "string", enum: ["ein", "aus", "sadaqa", "reinigung"], description: "ein = Einnahme, aus = Ausgabe, sadaqa = freiwillige Spende, reinigung = unerlaubtes Geld (z. B. erhaltene Zinsen) ohne Absicht auf Lohn weggeben" },
+        halal: { type: "string", enum: ["halal", "zweifelhaft", "nicht_halal"], description: "Nur für Einnahmen wichtig: Ist die Einnahme halal? Zinsen, Glücksspiel oder verbotene Branchen = nicht_halal. Bei anderen Arten: halal." },
         betrag: { type: "number", description: "Betrag in der Währung der Person, positiv" },
         quelle: { type: "string", description: "Woher oder wofür, z. B. 'Nachhilfe' oder 'Werbung'" },
         datum: { type: "string", description: "Datum im Format JJJJ-MM-TT; heute, wenn nicht genannt" }
       },
-      required: ["art", "betrag", "quelle", "datum"],
+      required: ["art", "betrag", "quelle", "datum", "halal"],
       additionalProperties: false
     },
     eager_input_streaming: true
@@ -73,7 +74,7 @@ function werkzeugAusfuehren(name, input) {
     return { text: aufgabeAnlegen(input.text, input.wichtig === true) };
   }
   if (name === "buchung_eintragen") {
-    var antwort = buchungEintragen(input.art, input.betrag, input.quelle, input.datum);
+    var antwort = buchungEintragen(input.art, input.betrag, input.quelle, input.datum, input.halal);
     return { text: antwort, fehler: /fehlt|ungültig|muss/.test(antwort) };
   }
   return { fehler: true, text: "Unbekanntes Werkzeug: " + name };

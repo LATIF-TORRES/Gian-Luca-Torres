@@ -15,8 +15,10 @@ SCHRIFT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 # Diese Dateien der Web-App kommen ins Paket (Ordner app/).
 APP_DATEIEN = ["index.html", "manifest.webmanifest", "css/style.css",
+               "js/lib/marked.min.js", "js/lib/purify.min.js",
                "js/daten.js", "js/speicher.js", "js/ki.js", "js/gemini.js",
-               "js/stimme.js", "js/app.js"]
+               "js/stimme.js", "js/einrichtung.js", "js/app.js",
+               "a-und-t-192.png", "a-und-t-512.png"]
 
 
 def symbol_zeichnen(groesse=256):
@@ -35,6 +37,9 @@ def symbol_zeichnen(groesse=256):
 
 
 def main():
+    # Symbole für die installierbare Web-App (Handy, Chrome, Edge)
+    for g in (192, 512):
+        symbol_zeichnen(g).save(os.path.join(KI, "a-und-t-%d.png" % g))
     symbol_zeichnen().save(SYMBOL, sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     os.makedirs(os.path.dirname(ZIEL), exist_ok=True)
     wurzel = "A-und-T/"

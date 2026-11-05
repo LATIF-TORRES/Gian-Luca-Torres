@@ -8,6 +8,7 @@ var VOLLER_NAME = "Amanah & Tijara";
 function leererZustand() {
   return {
     einstellungen: {
+      eingerichtet: false,
       name: "", kiName: STANDARD_NAME, waehrung: "CHF", ziel: 0, warum: "",
       anbieter: "gemini", geminiSchluessel: "", geminiModell: "",
       schluessel: "", modell: "claude-opus-5-5", sprache: "de-CH",
@@ -33,6 +34,9 @@ var Z = (function laden() {
       z.einstellungen = Object.assign(leererZustand().einstellungen, gespeichert.einstellungen || {});
       // Wer schon einen Claude-Schlüssel hatte, bleibt bei Claude.
       if (!(gespeichert.einstellungen || {}).anbieter && z.einstellungen.schluessel) z.einstellungen.anbieter = "claude";
+      // Wer die App schon benutzt, braucht den Einrichtungs-Assistenten nicht.
+      if (!(gespeichert.einstellungen || {}).hasOwnProperty("eingerichtet") &&
+          (z.einstellungen.name || z.einstellungen.schluessel || z.einstellungen.geminiSchluessel)) z.einstellungen.eingerichtet = true;
       if (z.einstellungen.kiName === "TORRES") z.einstellungen.kiName = STANDARD_NAME; // alter Arbeitstitel
     }
   } catch (e) { /* privates Fenster o. ä.: dann ohne Speicher */ }
@@ -62,10 +66,12 @@ function heuteISO() {
 
 function geld(betrag) {
   var w = Z.einstellungen.waehrung || "CHF";
+  var n = Number(betrag) || 0;
+  var minus = n < -0.004 ? "−" : ""; // „−CHF 660.50“ statt „CHF-660.50“
   try {
-    return new Intl.NumberFormat("de-CH", { style: "currency", currency: w, maximumFractionDigits: 2 }).format(betrag || 0);
+    return minus + new Intl.NumberFormat("de-CH", { style: "currency", currency: w, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(n));
   } catch (e) {
-    return w + " " + (Math.round((betrag || 0) * 100) / 100);
+    return minus + w + " " + Math.abs(Math.round(n * 100) / 100).toFixed(2);
   }
 }
 
@@ -90,31 +96,61 @@ function aufgabeAnlegen(text, wichtig) {
   return "Aufgabe angelegt: " + text + (wichtig ? " (wichtigste heute)" : "");
 }
 
-function buchungEintragen(art, betrag, quelle, datum) {
+var BUCHUNGSARTEN = {
+  ein: "Einnahme",
+  aus: "Ausgabe",
+  sadaqa: "Sadaqa",
+  reinigung: "Reinigung"
+};
+var HALAL_STATUS = { halal: "halal", zweifelhaft: "zweifelhaft", nicht_halal: "nicht halal" };
+
+/*
+ * art: ein = Einnahme, aus = Ausgabe, sadaqa = freiwillige Spende,
+ *      reinigung = unerlaubtes Geld (z. B. Zinsen) ohne Absicht auf Lohn weggeben.
+ * halal: nur bei Einnahmen: halal, zweifelhaft oder nicht_halal.
+ */
+function buchungEintragen(art, betrag, quelle, datum, halal) {
   betrag = Number(betrag);
   if (!(betrag > 0)) return "Betrag fehlt oder ist ungültig.";
-  if (art !== "ein" && art !== "aus") return "Art muss \"ein\" oder \"aus\" sein.";
+  if (!BUCHUNGSARTEN[art]) return "Art muss ein, aus, sadaqa oder reinigung sein.";
   var d = /^\d{4}-\d{2}-\d{2}$/.test(datum || "") ? datum : heuteISO();
-  Z.buchungen.push({ id: neueId(), art: art, betrag: Math.round(betrag * 100) / 100, quelle: String(quelle || "Ohne Angabe").trim(), datum: d });
+  var b = { id: neueId(), art: art, betrag: Math.round(betrag * 100) / 100, quelle: String(quelle || "Ohne Angabe").trim(), datum: d };
+  if (art === "ein") b.halal = HALAL_STATUS[halal] ? halal : "halal";
+  Z.buchungen.push(b);
   speichern();
-  return (art === "ein" ? "Einnahme " : "Ausgabe ") + geld(betrag) + " eingetragen (" + d.split("-").reverse().join(".") + ").";
+  var text = BUCHUNGSARTEN[art] + " " + geld(betrag) + " eingetragen (" + d.split("-").reverse().join(".") + ")";
+  if (b.halal === "nicht_halal") text += ". Diesen Betrag solltest du zur Reinigung weggeben";
+  return text + ".";
 }
 
 /* --- Auswertungen --- */
 
 function monatsZahlen(jahrMonat) {
   var ym = jahrMonat || heuteISO().slice(0, 7);
-  var ein = 0, aus = 0, quellen = {};
+  var ein = 0, einHalal = 0, aus = 0, sadaqa = 0, quellen = {};
   Z.buchungen.forEach(function (b) {
     if (b.datum.slice(0, 7) !== ym) return;
     if (b.art === "ein") {
       ein += b.betrag;
+      if (b.halal !== "nicht_halal") einHalal += b.betrag; // fürs Monatsziel zählt nur Erlaubtes
       quellen[b.quelle] = (quellen[b.quelle] || 0) + b.betrag;
     } else {
-      aus += b.betrag;
+      aus += b.betrag; // Ausgaben, Sadaqa und Reinigung verlassen die Kasse
+      if (b.art === "sadaqa") sadaqa += b.betrag;
     }
   });
-  return { ein: ein, aus: aus, saldo: ein - aus, quote: ein > 0 ? (ein - aus) / ein : 0, quellen: quellen };
+  return { ein: ein, einHalal: einHalal, aus: aus, sadaqa: sadaqa, saldo: ein - aus, quote: ein > 0 ? (ein - aus) / ein : 0, quellen: quellen };
+}
+
+// Reinigung über alle Monate: unerlaubte Einnahmen minus bereits weggegebene Beträge.
+function reinigungStand() {
+  var nichtHalal = 0, zweifelhaft = 0, gegeben = 0;
+  Z.buchungen.forEach(function (b) {
+    if (b.art === "ein" && b.halal === "nicht_halal") nichtHalal += b.betrag;
+    if (b.art === "ein" && b.halal === "zweifelhaft") zweifelhaft += b.betrag;
+    if (b.art === "reinigung") gegeben += b.betrag;
+  });
+  return { nichtHalal: nichtHalal, zweifelhaft: zweifelhaft, gegeben: gegeben, offen: Math.max(0, nichtHalal - gegeben) };
 }
 
 function kontextFuerKi() {
@@ -125,7 +161,10 @@ function kontextFuerKi() {
   teile.push("Währung: " + e.waehrung + ".");
   if (e.ziel) teile.push("Monatsziel Einnahmen: " + geld(e.ziel) + ".");
   if (e.warum) teile.push("Wofür sie Geld verdienen will: " + e.warum);
-  teile.push("Dieser Monat bisher: Einnahmen " + geld(m.ein) + ", Ausgaben " + geld(m.aus) + ", Saldo " + geld(m.saldo) + ".");
+  teile.push("Dieser Monat bisher: Einnahmen " + geld(m.ein) + ", Ausgaben " + geld(m.aus) + " (davon Sadaqa " + geld(m.sadaqa) + "), Saldo " + geld(m.saldo) + ".");
+  var r = reinigungStand();
+  if (r.offen > 0) teile.push("Noch zur Reinigung wegzugeben (unerlaubte Einnahmen): " + geld(r.offen) + ".");
+  if (r.zweifelhaft > 0) teile.push("Einnahmen mit zweifelhaftem Halal-Status: " + geld(r.zweifelhaft) + ".");
   var q = Object.keys(m.quellen);
   if (q.length) teile.push("Einnahmequellen diesen Monat: " + q.map(function (k) { return k + " " + geld(m.quellen[k]); }).join(", ") + ".");
   if (Z.gedaechtnis.length) {

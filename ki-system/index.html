@@ -6,10 +6,11 @@
   <meta name="theme-color" content="#0b0f17">
   <title>A&amp;T · Amanah &amp; Tijara</title>
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="a-und-t-192.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%230b0f17' stroke='%23e8b84a' stroke-width='5'/%3E%3Ctext x='32' y='38.5' text-anchor='middle' font-size='17' font-family='Arial' font-weight='bold' fill='%23e8b84a'%3EA%26amp%3BT%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="js/lib/marked.min.js"></script>
+  <script src="js/lib/purify.min.js"></script>
 </head>
 <body>
   <header class="kopf">
@@ -83,6 +84,7 @@
         <select id="modus" aria-label="Rolle des Mentors"></select>
         <select id="chat-wahl" aria-label="Gespräch wählen"></select>
         <button class="knopf klein" id="chat-neu">Neu</button>
+        <button class="rund klein-rund" id="chat-loeschen" title="Gespräch löschen" aria-label="Gespräch löschen">🗑</button>
       </div>
       <p class="leise klein-text" id="modus-info"></p>
       <div id="verlauf" class="verlauf" aria-live="polite"></div>
@@ -114,7 +116,12 @@
       <div class="karte">
         <h2>Buchung eintragen</h2>
         <form id="buchung-form" class="formular">
-          <select id="b-art"><option value="ein">Einnahme</option><option value="aus">Ausgabe</option></select>
+          <select id="b-art"><option value="ein">Einnahme</option><option value="aus">Ausgabe</option><option value="sadaqa">Sadaqa (Spende)</option><option value="reinigung">Reinigung (Unerlaubtes weggeben)</option></select>
+          <select id="b-halal" title="Halal-Status der Einnahme">
+            <option value="halal">Halal</option>
+            <option value="zweifelhaft">Zweifelhaft</option>
+            <option value="nicht_halal">Nicht halal (z. B. Zinsen)</option>
+          </select>
           <input id="b-betrag" type="number" step="0.05" min="0" placeholder="Betrag" required>
           <input id="b-quelle" placeholder="Quelle oder Zweck" required>
           <input id="b-datum" type="date" required>
@@ -228,6 +235,7 @@
       <div class="karte">
         <h2>Daten</h2>
         <div class="chips">
+          <button class="knopf klein" id="einrichtung-neu">Einrichtung wiederholen</button>
           <button class="knopf klein" id="export">Sicherung herunterladen</button>
           <label class="knopf klein">Sicherung laden <input type="file" id="import" accept="application/json" hidden></label>
           <button class="knopf klein rot" id="loeschen">Alles löschen</button>
@@ -239,11 +247,64 @@
 
   <div id="toast" class="toast" role="status"></div>
 
+  <!-- Einrichtungs-Assistent beim ersten Start -->
+  <div id="einrichtung" class="einrichtung versteckt" role="dialog" aria-modal="true" aria-labelledby="ein-titel">
+    <div class="einrichtung-box">
+      <div class="schritte" id="ein-punkte"><i></i><i></i><i></i><i></i></div>
+
+      <div class="schritt" data-schritt="0">
+        <div class="kern gross-kern"><span></span></div>
+        <h2 id="ein-titel">Assalamu alaikum! Ich bin A&amp;T.</h2>
+        <p>Amanah &amp; Tijara: Vertrauen und Handel. Ich helfe dir, gezielt und halal mehr Geld zu verdienen. Ohne Zinsen, ohne Glücksspiel, mit ehrlicher Arbeit und ehrlichem Handel.</p>
+        <p class="leise">Die Einrichtung dauert 2 Minuten. Alles bleibt auf deinem Gerät.</p>
+        <label class="ein-feld">Wie heisst du? <input id="ein-name" placeholder="Dein Vorname" autocomplete="given-name"></label>
+      </div>
+
+      <div class="schritt" data-schritt="1">
+        <h2>Dein Ziel</h2>
+        <label class="ein-feld">Wie viel willst du pro Monat zusätzlich verdienen? <input id="ein-ziel" type="number" min="0" placeholder="z. B. 1000"></label>
+        <label class="ein-feld">Währung <select id="ein-waehrung"><option>CHF</option><option>EUR</option><option>USD</option></select></label>
+        <label class="ein-feld">Wofür? <input id="ein-warum" placeholder="z. B. eigene Wohnung, Familie, Firma gründen"></label>
+      </div>
+
+      <div class="schritt" data-schritt="2">
+        <h2>Über dich</h2>
+        <p class="leise">Je mehr ich weiss, desto besser passen meine Ideen. Lass leer, was du nicht sagen willst.</p>
+        <label class="ein-feld">Was kannst du gut? <input id="ein-faehig" placeholder="z. B. Videos schneiden, Nachhilfe, Kochen, Verkaufen"></label>
+        <label class="ein-feld">Wie viele Stunden pro Woche hast du Zeit? <input id="ein-zeit" type="number" min="0" placeholder="z. B. 10"></label>
+        <label class="ein-feld">Wie viel Startkapital hast du? <input id="ein-kapital" type="number" min="0" placeholder="z. B. 200"></label>
+        <label class="ein-feld">Wo wohnst du (Stadt oder Region)? <input id="ein-ort" placeholder="z. B. Zürich"></label>
+      </div>
+
+      <div class="schritt" data-schritt="3">
+        <h2>Kostenlose KI verbinden</h2>
+        <ol class="anleitung">
+          <li>Öffne <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> und melde dich mit deinem Google-Konto an.</li>
+          <li>Tippe auf „Create API key“ und kopiere den Schlüssel.</li>
+          <li>Füge ihn hier ein und tippe auf „Testen“.</li>
+        </ol>
+        <div class="zeile">
+          <input id="ein-schluessel" type="password" placeholder="AIza…" autocomplete="off">
+          <button type="button" class="knopf" id="ein-testen">Testen</button>
+        </div>
+        <p id="ein-test-ergebnis" class="leise klein-text"></p>
+        <p class="leise klein-text">Kostenlos, keine Kreditkarte. Es gibt ein Tageslimit. Bei der Gratis-Stufe darf Google deine Eingaben zur Verbesserung nutzen, darum keine geheimen Daten eingeben. Du kannst das auch später unter „Ich“ machen.</p>
+      </div>
+
+      <div class="ein-knoepfe">
+        <button type="button" class="knopf zart" id="ein-zurueck">Zurück</button>
+        <button type="button" class="link" id="ein-spaeter">Später</button>
+        <button type="button" class="knopf" id="ein-weiter">Weiter</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/daten.js"></script>
   <script src="js/speicher.js"></script>
   <script src="js/ki.js"></script>
   <script src="js/gemini.js"></script>
   <script src="js/stimme.js"></script>
+  <script src="js/einrichtung.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

@@ -122,10 +122,43 @@ function geminiFehlerText(e) {
   if (e.status === 400 && /api key/i.test(e.message)) return "Der Gemini-Schlüssel stimmt nicht. Prüfe ihn unter „Ich“.";
   if (e.status === 403) return "Dein Gemini-Schlüssel darf dieses Modell nicht nutzen. Wähle unter „Ich“ ein anderes Modell.";
   if (e.status === 404) return "Dieses Gemini-Modell gibt es nicht mehr. Tipp unter „Ich“ auf „Modelle laden“.";
-  if (e.status === 429) return "Das kostenlose Tageslimit von Gemini ist erreicht. Morgen geht es wieder, oder wähle unter „Ich“ ein anderes Gemini-Modell.";
+  if (e.status === 429) return "Alle Gratis-Modelle von Gemini haben ihr Limit erreicht. Warte ein paar Minuten oder versuch es morgen wieder. Rechner, Geldbuch und Vorbilder funktionieren weiter.";
   if (e.status >= 500) return "Google hat gerade Probleme. Versuch es gleich nochmal.";
   if (e instanceof TypeError) return "Keine Verbindung. Prüfe dein Internet.";
   return "Fehler von Gemini: " + (e.message || e.status);
+}
+
+// Merkt sich für heute, welche Modelle ihr Gratis-Limit erreicht haben.
+function geminiErschoepftMerken(id) {
+  var e = Z.einstellungen, heute = heuteISO();
+  if (!e.geminiErschoepft || e.geminiErschoepft.datum !== heute) e.geminiErschoepft = { datum: heute, ids: [] };
+  if (e.geminiErschoepft.ids.indexOf(id) === -1) e.geminiErschoepft.ids.push(id);
+  speichern();
+}
+
+var _geminiListe = null;
+// Reihenfolge der Modelle: gewähltes zuerst, dann stabile, dann Vorschau; heute erschöpfte ans Ende.
+async function geminiKandidaten(e) {
+  if (!_geminiListe || !_geminiListe.length) {
+    try { _geminiListe = await geminiModelleLaden(e.geminiSchluessel); } catch (f) {
+      if (f.message === "schluessel") throw Object.assign(new Error("API key not valid"), { status: 400 });
+      _geminiListe = [];
+    }
+  }
+  if (!e.geminiModell && _geminiListe.length) { e.geminiModell = geminiStandardModell(_geminiListe); speichern(); }
+  var ids = _geminiListe.filter(function (m) { return !m.vorschau; }).concat(_geminiListe.filter(function (m) { return m.vorschau; }))
+    .map(function (m) { return m.id; });
+  var liste = [e.geminiModell].concat(ids).filter(function (id, i, a) { return id && a.indexOf(id) === i; });
+  var leer = e.geminiErschoepft && e.geminiErschoepft.datum === heuteISO() ? e.geminiErschoepft.ids : [];
+  liste = liste.filter(function (id) { return leer.indexOf(id) === -1; }).concat(liste.filter(function (id) { return leer.indexOf(id) !== -1; }));
+  return liste.slice(0, 6);
+}
+
+// Prüft einen Schlüssel. Gibt die Zahl der nutzbaren Modelle zurück.
+async function geminiSchluesselTesten(schluessel) {
+  var liste = await geminiModelleLaden(schluessel);
+  _geminiListe = liste;
+  return liste;
 }
 
 function antwortGemini(chat, cb) {
@@ -134,14 +167,10 @@ function antwortGemini(chat, cb) {
 
   (async function () {
     var e = Z.einstellungen;
-    var modell = e.geminiModell;
     try {
-      if (!modell) {
-        var liste = await geminiModelleLaden(e.geminiSchluessel);
-        modell = e.geminiModell = geminiStandardModell(liste);
-        speichern();
-        if (!modell) throw Object.assign(new Error("Kein passendes Modell gefunden."), { status: 404 });
-      }
+      var kandidaten = await geminiKandidaten(e);
+      if (!kandidaten.length) throw Object.assign(new Error("Kein passendes Modell gefunden."), { status: 404 });
+      var nr = 0, modell = kandidaten[0];
       var mitSuche = e.websuche !== false;
 
       for (var runde = 0; runde < 6 && !gestoppt; runde++) {
@@ -161,6 +190,15 @@ function antwortGemini(chat, cb) {
             runde--;
             continue;
           }
+          // Tageslimit erreicht oder Modell weg: zum nächsten Gratis-Modell wechseln.
+          if ((f.status === 429 || f.status === 404 || f.status === 503) && nr + 1 < kandidaten.length) {
+            if (f.status === 429) geminiErschoepftMerken(modell);
+            modell = kandidaten[++nr];
+            cb.status("Limit erreicht, wechsle zu " + modell + " …");
+            runde--;
+            continue;
+          }
+          if (f.status === 429) geminiErschoepftMerken(modell);
           throw f;
         }
 
