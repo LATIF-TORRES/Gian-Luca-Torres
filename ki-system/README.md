@@ -25,7 +25,7 @@ Eine Web-App für Browser und Handy. Ein KI-Mentor (Claude) hilft dir, gezielt u
 
 - **Einrichtungs-Assistent** beim ersten Start: Name, Ziel, Fähigkeiten, Zeit, Startkapital, Wohnort und der kostenlose Schlüssel mit „Testen“-Knopf. Später erneut unter **Ich → Einrichtung wiederholen**.
 - **Mehr Gratis-Nutzung:** Hat ein Gemini-Modell sein Limit erreicht, wechselt A&T selbst zum nächsten Gratis-Modell und merkt sich das für den Tag.
-- **Halal-Geldbuch:** Jede Einnahme hat einen Halal-Status (halal, zweifelhaft, nicht halal). Dazu die Buchungsarten **Sadaqa** und **Reinigung**. A&T zeigt, wie viel unerlaubtes Geld (z. B. Zinsen) noch wegzugeben ist. Fürs Monatsziel zählt nur Erlaubtes.
+- **Halal-Geldbuch:** Jede Einnahme hat einen Halal-Status (halal, zweifelhaft, nicht halal). Fürs Monatsziel zählt nur Erlaubtes. Dazu ein **Sadaqa-Vorschlag**: A&T zeigt, wie viel du von deinen Einnahmen als Sadaqa zur Seite legen könntest (1 %, 2,5 %, 5 % oder 10 %, wählbar unter **Ich**, oder aus). Das ist nur ein Vorschlag. Es wird nie etwas abgezogen. Im Geldbuch steht nur, was du selbst einträgst.
 - **Bessere Ideen-Bewertung:** Jede Geschäftsidee bekommt eine Tabelle mit Halal-Ampel, Startkosten, Zeit bis zum ersten Geld, Einkommen nach 3 und 12 Monaten, Risiko und „Passt zu dir“.
 - **Chat-Komfort:** Antworten kopieren (z. B. fertige Kundennachrichten), Gespräche löschen. Fehler behoben, wenn nach einem Abbruch erneut gefragt wird.
 - **Zuverlässiger:** Die Anzeige-Bibliotheken liegen direkt in der App. Auf GitHub Pages ist A&T als App installierbar (Handy und PC) und startet schneller.

@@ -38,12 +38,12 @@ var EIGENE_WERKZEUGE = [
   },
   {
     name: "buchung_eintragen",
-    description: "Trägt eine Einnahme, Ausgabe, Sadaqa oder Reinigung ins Geldbuch der Person ein. Nur wenn die Person einen echten Betrag nennt.",
+    description: "Trägt eine Einnahme, Ausgabe oder gegebene Sadaqa ins Geldbuch der Person ein. Nur wenn die Person einen echten Betrag nennt, den sie bekommen oder ausgegeben hat.",
     input_schema: {
       type: "object",
       properties: {
-        art: { type: "string", enum: ["ein", "aus", "sadaqa", "reinigung"], description: "ein = Einnahme, aus = Ausgabe, sadaqa = freiwillige Spende, reinigung = unerlaubtes Geld (z. B. erhaltene Zinsen) ohne Absicht auf Lohn weggeben" },
-        halal: { type: "string", enum: ["halal", "zweifelhaft", "nicht_halal"], description: "Nur für Einnahmen wichtig: Ist die Einnahme halal? Zinsen, Glücksspiel oder verbotene Branchen = nicht_halal. Bei anderen Arten: halal." },
+        art: { type: "string", enum: ["ein", "aus", "sadaqa"], description: "ein = Einnahme, aus = Ausgabe, sadaqa = Sadaqa, die die Person selbst gegeben hat" },
+        halal: { type: "string", enum: ["halal", "zweifelhaft", "nicht_halal"], description: "Nur für Einnahmen: Ist die Einnahme halal? Zinsen, Glücksspiel oder verbotene Branchen = nicht_halal. Bei Ausgaben und Sadaqa: halal." },
         betrag: { type: "number", description: "Betrag in der Währung der Person, positiv" },
         quelle: { type: "string", description: "Woher oder wofür, z. B. 'Nachhilfe' oder 'Werbung'" },
         datum: { type: "string", description: "Datum im Format JJJJ-MM-TT; heute, wenn nicht genannt" }

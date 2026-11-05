@@ -269,7 +269,7 @@
     input = input || {};
     if (name === "merken") return "🧠 Gemerkt: " + (input.text || "");
     if (name === "aufgabe_anlegen") return "✅ Aufgabe: " + (input.text || "") + (input.wichtig ? " ★" : "");
-    if (name === "buchung_eintragen") return (input.art === "sadaqa" || input.art === "reinigung" ? "🤲 " : "💰 ") + (BUCHUNGSARTEN[input.art] || "Buchung") + " " + geld(input.betrag) + " · " + (input.quelle || "") + (input.halal === "nicht_halal" ? " · nicht halal" : "");
+    if (name === "buchung_eintragen") return (input.art === "sadaqa" ? "🤲 " : "💰 ") + (BUCHUNGSARTEN[input.art] || "Buchung") + " " + geld(input.betrag) + " · " + (input.quelle || "") + (input.halal === "nicht_halal" ? " · nicht halal" : "");
     return name;
   }
 
@@ -486,11 +486,12 @@
       kachel("Einnahmen " + monat, geld(m.ein), "plus") +
       kachel("Ausgaben " + monat, geld(m.aus), "minus") +
       kachel("Bleibt übrig", geld(m.saldo) + (m.ein > 0 ? " · " + String(Math.round(m.quote * 100)).replace("-", "−") + " %" : ""), m.saldo >= 0 ? "plus" : "minus") +
-      kachel("Sadaqa " + monat, geld(m.sadaqa), "plus") +
       (function () {
-        var r = reinigungStand();
-        return r.offen > 0 ? kachel("Noch zur Reinigung weggeben", geld(r.offen), "minus") :
-          kachel("Reinigung", r.nichtHalal > 0 ? "Erledigt ✓" : "Nichts offen ✓", "plus");
+        var sv = sadaqaVorschlag();
+        if (!sv.prozent) return "";
+        return kachel("Sadaqa-Vorschlag " + monat, geld(sv.vorschlag), "gold-zahl",
+          String(sv.prozent).replace(".", ",") + " % deiner Einnahmen. Nur ein Vorschlag, es wird nichts abgezogen." +
+          (sv.gegeben > 0 ? " Selbst eingetragen: " + geld(sv.gegeben) + "." : ""));
       })();
 
     var q = Object.keys(m.quellen).sort(function (a, b) { return m.quellen[b] - m.quellen[a]; });
@@ -508,7 +509,6 @@
     liste.forEach(function (b) {
       var li = document.createElement("li");
       var marke = b.art === "sadaqa" ? "<em class='marke-klein gut'>Sadaqa</em>" :
-        b.art === "reinigung" ? "<em class='marke-klein gut'>Reinigung</em>" :
         b.halal === "nicht_halal" ? "<em class='marke-klein schlecht'>nicht halal</em>" :
         b.halal === "zweifelhaft" ? "<em class='marke-klein mittel'>zweifelhaft</em>" : "";
       li.className = "buchung";
@@ -519,13 +519,14 @@
     });
     rechnen();
   }
-  function kachel(titel, wert, art) {
-    return "<div class='karte kachel'><div class='leise klein-text'>" + esc(titel) + "</div><div class='gross " + art + "'>" + esc(wert) + "</div></div>";
+  function kachel(titel, wert, art, notiz) {
+    return "<div class='karte kachel'><div class='leise klein-text'>" + esc(titel) + "</div><div class='gross " + art + "'>" + esc(wert) + "</div>" +
+      (notiz ? "<div class='leise klein-text'>" + esc(notiz) + "</div>" : "") + "</div>";
   }
   $("#b-datum").value = heuteISO();
   $("#b-art").onchange = function () {
     $("#b-halal").classList.toggle("versteckt", this.value !== "ein");
-    $("#b-quelle").placeholder = { ein: "Woher? z. B. Nachhilfe", aus: "Wofür? z. B. Werbung", sadaqa: "An wen? z. B. Moschee", reinigung: "An wen? z. B. Hilfswerk" }[this.value];
+    $("#b-quelle").placeholder = { ein: "Woher? z. B. Nachhilfe", aus: "Wofür? z. B. Werbung", sadaqa: "An wen? z. B. Moschee" }[this.value];
   };
   $("#buchung-form").onsubmit = function (ev) {
     ev.preventDefault();
@@ -581,7 +582,7 @@
 
   /* ---------- Einstellungen ---------- */
   var FELDER = { "#e-name": "name", "#e-ki-name": "kiName", "#e-waehrung": "waehrung", "#e-ziel": "ziel", "#e-warum": "warum", "#e-schluessel": "schluessel", "#e-modell": "modell", "#e-sprache": "sprache",
-    "#e-anbieter": "anbieter", "#e-gemini-schluessel": "geminiSchluessel", "#e-gemini-modell": "geminiModell" };
+    "#e-anbieter": "anbieter", "#e-sadaqa": "sadaqaProzent", "#e-gemini-schluessel": "geminiSchluessel", "#e-gemini-modell": "geminiModell" };
   function geminiOption(id) {
     var sel = $("#e-gemini-modell");
     if (id && !Array.prototype.some.call(sel.options, function (o) { return o.value === id; })) {
@@ -632,6 +633,7 @@
     $(s).addEventListener("change", function () {
       var k = FELDER[s], wert = this.value.trim();
       if (k === "ziel") wert = Math.max(0, parseFloat(wert) || 0);
+      if (k === "sadaqaProzent") wert = Math.max(0, parseFloat(wert) || 0);
       if (k === "kiName") wert = wert || STANDARD_NAME;
       Z.einstellungen[k] = wert;
       speichern();

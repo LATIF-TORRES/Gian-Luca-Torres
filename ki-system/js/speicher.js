@@ -12,7 +12,7 @@ function leererZustand() {
       name: "", kiName: STANDARD_NAME, waehrung: "CHF", ziel: 0, warum: "",
       anbieter: "gemini", geminiSchluessel: "", geminiModell: "",
       schluessel: "", modell: "claude-opus-5-5", sprache: "de-CH",
-      weckwort: false, websuche: true, vorlesen: false, tiefe: "medium"
+      weckwort: false, sadaqaProzent: 5, websuche: true, vorlesen: false, tiefe: "medium"
     },
     gedaechtnis: [],   // {id, text, datum}
     aufgaben: [],      // {id, text, erledigt, wichtig, datum}
@@ -37,6 +37,8 @@ var Z = (function laden() {
       // Wer die App schon benutzt, braucht den Einrichtungs-Assistenten nicht.
       if (!(gespeichert.einstellungen || {}).hasOwnProperty("eingerichtet") &&
           (z.einstellungen.name || z.einstellungen.schluessel || z.einstellungen.geminiSchluessel)) z.einstellungen.eingerichtet = true;
+      // Die frühere Buchungsart „Reinigung“ gibt es nicht mehr: als normale Ausgabe behalten.
+      z.buchungen.forEach(function (b) { if (b.art === "reinigung") b.art = "aus"; });
       if (z.einstellungen.kiName === "TORRES") z.einstellungen.kiName = STANDARD_NAME; // alter Arbeitstitel
     }
   } catch (e) { /* privates Fenster o. ä.: dann ohne Speicher */ }
@@ -99,28 +101,25 @@ function aufgabeAnlegen(text, wichtig) {
 var BUCHUNGSARTEN = {
   ein: "Einnahme",
   aus: "Ausgabe",
-  sadaqa: "Sadaqa",
-  reinigung: "Reinigung"
+  sadaqa: "Sadaqa"
 };
 var HALAL_STATUS = { halal: "halal", zweifelhaft: "zweifelhaft", nicht_halal: "nicht halal" };
 
 /*
- * art: ein = Einnahme, aus = Ausgabe, sadaqa = freiwillige Spende,
- *      reinigung = unerlaubtes Geld (z. B. Zinsen) ohne Absicht auf Lohn weggeben.
+ * art: ein = Einnahme, aus = Ausgabe, sadaqa = Sadaqa, die die Person selbst gegeben hat.
  * halal: nur bei Einnahmen: halal, zweifelhaft oder nicht_halal.
+ * Es wird nie automatisch etwas abgezogen: Hier steht nur, was die Person selbst einträgt.
  */
 function buchungEintragen(art, betrag, quelle, datum, halal) {
   betrag = Number(betrag);
   if (!(betrag > 0)) return "Betrag fehlt oder ist ungültig.";
-  if (!BUCHUNGSARTEN[art]) return "Art muss ein, aus, sadaqa oder reinigung sein.";
+  if (!BUCHUNGSARTEN[art]) return "Art muss ein, aus oder sadaqa sein.";
   var d = /^\d{4}-\d{2}-\d{2}$/.test(datum || "") ? datum : heuteISO();
   var b = { id: neueId(), art: art, betrag: Math.round(betrag * 100) / 100, quelle: String(quelle || "Ohne Angabe").trim(), datum: d };
   if (art === "ein") b.halal = HALAL_STATUS[halal] ? halal : "halal";
   Z.buchungen.push(b);
   speichern();
-  var text = BUCHUNGSARTEN[art] + " " + geld(betrag) + " eingetragen (" + d.split("-").reverse().join(".") + ")";
-  if (b.halal === "nicht_halal") text += ". Diesen Betrag solltest du zur Reinigung weggeben";
-  return text + ".";
+  return BUCHUNGSARTEN[art] + " " + geld(betrag) + " eingetragen (" + d.split("-").reverse().join(".") + ").";
 }
 
 /* --- Auswertungen --- */
@@ -135,22 +134,19 @@ function monatsZahlen(jahrMonat) {
       if (b.halal !== "nicht_halal") einHalal += b.betrag; // fürs Monatsziel zählt nur Erlaubtes
       quellen[b.quelle] = (quellen[b.quelle] || 0) + b.betrag;
     } else {
-      aus += b.betrag; // Ausgaben, Sadaqa und Reinigung verlassen die Kasse
+      aus += b.betrag; // selbst eingetragene Ausgaben und gegebene Sadaqa
       if (b.art === "sadaqa") sadaqa += b.betrag;
     }
   });
   return { ein: ein, einHalal: einHalal, aus: aus, sadaqa: sadaqa, saldo: ein - aus, quote: ein > 0 ? (ein - aus) / ein : 0, quellen: quellen };
 }
 
-// Reinigung über alle Monate: unerlaubte Einnahmen minus bereits weggegebene Beträge.
-function reinigungStand() {
-  var nichtHalal = 0, zweifelhaft = 0, gegeben = 0;
-  Z.buchungen.forEach(function (b) {
-    if (b.art === "ein" && b.halal === "nicht_halal") nichtHalal += b.betrag;
-    if (b.art === "ein" && b.halal === "zweifelhaft") zweifelhaft += b.betrag;
-    if (b.art === "reinigung") gegeben += b.betrag;
-  });
-  return { nichtHalal: nichtHalal, zweifelhaft: zweifelhaft, gegeben: gegeben, offen: Math.max(0, nichtHalal - gegeben) };
+// Sadaqa-Vorschlag: nur eine Empfehlung, wie viel man zur Seite legen könnte. Es wird nichts abgezogen.
+function sadaqaVorschlag(jahrMonat) {
+  var m = monatsZahlen(jahrMonat);
+  var prozent = Number(Z.einstellungen.sadaqaProzent) || 0;
+  var vorschlag = Math.round(m.einHalal * prozent) / 100;
+  return { prozent: prozent, vorschlag: vorschlag, gegeben: m.sadaqa, einnahmen: m.einHalal };
 }
 
 function kontextFuerKi() {
@@ -162,9 +158,8 @@ function kontextFuerKi() {
   if (e.ziel) teile.push("Monatsziel Einnahmen: " + geld(e.ziel) + ".");
   if (e.warum) teile.push("Wofür sie Geld verdienen will: " + e.warum);
   teile.push("Dieser Monat bisher: Einnahmen " + geld(m.ein) + ", Ausgaben " + geld(m.aus) + " (davon Sadaqa " + geld(m.sadaqa) + "), Saldo " + geld(m.saldo) + ".");
-  var r = reinigungStand();
-  if (r.offen > 0) teile.push("Noch zur Reinigung wegzugeben (unerlaubte Einnahmen): " + geld(r.offen) + ".");
-  if (r.zweifelhaft > 0) teile.push("Einnahmen mit zweifelhaftem Halal-Status: " + geld(r.zweifelhaft) + ".");
+  var sv = sadaqaVorschlag();
+  if (sv.prozent > 0) teile.push("Sadaqa-Vorschlag diesen Monat (freiwillig, nur ein Vorschlag): " + sv.prozent + " % der Einnahmen = " + geld(sv.vorschlag) + ", selbst eingetragen gegeben: " + geld(sv.gegeben) + ".");
   var q = Object.keys(m.quellen);
   if (q.length) teile.push("Einnahmequellen diesen Monat: " + q.map(function (k) { return k + " " + geld(m.quellen[k]); }).join(", ") + ".");
   if (Z.gedaechtnis.length) {

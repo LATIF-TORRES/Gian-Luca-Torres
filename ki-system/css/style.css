@@ -253,3 +253,4 @@ body.gesperrt { overflow: hidden; }
 .liste li.buchung > .datum { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .liste li.buchung > .wachsen { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .liste li.buchung > strong { white-space: nowrap; }
+.gold-zahl { color: var(--gold); }

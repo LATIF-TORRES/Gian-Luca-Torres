@@ -116,7 +116,7 @@
       <div class="karte">
         <h2>Buchung eintragen</h2>
         <form id="buchung-form" class="formular">
-          <select id="b-art"><option value="ein">Einnahme</option><option value="aus">Ausgabe</option><option value="sadaqa">Sadaqa (Spende)</option><option value="reinigung">Reinigung (Unerlaubtes weggeben)</option></select>
+          <select id="b-art"><option value="ein">Einnahme</option><option value="aus">Ausgabe</option><option value="sadaqa">Sadaqa (selbst gegeben)</option></select>
           <select id="b-halal" title="Halal-Status der Einnahme">
             <option value="halal">Halal</option>
             <option value="zweifelhaft">Zweifelhaft</option>
@@ -182,6 +182,15 @@
             <label>Name deines Assistenten <input id="e-ki-name" placeholder="A&amp;T"></label>
             <label>Währung <select id="e-waehrung"><option>CHF</option><option>EUR</option><option>USD</option></select></label>
             <label>Monatsziel Einnahmen <input id="e-ziel" type="number" min="0" placeholder="z. B. 3000"></label>
+            <label>Sadaqa-Vorschlag (nur ein Vorschlag, es wird nichts abgezogen)
+              <select id="e-sadaqa">
+                <option value="0">Aus</option>
+                <option value="1">1 % der Einnahmen</option>
+                <option value="2.5">2,5 % der Einnahmen</option>
+                <option value="5">5 % der Einnahmen</option>
+                <option value="10">10 % der Einnahmen</option>
+              </select>
+            </label>
             <label>Wofür willst du Geld verdienen? <textarea id="e-warum" rows="2" placeholder="z. B. eigene Wohnung, Firma gründen, Freiheit"></textarea></label>
           </div>
         </div>
