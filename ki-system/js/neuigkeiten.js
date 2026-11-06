@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "3.6"; // muss mit version.json übereinstimmen
+var APP_VERSION = "3.7"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { besitzer: true, titel: "Halal-Liste mit einem Klick", text: "Im Depot unter Halal-Liste: „Startliste übernehmen“ nimmt die 24 grössten Aktien des schariakonformen Fonds HLAL auf (Stand 3. November 2026). A&T prüft zusätzlich die Branche. Mehrere Kürzel kannst du auch mit Komma auf einmal eingeben." },
   { besitzer: true, titel: "Nachziehender Stop, für jede Aktie angepasst", text: "Jede Position bekommt einen Stop nach ihrer üblichen Tagesschwankung (höchstens dein Höchstverlust, Standard 3 %). Der Stop zieht mit dem Höchstkurs nach, rückt bei genug Gewinn auf den Kaufkurs, und beim Gewinnziel (mindestens 8 %) wird die Hälfte gesichert. Der Rest läuft weiter." },
   { besitzer: true, titel: "Selbstständiger Handel", text: "Im Depot kannst du einschalten, dass A&T alle 15, 30 oder 60 Minuten selbst eine Handelsrunde macht, solange A&T offen ist und die US-Börse offen hat. Gehandelt wird nur bei hoher Zuversicht. Stop-Loss und Gewinnziel setzt das Programm selbst um. Alles steht im Protokoll." },
   { titel: "Besser auf kleinen Handys", text: "Die Bereiche oben passen jetzt auch auf schmale Bildschirme, ohne dass etwas abgeschnitten wird." },

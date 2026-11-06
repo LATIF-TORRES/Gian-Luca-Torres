@@ -123,6 +123,39 @@ function schutzWerte(symbol) {
 
 /* ---------- Halal-Liste ---------- */
 
+// Startliste: die grössten Positionen eines schariakonformen ETF (von einem Scharia-Rat geprüft).
+// Alphabet nur einmal (GOOGL). Die Liste ändert sich mit der Zeit; die Person bestätigt die Übernahme.
+var HALAL_STARTLISTE = {
+  quelle: "Wahed FTSE USA Shariah ETF (HLAL), grösste Positionen, Stand 3. November 2026",
+  symbole: ["AAPL", "NVDA", "MSFT", "GOOGL", "AVGO", "META", "TSLA", "LLY", "MU", "AMD", "XOM", "JNJ",
+    "CVX", "CSCO", "PG", "KO", "AMAT", "LRCX", "TXN", "PANW", "INTC", "GEV", "LIN", "ADI"]
+};
+
+// Nimmt mehrere Aktien auf. Verbotene Branchen werden übersprungen (Prüfung über Finnhub, falls Schlüssel da).
+async function halalMehrereAufnehmen(symbole, quelle, fortschritt) {
+  var d = depot(), neu = [], verboten = [], schon = [], ohneDaten = [];
+  for (var i = 0; i < symbole.length; i++) {
+    var s = symbolSauber(symbole[i]);
+    if (!s) continue;
+    if (aufHalalListe(s)) { schon.push(s); continue; }
+    var eintrag = { symbol: s, name: "", branche: "", datum: heuteISO(), quelle: quelle || "" };
+    if (d.finnhubSchluessel) {
+      try {
+        var f = await firmaHolen(s);
+        if (f.verboten) { verboten.push(s + " (" + f.branche + ")"); continue; }
+        eintrag.name = f.name; eintrag.branche = f.branche;
+      } catch (e) { ohneDaten.push(s); }
+    } else {
+      ohneDaten.push(s);
+    }
+    d.halalListe.push(eintrag);
+    neu.push(s);
+    if (fortschritt) fortschritt(i + 1, symbole.length);
+  }
+  speichern();
+  return { neu: neu, verboten: verboten, schon: schon, ohneDaten: ohneDaten };
+}
+
 function aufHalalListe(symbol) {
   symbol = symbolSauber(symbol);
   return depot().halalListe.filter(function (h) { return h.symbol === symbol; })[0] || null;
@@ -619,8 +652,40 @@ var Depot = (function () {
       await kurseLaden(); zeigen();
     };
     var gefunden = null;
+    function mehrereMelden(r) {
+      var t = r.neu.length + (r.neu.length === 1 ? " Aktie" : " Aktien") + " aufgenommen" + (r.neu.length ? ": " + r.neu.join(", ") : "") + ".";
+      if (r.verboten.length) t += " Nicht aufgenommen (verbotene Branche): " + r.verboten.join(", ") + ".";
+      if (r.schon.length) t += " Schon auf der Liste: " + r.schon.join(", ") + ".";
+      if (r.ohneDaten.length) t += " Ohne Branchenprüfung (Finnhub-Schlüssel fehlt oder keine Daten): " + r.ohneDaten.join(", ") + ".";
+      var info = $("#h-info"); info.className = "klein-text"; info.textContent = t;
+      zeigen();
+    }
+    $("#h-startliste").onclick = async function () {
+      var L = HALAL_STARTLISTE;
+      if (!confirm("Startliste übernehmen?\n\n" + L.symbole.length + " Aktien aus dem schariakonformen Fonds " + L.quelle + ":\n" + L.symbole.join(", ") +
+        "\n\nDer Fonds wird regelmässig von einem Scharia-Rat geprüft. A&T prüft zusätzlich die Branche und lässt verbotene weg. Die Bewertung einzelner Aktien kann sich ändern: Prüfe sie ab und zu in Zoya oder Musaffa.")) return;
+      var knopf = this; knopf.disabled = true;
+      $("#h-info").className = "klein-text leise"; $("#h-info").textContent = "Nehme auf …";
+      var r = await halalMehrereAufnehmen(L.symbole, L.quelle, function (n, gesamt) { $("#h-info").textContent = "Nehme auf … " + n + " von " + gesamt; });
+      knopf.disabled = false;
+      mehrereMelden(r);
+    };
     $("#halal-form").onsubmit = async function (ev) {
       ev.preventDefault();
+      // Mehrere Kürzel auf einmal (mit Komma oder Leerzeichen getrennt)
+      var teile = $("#h-symbol").value.split(/[\s,;]+/).map(symbolSauber).filter(Boolean);
+      if (teile.length > 1) {
+        if (!depot().finnhubSchluessel) {
+          $("#h-info").className = "klein-text minus";
+          $("#h-info").textContent = "Für eigene Kürzel braucht A&T den Finnhub-Schlüssel, um die Branche zu prüfen (Einstellungen weiter unten). Ohne Schlüssel geht nur die geprüfte Startliste.";
+          return;
+        }
+        if (!confirm(teile.length + " Aktien prüfen und aufnehmen?\n" + teile.join(", ") + "\n\nVerbotene Branchen werden automatisch weggelassen. Mit OK bestätigst du, dass du die übrigen geprüft hast.")) return;
+        var r = await halalMehrereAufnehmen(teile, "von Hand");
+        $("#h-symbol").value = "";
+        mehrereMelden(r);
+        return;
+      }
       var s = symbolSauber($("#h-symbol").value), info = $("#h-info");
       gefunden = null;
       $("#h-bestaetigen").classList.add("versteckt");

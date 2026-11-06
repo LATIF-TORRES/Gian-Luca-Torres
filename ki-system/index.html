@@ -237,9 +237,10 @@
         <h2>Halal-Liste</h2>
         <p class="leise klein-text">Nur diese Aktien dürfen gehandelt werden, auch vom Mentor. A&amp;T prüft die Branche, du prüfst Schulden, Zinseinnahmen und Produkte (z. B. mit Zoya oder Musaffa) und bestätigst.</p>
         <form id="halal-form" class="zeile">
-          <input id="h-symbol" placeholder="Kürzel, z. B. AAPL" autocomplete="off">
+          <input id="h-symbol" placeholder="Kürzel, z. B. AAPL (mehrere mit Komma)" autocomplete="off">
           <button class="knopf">Prüfen</button>
         </form>
+        <button class="knopf klein zart" id="h-startliste" type="button" style="white-space: normal; margin-top: 8px;">Startliste übernehmen (24 Halal-Aktien)</button>
         <p id="h-info" class="klein-text leise"></p>
         <button class="knopf klein versteckt" id="h-bestaetigen" type="button">Ich habe sie geprüft: aufnehmen</button>
         <ul id="halal-liste" class="liste"></ul>
