@@ -329,7 +329,7 @@ export function runLesson(root, exercises, opts) {
   const el = h(`
     <div class="player">
       <header class="p-top">
-        <button class="icon-btn quit" aria-label="Quit">✕</button>
+        <button class="icon-btn quit" aria-label="${t('quitYes')}">✕</button>
         <div class="bar"><i></i></div>
         <span class="combo"></span>
       </header>

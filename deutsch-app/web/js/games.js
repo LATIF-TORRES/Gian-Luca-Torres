@@ -56,7 +56,7 @@ function shell(root, g, level, { onExit, onDone, onAgain }) {
   const el = h(`
     <div class="player game" style="--gc:${g.color}">
       <header class="p-top">
-        <button class="icon-btn quit" aria-label="✕">✕</button>
+        <button class="icon-btn quit" aria-label="${t('quitYes')}">✕</button>
         <div class="g-title"><span>${g.icon}</span><b>${t('g_' + g.id)}</b><small>${t(LEVEL_KEY[level])}</small></div>
         <span class="g-score" aria-live="polite">0</span>
       </header>
@@ -197,7 +197,7 @@ function pretzel(api, P, level, lang) {
       <div class="hint-box">
         ${level === 'easy' && hasPic(w) ? `<div class="pic small">${esc(w.e)}</div>` : ''}
         ${level !== 'hard' ? `<div class="native-big">${esc(w[lang])}</div>` : ''}
-        <button class="speaker" data-say aria-label="🔊">🔊</button>
+        <button class="speaker" data-say aria-label="${t('tapToListen')}">🔊</button>
       </div>
       <div class="word-slots">${article(w) ? `<span class="art">${article(w)}</span>` : ''}<span class="slots"></span></div>
       <div class="keyboard"></div>`;
@@ -316,7 +316,7 @@ function anagram(api, P, level, lang) {
       <div class="hint-box">
         ${level === 'easy' && hasPic(w) ? `<div class="pic small">${esc(w.e)}</div>` : ''}
         ${level !== 'hard' ? `<div class="native-big">${esc(w[lang])}</div>` : ''}
-        <button class="speaker" data-say aria-label="🔊">🔊</button>
+        <button class="speaker" data-say aria-label="${t('tapToListen')}">🔊</button>
       </div>
       ${article(w) && level !== 'hard' ? `<p class="g-sub">${article(w)} …</p>` : ''}
       <div class="answer-line ana-line"></div>
@@ -468,7 +468,7 @@ function listen(api, P, level, lang) {
       : `<span>${esc(x.de)}</span>`;
     api.area.innerHTML = `
       <p class="g-help">${t('whatHeard')} · ${t('round')} ${r + 1}/${rounds}</p>
-      <div class="listen-box"><button class="speaker big" data-say aria-label="🔊">🔊</button></div>
+      <div class="listen-box"><button class="speaker big" data-say aria-label="${t('tapToListen')}">🔊</button></div>
       <div class="options ${level === 'easy' ? 'grid2' : ''}"></div>`;
     $('[data-say]', api.area).onclick = () => say(w);
     say(w);
@@ -585,7 +585,7 @@ function sentence(api, P, level, lang) {
       <p class="g-help">${t('buildFast')} · ${t('round')} ${r + 1}/${list.length}</p>
       <div class="hint-box">
         ${level !== 'hard' ? `<div class="native-big">${esc(s[lang])}</div>` : ''}
-        <button class="speaker" data-say aria-label="🔊">🔊</button>
+        <button class="speaker" data-say aria-label="${t('tapToListen')}">🔊</button>
       </div>
       <div class="answer-line"></div>
       <div class="bank"></div>`;
@@ -641,7 +641,7 @@ function typing(api, P, level, lang) {
     pr.innerHTML = `
       ${level === 'easy' && hasPic(w) ? `<div class="pic small">${esc(w.e)}</div>` : ''}
       ${level !== 'hard' ? `<div class="native-big">${esc(w[lang])}</div>` : ''}
-      <button class="speaker" type="button" data-say aria-label="🔊">🔊</button>
+      <button class="speaker" type="button" data-say aria-label="${t('tapToListen')}">🔊</button>
       ${level === 'easy' ? `<div class="g-sub">${esc(w.de.slice(0, article(w) ? article(w).length + 2 : 1))}…</div>` : ''}`;
     $('[data-say]', pr).onclick = () => say(w);
     if (level === 'hard') say(w);
