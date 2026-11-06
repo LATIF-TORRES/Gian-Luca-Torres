@@ -204,6 +204,7 @@
       <div class="karte">
         <h2>Scanner: Aktien mit Bewegung</h2>
         <p class="klein-text leise" id="scanner-stand"></p>
+        <p class="klein-text minus" id="scanner-fehler"></p>
         <ul id="scanner-liste" class="liste"></ul>
         <button class="knopf klein zart" id="scanner-jetzt" type="button">Jetzt scannen</button>
       </div>
@@ -283,6 +284,8 @@
         <h2>Einstellungen</h2>
         <div class="formular">
           <label>Finnhub-Schlüssel (für echte Kurse) <input id="d-finnhub" type="password" placeholder="kostenlos auf finnhub.io" autocomplete="off"></label>
+          <button class="knopf klein zart" id="d-finnhub-test" type="button">Schlüssel testen</button>
+          <p id="d-finnhub-info" class="klein-text leise"></p>
           <label>Tageslimit für automatische Orders (USD) <input id="d-limit" type="number" min="0" step="50"></label>
           <label>Startkapital (Spielgeld, USD) <input id="d-start" type="number" min="100" step="1000"></label>
           <button class="knopf klein rot" id="d-zuruecksetzen" type="button">Depot neu starten</button>

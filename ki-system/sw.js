@@ -1,7 +1,7 @@
 /* Service Worker: macht A&T installierbar und lädt die App schneller.
    Netzwerk zuerst, damit Updates sofort ankommen; ohne Netz aus dem Zwischenspeicher.
    Anfragen an die KI (Google, Anthropic) laufen nie über den Zwischenspeicher. */
-var NAME = "a-und-t-v8";
+var NAME = "a-und-t-v9";
 var DATEIEN = ["./", "index.html", "manifest.webmanifest", "css/style.css",
   "js/lib/marked.min.js", "js/lib/purify.min.js", "js/daten.js", "js/speicher.js", "js/halal-welt.js", "js/depot.js", "js/ki.js",
   "js/gemini.js", "js/lokal.js", "js/stimme.js", "js/einrichtung.js", "js/neuigkeiten.js", "js/app.js", "a-und-t-192.png", "a-und-t-512.png"];

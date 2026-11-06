@@ -85,13 +85,30 @@ function startlisteAutomatisch(fertig) {
 /* ---------- Kurse und Firmendaten (Finnhub) ---------- */
 
 var _kursCache = {};
+var FINNHUB_STATUS = { fehler: null, art: null, zeit: 0, ok: 0 };
+function finnhubFehler(art, text) {
+  var e = new Error(text); e.art = art;
+  if (art !== "zugriff") { FINNHUB_STATUS.fehler = text; FINNHUB_STATUS.art = art; FINNHUB_STATUS.zeit = Date.now(); }
+  return e;
+}
+// Schlüssel säubern: Leerzeichen, Zeilenumbrüche, Anführungszeichen und unsichtbare Zeichen vom Kopieren entfernen
+function finnhubSchluesselSauber(s) { return String(s || "").replace(/[\s"'`\u200B-\u200D\uFEFF]/g, ""); }
+async function finnhubTesten() {
+  var q = await finnhub("quote?symbol=AAPL");
+  if (!q || !(q.c > 0)) throw new Error("Finnhub antwortet, liefert aber keinen Kurs. Versuch es in einer Minute nochmal.");
+  FINNHUB_STATUS.fehler = null; FINNHUB_STATUS.ok = Date.now();
+  return "Schlüssel funktioniert: Apple kostet gerade " + usd(q.c) + ".";
+}
 async function finnhub(pfad) {
   var k = depot().finnhubSchluessel;
   if (!k) throw new Error("Für echte Kurse fehlt der kostenlose Finnhub-Schlüssel (Depot → Einstellungen).");
-  var r = await fetch(FINNHUB_URL + pfad + (pfad.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(k));
-  if (r.status === 401 || r.status === 403) throw new Error("Der Finnhub-Schlüssel stimmt nicht oder darf diese Daten nicht abrufen.");
-  if (r.status === 429) throw new Error("Finnhub-Limit kurz erreicht. In einer Minute geht es wieder.");
-  if (!r.ok) throw new Error("Finnhub antwortet nicht (" + r.status + ").");
+  var r;
+  try { r = await fetch(FINNHUB_URL + pfad + (pfad.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(k)); }
+  catch (e) { throw finnhubFehler("netz", "Keine Verbindung zu Finnhub. Ist das Internet an? (Manche Werbeblocker oder Firmen-Netze sperren finnhub.io.)"); }
+  if (r.status === 401) throw finnhubFehler("schluessel", "Finnhub lehnt den Schlüssel ab (401). Kopiere ihn auf finnhub.io unter „Dashboard“ neu und trag ihn im Depot unter Einstellungen ein. Hast du einen neuen Schlüssel erzeugt, gilt der alte nicht mehr.");
+  if (r.status === 403) throw finnhubFehler("zugriff", "Diese Aktie gibt es mit dem Gratis-Schlüssel von Finnhub nicht (403).");
+  if (r.status === 429) throw finnhubFehler("limit", "Finnhub-Limit kurz erreicht (60 Abfragen pro Minute). In einer Minute geht es wieder.");
+  if (!r.ok) throw finnhubFehler("server", "Finnhub antwortet nicht (" + r.status + ").");
   return r.json();
 }
 function keinKursText(symbol) {
@@ -106,7 +123,8 @@ async function kursHolen(symbol, frisch) {
   var c = _kursCache[symbol];
   if (!frisch && c && Date.now() - c.zeit < 15000) return c;
   var q = await finnhub("quote?symbol=" + encodeURIComponent(symbol));
-  if (!q || !(q.c > 0)) throw new Error("Kein Kurs für „" + symbol + "“ gefunden. Stimmt das Kürzel (z. B. AAPL)?");
+  if (!q || !(q.c > 0)) { var e0 = new Error("Kein Kurs für „" + symbol + "“ gefunden (Finnhub liefert für dieses Kürzel nichts)."); e0.art = "zugriff"; throw e0; }
+  FINNHUB_STATUS.fehler = null; FINNHUB_STATUS.ok = Date.now();
   c = { symbol: symbol, kurs: q.c, aenderung: q.dp, hoch: q.h, tief: q.l, vortag: q.pc, zeit: Date.now() };
   schwankungMerken(symbol, q);
   _kursCache[symbol] = c;
@@ -578,9 +596,14 @@ async function depotWerkzeug(name, input) {
     }
     if (name === "kandidaten_scannen") {
       var n = Math.min(20, Math.max(3, parseInt(input.anzahl, 10) || 10));
+      // Läuft der Scanner gerade (im Hintergrund), auf ihn warten statt leer zurückzugeben
+      for (var w = 0; w < 60 && SCANNER.laeuft; w++) await new Promise(function (r) { setTimeout(r, 500); });
       if (scannerFrisch().length < 30) await scannerSchritt(35);
       var liste = kandidaten(n);
-      if (!liste.length) return { text: "Noch keine Kursdaten. Ist der Finnhub-Schlüssel eingetragen und die Halal-Liste gefüllt?" };
+      if (!liste.length) {
+        if (!depot().finnhubSchluessel) return { fehler: true, text: "Kein Finnhub-Schlüssel eingetragen (Depot → Einstellungen). Ohne ihn gibt es keine Kurse." };
+        return { fehler: true, text: "Keine Kursdaten. Grund: " + (FINNHUB_STATUS.fehler || "unbekannt (Finnhub hat keine Kurse geliefert)") };
+      }
       return { text: "Aktien mit der meisten Bewegung (" + scannerFrisch().length + " von " + mitKursAnzahl() + " Aktien mit Kurs geprüft):\n" + kandidatenText(liste) };
     }
     if (name === "depot_anzeigen") return { text: input.mit_kursen === false ? depotKurzFuerKi() : await depotText() };
@@ -604,7 +627,7 @@ async function depotWerkzeug(name, input) {
 /* ---------- Scanner: findet Aktien mit Bewegung auf der Halal-Liste ---------- */
 // Prüft die Liste nach und nach (Finnhub erlaubt etwa 60 Abfragen pro Minute) und merkt sich
 // Kurs, Tagesänderung und Tagesspanne. Die KI bekommt daraus nur die besten Kandidaten.
-var SCANNER = { daten: {}, pos: 0, laeuft: false, letzte: 0 };
+var SCANNER = { daten: {}, pos: 0, laeuft: false, letzte: 0, ohneKurs: {} };
 
 async function scannerSchritt(anzahl) {
   var d = depot();
@@ -612,7 +635,7 @@ async function scannerSchritt(anzahl) {
   if (!d.halalListe.some(function (h) { return kursMoeglich(h.symbol); })) return;
   SCANNER.laeuft = true;
   try {
-    var liste = d.halalListe.map(function (h) { return h.symbol; }).filter(function (s) { return kursMoeglich(s) && !istGesperrt(s); });
+    var liste = d.halalListe.map(function (h) { return h.symbol; }).filter(function (s) { return kursMoeglich(s) && !istGesperrt(s) && !SCANNER.ohneKurs[s]; });
     for (var i = 0; i < Math.min(anzahl, liste.length); i++) {
       if (SCANNER.pos >= liste.length) SCANNER.pos = 0;
       var s = liste[SCANNER.pos++];
@@ -621,7 +644,9 @@ async function scannerSchritt(anzahl) {
         SCANNER.daten[s] = { kurs: k.kurs, aenderung: Number(k.aenderung) || 0,
           spanne: k.vortag > 0 ? (k.hoch - k.tief) / k.vortag * 100 : 0, zeit: Date.now() };
       } catch (e) {
-        if (/Limit/.test(e.message)) break;
+        if (e.art === "zugriff") { SCANNER.ohneKurs[s] = true; continue; } // z. B. ausserbörsliche ADRs: künftig überspringen
+        if (e.art === "limit") break;
+        if (e.art === "schluessel" || e.art === "netz") break; // ganzer Lauf sinnlos
       }
       await new Promise(function (r) { setTimeout(r, 250); });
     }
@@ -751,6 +776,8 @@ async function autoRunde(test) {
   try {
     if (!depot().finnhubSchluessel) { autoNotiz("Übersprungen: Finnhub-Schlüssel fehlt."); return; }
     if (!depot().halalListe.length) { autoNotiz("Übersprungen: Halal-Liste ist leer."); return; }
+    // Erst prüfen, ob Finnhub Kurse liefert. Sonst die Runde sparen (die KI würde nur „keine Daten“ melden).
+    try { await finnhubTesten(); } catch (fx) { autoNotiz("Übersprungen, keine Kurse: " + fx.message); return; }
     await regelnPruefen();
     if (autoTradesHeute() >= a.maxTrades) { autoNotiz("Höchstzahl Trades für heute erreicht. Nur Stop-Loss und Gewinnziel geprüft."); return; }
     if (!hatSchluessel()) { autoNotiz("Übersprungen: keine KI verbunden."); return; }
@@ -890,6 +917,7 @@ var Depot = (function () {
     });
 
     var frisch = scannerFrisch().length;
+    $("#scanner-fehler").textContent = FINNHUB_STATUS.fehler && Date.now() - FINNHUB_STATUS.zeit < 30 * 60000 ? "Problem: " + FINNHUB_STATUS.fehler : "";
     $("#scanner-stand").textContent = frisch ? frisch + " von " + d.halalListe.length + " Aktien geprüft" + (SCANNER.letzte ? ", zuletzt vor " + Math.max(0, Math.round((Date.now() - SCANNER.letzte) / 60000)) + " Min." : "") +
       ". Der Scanner läuft, solange das Depot offen ist oder selbstständig gehandelt wird." : "Noch keine Daten. Tipp auf „Jetzt scannen“ (braucht den Finnhub-Schlüssel).";
     var sl = $("#scanner-liste");
@@ -931,7 +959,15 @@ var Depot = (function () {
     };
     setInterval(autoTakt, 60000);
     $("#depot-hinweis-ok").onclick = function () { depot().hinweisGesehen = true; speichern(); zeigen(); };
-    $("#d-finnhub").onchange = function () { depot().finnhubSchluessel = this.value.trim(); _kursCache = {}; speichern(); meldung("Finnhub-Schlüssel gespeichert."); aktualisieren(); };
+    async function schluesselTesten() {
+      var info = $("#d-finnhub-info");
+      if (!depot().finnhubSchluessel) { info.className = "klein-text minus"; info.textContent = "Noch kein Schlüssel eingetragen."; return; }
+      info.className = "klein-text leise"; info.textContent = "Teste …";
+      try { info.className = "klein-text plus"; info.textContent = await finnhubTesten(); SCANNER.ohneKurs = {}; }
+      catch (e) { info.className = "klein-text minus"; info.textContent = e.message; }
+    }
+    $("#d-finnhub").onchange = function () { var k = finnhubSchluesselSauber(this.value); this.value = k; depot().finnhubSchluessel = k; _kursCache = {}; speichern(); meldung("Finnhub-Schlüssel gespeichert."); schluesselTesten(); aktualisieren(); };
+    $("#d-finnhub-test").onclick = schluesselTesten;
     $("#d-limit").onchange = function () { depot().tageslimit = Math.max(0, parseFloat(this.value) || 0); speichern(); zeigen(); };
     $("#d-zuruecksetzen").onclick = function () {
       var start = Math.max(100, parseFloat($("#d-start").value) || 10000);
