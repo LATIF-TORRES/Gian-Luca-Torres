@@ -35,8 +35,13 @@ function sha256(text) {
   }
   return H.map(function (v) { return ("00000000" + (v >>> 0).toString(16)).slice(-8); }).join("");
 }
+// Toleriert Leerzeichen, fehlende Bindestriche und Kleinbuchstaben (Handy-Tastatur): "at pebl…" = "AT-PEBL-…"
+function besitzerCodeNormal(code) {
+  var z = String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return /^AT[A-Z0-9]{12}$/.test(z) ? "AT-" + z.slice(2, 6) + "-" + z.slice(6, 10) + "-" + z.slice(10, 14) : String(code || "").trim().toUpperCase();
+}
 function besitzerCodePruefen(code) {
-  return sha256(String(code || "").trim().toUpperCase()) === BESITZER_HASH;
+  return sha256(besitzerCodeNormal(code)) === BESITZER_HASH;
 }
 
 var FINNHUB_URL = "https://finnhub.io/api/v1/";

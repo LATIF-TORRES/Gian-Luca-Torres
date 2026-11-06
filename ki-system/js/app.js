@@ -828,7 +828,9 @@
       toast("Besitzer-Modus an: Depot und Überweisungen sind freigeschaltet.");
       startlisteAutomatisch(function (r) { toast("Halal-Liste ergänzt: " + r.neu.length.toLocaleString("de-CH") + " Aktien aus der weltweiten Halal-Liste übernommen."); });
     } else {
-      toast("Code falsch.");
+      var eingabe = $("#besitzer-code").value.trim();
+      toast(/^AT/i.test(eingabe) ? "Besitzer-Code falsch. Er beginnt mit AT und hat 3 Vierergruppen, z. B. AT-XXXX-XXXX-XXXX." :
+        "Das ist nicht der Besitzer-Code (er beginnt mit AT-). Der Finnhub-Schlüssel kommt nicht hierhin: Erst freischalten, dann im Depot unter „Einstellungen“ eintragen.");
     }
   };
   $("#besitzer-aus").onclick = function () {

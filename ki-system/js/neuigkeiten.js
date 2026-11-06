@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "4.1"; // muss mit version.json übereinstimmen
+var APP_VERSION = "4.2"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "Freischalten einfacher", text: "Der Besitzer-Code funktioniert jetzt auch mit Kleinbuchstaben oder Leerzeichen. Gibst du versehentlich einen anderen Schlüssel ein, sagt A&T dir, wo er hingehört." },
   { besitzer: true, titel: "Halal-Liste: jetzt 3624 Aktien aus 51 Ländern", text: "Neu dabei: 381 Aktien aus Saudi-Arabien (nur die, die mindestens 2 von 3 Scharia-Gelehrten als konform einstufen: Al Rajhi Capital, Dr. Mohammed Al-Osaimi, Albilad Capital), die 100 Aktien des türkischen Beteiligungsindex BIST Katılım 100 und 284 Aktien aus Bangladesch (Scharia-Liste von Islami Bank Securities). Die Liste wird beim nächsten Start automatisch ergänzt." },
   { besitzer: true, titel: "Weltweite Halal-Liste: 2885 Aktien aus 50 Ländern", text: "Die Halal-Liste kommt jetzt aus 13 geprüften Quellen: Halal-Fonds von SP Funds und iShares (USA, Welt, Schwellenländer) und die offiziellen Scharia-Listen von Malaysia, Indonesien, Pakistan, Ägypten, Nigeria und Südafrika. Dabei sind grosse und ganz kleine Firmen aus Asien (China, Japan, Indien, Taiwan, Korea, Malaysia, Indonesien …), Afrika, dem Nahen Osten, Europa und Amerika. Im Depot siehst du sie nach Region und Land und kannst suchen. Handelbar im Übungs-Depot sind vorerst die Aktien an der US-Börse (auch TSMC, Alibaba, Infosys, Gold Fields usw.), die anderen folgen mit der IBKR-Verbindung. Russische Aktien sind wegen Sanktionen gesperrt." },
   { besitzer: true, titel: "Eigener Fonds: A&T Welt-Halal-Fonds", text: "Im Depot verteilst du einen Betrag mit einem Klick auf 10 bis 30 Halal-Aktien aus Asien, Amerika, Europa, Afrika und Ozeanien." },
