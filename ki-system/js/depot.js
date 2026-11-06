@@ -59,6 +59,17 @@ function usd(n) {
 }
 function symbolSauber(s) { return String(s || "").trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, ""); }
 
+// Auf Wunsch des Besitzers: Ist die Halal-Liste leer, wird die Startliste einmal automatisch übernommen.
+function startlisteAutomatisch(fertig) {
+  var d = depot();
+  if (!istBesitzer() || d.startlisteGeladen || d.halalListe.length) return;
+  d.startlisteGeladen = true;
+  speichern();
+  halalMehrereAufnehmen(HALAL_STARTLISTE.symbole, HALAL_STARTLISTE.quelle).then(function (r) {
+    if (fertig) fertig(r);
+  });
+}
+
 /* ---------- Kurse und Firmendaten (Finnhub) ---------- */
 
 var _kursCache = {};

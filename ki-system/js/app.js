@@ -825,6 +825,7 @@
       $("#besitzer-code").value = "";
       besitzerAnzeigen();
       toast("Besitzer-Modus an: Depot und Überweisungen sind freigeschaltet.");
+      startlisteAutomatisch(function (r) { toast("Halal-Liste gefüllt: " + r.neu.length + " Aktien aus dem Halal-ETF übernommen."); });
     } else {
       toast("Code falsch.");
     }
@@ -844,6 +845,7 @@
   alles();
   $("#b-art").onchange.call($("#b-art"));
   Neuigkeiten.beimStart();
+  startlisteAutomatisch(function (r) { toast("Halal-Liste gefüllt: " + r.neu.length + " Aktien aus dem Halal-ETF übernommen."); });
   if (!Z.einstellungen.eingerichtet) Einrichtung.start(function () { alles(); zeigeTab("heute"); });
   $("#neu-zeigen").onclick = Neuigkeiten.zeigen;
   $("#update-link").href = DOWNLOAD_URL;
