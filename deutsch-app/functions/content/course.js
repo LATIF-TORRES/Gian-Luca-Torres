@@ -8,6 +8,8 @@
 // Diese Datei wird von der Cloud Function ausgeliefert (nur an Zahlende).
 // Im Demo-Modus lädt die Web-App sie direkt.
 
+import { TR } from './tr.js';
+
 const w = (de, en, fr, e, p = true, alt) => ({ de, en, fr, e, p, ...(alt ? { alt } : {}) });
 const s = (de, en, fr) => ({ de, en, fr });
 
@@ -403,6 +405,18 @@ export const COURSE = {
     },
   ],
 };
+
+// Türkisch dazunehmen (Übersetzungen in tr.js, gleiche Reihenfolge)
+for (const u of COURSE.units) {
+  const t = TR[u.id];
+  if (!t || t.words.length !== u.words.length || t.sentences.length !== u.sentences.length) {
+    throw new Error(`Türkische Übersetzung passt nicht zu ${u.id}`);
+  }
+  u.title.tr = t.title;
+  u.tip.tr = t.tip;
+  u.words.forEach((x, i) => (x.tr = t.words[i]));
+  u.sentences.forEach((x, i) => (x.tr = t.sentences[i]));
+}
 
 // Die erste Lektion (die ersten 6 Wörter von Einheit 1) ist gratis.
 export const TRIAL_WORDS = 6;

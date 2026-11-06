@@ -100,6 +100,7 @@ function langSwitch() {
   return `<div class="lang-switch">
     <button data-lang="en" class="${getLang() === 'en' ? 'on' : ''}">🇬🇧 English</button>
     <button data-lang="fr" class="${getLang() === 'fr' ? 'on' : ''}">🇫🇷 Français</button>
+    <button data-lang="tr" class="${getLang() === 'tr' ? 'on' : ''}">🇹🇷 Türkçe</button>
   </div>`;
 }
 
@@ -408,7 +409,7 @@ function progressMessage(last) {
   lines.push(`⭐ ${s.xp} XP · 🔥 ${streak} ${streak === 1 ? 'Tag' : 'Tage'} in Folge`);
   const nMistakes = Object.keys(s.mistakes).length;
   if (nMistakes) lines.push(`🔁 Wörter zum Wiederholen: ${nMistakes}`);
-  lines.push(`🌐 Sprache: ${getLang() === 'fr' ? 'Französisch' : 'Englisch'}`);
+  lines.push(`🌐 Sprache: ${{ fr: 'Französisch', tr: 'Türkisch' }[getLang()] || 'Englisch'}`);
   return lines.join('\n');
 }
 

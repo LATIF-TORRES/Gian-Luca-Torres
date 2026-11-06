@@ -72,7 +72,7 @@ function checkExercise(ex, lang) {
 }
 
 test('alle Lektionen aller Einheiten sind gültig', () => {
-  for (const lang of ['en', 'fr']) {
+  for (const lang of ['en', 'fr', 'tr']) {
     for (const speakOn of [true, false]) {
       for (let r = 0; r < 15; r++) {
         COURSE.units.forEach((u, ui) => {
@@ -108,15 +108,15 @@ test('Wiederholung', () => {
 
 test('Inhalt: Übersetzungen eindeutig und Schweizer Schreibweise', () => {
   for (const u of COURSE.units) {
-    for (const lang of ['en', 'fr']) {
+    for (const lang of ['en', 'fr', 'tr']) {
       const t = u.words.map((w) => w[lang]);
       assert.equal(new Set(t).size, t.length, `${u.id} ${lang} doppelt`);
     }
     for (const x of [...u.words, ...u.sentences]) {
       assert.ok(!x.de.includes('ß'), `ß in ${x.de}`);
-      assert.ok(x.en && x.fr, `Übersetzung fehlt: ${x.de}`);
+      assert.ok(x.en && x.fr && x.tr, `Übersetzung fehlt: ${x.de}`);
     }
-    assert.ok(u.tip.en && u.tip.fr);
+    assert.ok(u.tip.en && u.tip.fr && u.tip.tr && u.title.tr);
   }
 });
 
@@ -134,7 +134,9 @@ test('Freischalt-Codes', async () => {
   // anderer Name mit demselben Teil: ungültig
   assert.equal(await openCourse(code.replace('ZOE-MULLER', 'ANNA'), locked), null);
   // ein Zeichen falsch: ungültig
-  const bad = code.slice(0, -1) + (code.endsWith('A') ? 'B' : 'A');
+  // ein Zeichen in der Mitte ändern (das letzte Zeichen trägt nur teilweise Information)
+  const at = code.length - 10;
+  const bad = code.slice(0, at) + (code[at] === 'A' ? 'B' : 'A') + code.slice(at + 1);
   assert.equal(await openCourse(bad, locked), null);
   assert.equal(await openCourse('Quatsch', locked), null);
   // anderer Schlüssel: ungültig

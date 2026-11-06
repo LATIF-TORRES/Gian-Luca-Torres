@@ -62,9 +62,10 @@
     <div class="code" id="code"></div>
     <label>Nachricht zum Kopieren</label>
     <div class="row tabs" role="group" aria-label="Sprache der Nachricht">
-      <button class="secondary" type="button" data-lang="all" aria-pressed="true">Begrüssung DE · EN · FR</button>
+      <button class="secondary" type="button" data-lang="all" aria-pressed="true">Begrüssung DE · EN · FR · TR</button>
       <button class="secondary" type="button" data-lang="fr" aria-pressed="false">Nur Französisch</button>
       <button class="secondary" type="button" data-lang="en" aria-pressed="false">Nur Englisch</button>
+      <button class="secondary" type="button" data-lang="tr" aria-pressed="false">Nur Türkisch</button>
     </div>
     <div class="msg" id="msg"></div>
     <div class="row">
@@ -138,11 +139,25 @@ ${l}
 Clique dessus et c’est parti ! Ne le partage pas, il est rien que pour toi.
 
 Une question ? Écris-nous ici quand tu veux. On t’aide avec plaisir ! 😊`;
+  const tr = (n, l) => `🇹🇷 *Selam ${n}, Hallo Deutsch’a hoş geldin!* 🎉
+
+Aramızda olman süper! Kursun artık tamamen açık: 48 ders ve bütün oyunlar senin. 🔓
+
+Küçük bir ipucu: Haftada bir saat yerine her gün 5 dakika çok daha iyi. Böylece akılda kalıyor. Kedimiz Pasha 🐱 da yol boyunca seni hep destekleyecek.
+
+Başarabilirsin! Adım adım, rahat rahat. 💪
+
+👉 Kişisel linkin:
+${l}
+Dokun ve başla! Lütfen kimseyle paylaşma, bu link sadece senin için.
+
+Sorun mu var? Bize buradan istediğin zaman yaz. Seve seve yardım ederiz! 😊`;
   const LINE = '\n\n━━━━━━━━━━━━━━━\n\n';
   const texts = {
-    all: (n, l) => de(n, l) + LINE + en(n, l) + LINE + fr(n, l),
+    all: (n, l) => de(n, l) + LINE + en(n, l) + LINE + fr(n, l) + LINE + tr(n, l),
     fr: (n, l) => fr(n, l),
     en: (n, l) => en(n, l),
+    tr: (n, l) => tr(n, l),
   };
   const personalLink = (code) => (LINK ? `${LINK}#${code}` : code);
 

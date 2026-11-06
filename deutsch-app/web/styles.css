@@ -109,7 +109,7 @@ input { font: inherit; }
 .or { text-align: center; color: var(--muted); margin: 14px 0; position: relative; font-size: 14px; }
 .or::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px solid var(--line); }
 .or span { background: var(--card); padding: 0 10px; position: relative; }
-.lang-switch { display: inline-flex; background: var(--card); border-radius: 999px; padding: 4px; box-shadow: var(--shadow); gap: 2px; }
+.lang-switch { max-width: 100%; flex-wrap: wrap; justify-content: center; display: inline-flex; background: var(--card); border-radius: 999px; padding: 4px; box-shadow: var(--shadow); gap: 2px; }
 .auth > .lang-switch { display: flex; width: max-content; margin: 0 auto; }
 .lang-switch button { border: 0; background: none; padding: 7px 12px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--muted); white-space: nowrap; }
 .lang-switch button.on { background: var(--primary); color: #fff; }
@@ -530,3 +530,6 @@ body.in-game .cat-pop .cat-bubble { margin-bottom: 6px; padding: 8px 12px; font-
 /* Tipp-Turbo */
 .tt-msg { margin: 0; min-height: 1.4em; font-weight: 800; text-align: center; color: var(--muted); }
 .tt-msg.good { color: var(--good); } .tt-msg.bad { color: var(--bad); }
+
+/* Drei Sprachen: auf sehr kleinen Handys schmalere Knöpfe */
+@media (max-width: 380px) { .lang-switch button { padding: 7px 8px; font-size: 13px; } }
