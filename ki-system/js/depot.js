@@ -547,8 +547,9 @@ var DEPOT_WERKZEUGE = [
       symbol: { type: "string", description: "Börsenkürzel" },
       seite: { type: "string", enum: ["kauf", "verkauf"] },
       anzahl: { type: "number", description: "Anzahl Aktien. Bruchteile erlaubt, z. B. 0.25. Für einen Betrag: Betrag ÷ Kurs (z. B. 20 $ ÷ 400 $ = 0.05)" },
+      zuversicht: { type: "integer", description: "Wie sicher bist du, dass sich die Order lohnt? 1 bis 10" },
       begruendung: { type: "string", description: "Kurze Begründung der Order" }
-    }, required: ["symbol", "seite", "anzahl", "begruendung"], additionalProperties: false },
+    }, required: ["symbol", "seite", "anzahl", "zuversicht", "begruendung"], additionalProperties: false },
     eager_input_streaming: true
   },
   {
@@ -613,7 +614,13 @@ async function depotWerkzeug(name, input) {
       var a = autoEinstellungen();
       if (AUTO.orders >= 1) return { fehler: true, text: "Pro selbstständiger Runde ist nur eine Order erlaubt." };
       if (autoTradesHeute() >= a.maxTrades) return { fehler: true, text: "Höchstzahl selbstständiger Trades für heute (" + a.maxTrades + ") erreicht." };
-      var r = await orderAufgeben(input.symbol, input.seite, Number(input.anzahl), "auto", "[Auto] " + (input.begruendung || ""));
+      var zv = parseInt(input.zuversicht, 10);
+      if (input.seite === "kauf" && zv > 0 && zv < a.zuversicht) return { fehler: true, text: "Zuversicht " + zv + "/10 liegt unter der eingestellten Mindest-Zuversicht von " + a.zuversicht + "/10. Keine Order." };
+      if (input.seite === "kauf") {
+        var kk = await kursHolen(input.symbol);
+        if (kk.kurs * Number(input.anzahl) > depot().bargeld * 0.2 + 0.01) return { fehler: true, text: "Zu gross: Selbstständig höchstens 20 % des Bargelds pro Order (" + usd(depot().bargeld * 0.2) + "). Nimm eine kleinere Anzahl (Bruchteile erlaubt)." };
+      }
+      var r = await orderAufgeben(input.symbol, input.seite, Number(input.anzahl), "auto", "[Auto, Zuversicht " + (zv || "?") + "/10] " + (input.begruendung || ""));
       if (!r.fehler) AUTO.orders++;
       return r;
     }
@@ -681,8 +688,9 @@ var AUTO = { laeuft: false, orders: 0, letzteRegel: 0 };
 function autoEinstellungen() {
   var d = depot();
   if (!d.auto) d.auto = {};
-  var std = { an: false, intervall: 30, stop: 3, ziel: 8, maxTrades: 3, letzte: 0, protokoll: [], schutzVersion: 2 };
+  var std = { an: false, intervall: 30, stop: 3, ziel: 8, maxTrades: 3, zuversicht: 5, letzte: 0, protokoll: [], schutzVersion: 2 };
   if (d.auto.ziel === 5 && !d.auto.schutzVersion) d.auto.ziel = 8; // alter Standard → neuer Standard
+  if (d.auto.zuversicht === undefined) d.auto.zuversicht = 5; // Wunsch des Besitzers: mutiger handeln
   Object.keys(std).forEach(function (k) { if (d.auto[k] === undefined) d.auto[k] = std[k]; });
   return d.auto;
 }
@@ -760,8 +768,9 @@ function autoFrage() {
   return "Selbstständige Handelsrunde (" + new Date().toLocaleString("de-CH") + "). " +
     "Hol mit kandidaten_scannen die 10 Aktien der Halal-Liste mit der meisten Bewegung (nur Aktien mit Kurs an der US-Börse, auch ausländische Firmen), prüfe Interessantes mit kurs_abfragen und schau mit depot_anzeigen ins Depot. " +
     "Bruchteile sind erlaubt: Bei wenig Geld rechnest du anzahl = Betrag ÷ Kurs. " +
-    "Handle NUR, wenn du die Gewinnchance als hoch einschätzt: Zuversicht mindestens 8 von 10 und ein konkreter Grund aus den Kursdaten. " +
-    "Nichtstun ist die Regel und völlig in Ordnung. Höchstens eine Order, höchstens 20 % des Bargelds. " +
+    "Handle, wenn deine Zuversicht mindestens " + a.zuversicht + " von 10 ist und es einen konkreten Grund aus den Kursdaten gibt" +
+    (a.zuversicht <= 6 ? " (die Person will bewusst mutiger handeln: nutze auch mittlere Chancen, statt nur abzuwarten)" : "") + ". " +
+    "Darunter: keine Order. Höchstens eine Order, höchstens 20 % des Bargelds (prüft auch das Programm). Gib im Feld zuversicht deine ehrliche Einschätzung an. " +
     "Das Programm schützt jede Position selbst: individueller Stop nach Schwankung (höchstens " + a.stop + " % Verlust), nachziehender Stop, ab " + a.ziel + " % Gewinn wird die Hälfte gesichert. " +
     "Willst du handeln, rufst du ZUERST order_aufgeben auf (konkretes Kürzel, Anzahl). Nur Hinschreiben führt keine Order aus. " +
     "Schreib zum Schluss genau eine Zeile: „Entscheidung: Kauf KÜRZEL für x $ | Zuversicht: x/10 | Grund: …“ oder „Entscheidung: Keine Order | Zuversicht: x/10 | Grund: …“.";
@@ -924,6 +933,7 @@ var Depot = (function () {
     $("#auto-stop").value = a.stop;
     $("#auto-ziel").value = a.ziel;
     $("#auto-max").value = a.maxTrades;
+    $("#auto-zuversicht").value = String(a.zuversicht);
     var offen = boerseOffen();
     $("#auto-status").textContent = (a.an ? "An" : "Aus") + " · US-Börse " + (offen ? "offen" : "geschlossen (offen Mo bis Fr, 15:30 bis 22:00 Schweizer Zeit)") +
       " · Heute selbstständig: " + autoTradesHeute() + " von " + a.maxTrades + " Trades" +
@@ -973,6 +983,7 @@ var Depot = (function () {
     $("#auto-intervall").onchange = function () { autoEinstellungen().intervall = Number(this.value) || 30; speichern(); zeigen(); };
     $("#auto-stop").onchange = function () { autoEinstellungen().stop = Math.min(50, Math.max(0.5, parseFloat(this.value) || 3)); speichern(); zeigen(); };
     $("#auto-ziel").onchange = function () { autoEinstellungen().ziel = Math.min(100, Math.max(0.5, parseFloat(this.value) || 5)); speichern(); zeigen(); };
+    $("#auto-zuversicht").onchange = function () { autoEinstellungen().zuversicht = Math.min(10, Math.max(3, parseInt(this.value, 10) || 5)); speichern(); zeigen(); };
     $("#auto-max").onchange = function () { autoEinstellungen().maxTrades = Math.min(20, Math.max(0, parseInt(this.value, 10) || 0)); speichern(); zeigen(); };
     $("#auto-jetzt").onclick = async function () {
       this.disabled = true; meldung("Runde läuft …");
