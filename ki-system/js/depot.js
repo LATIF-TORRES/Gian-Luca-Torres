@@ -161,7 +161,7 @@ var BOERSEN = {
   NS: ["Indien (NSE)", "nein"], KS: ["Seoul", "nein"], KQ: ["Seoul (Kosdaq)", "nein"], TW: ["Taipeh", "nein"],
   TWO: ["Taipeh (OTC)", "nein"], KL: ["Kuala Lumpur", "nein"], SA: ["São Paulo", "nein"], BK: ["Bangkok", "nein"],
   QA: ["Katar", "nein"], KW: ["Kuwait", "nein"], JK: ["Jakarta", "nein"], SN: ["Santiago", "nein"], PS: ["Manila", "nein"],
-  KA: ["Karachi", "nein"], CA: ["Kairo", "nein"], LG: ["Lagos", "nein"], ME: ["Moskau", "gesperrt"]
+  KA: ["Karachi", "nein"], DH: ["Dhaka", "nein"], CA: ["Kairo", "nein"], LG: ["Lagos", "nein"], ME: ["Moskau", "gesperrt"]
 };
 var REGIONEN = {
   "Amerika": ["US", "CA", "MX", "BR", "CL", "PE", "CO", "AR", "UY"],
@@ -169,7 +169,7 @@ var REGIONEN = {
   "Russland": ["RU"],
   "Naher Osten": ["SA", "AE", "QA", "KW", "IL", "TR"],
   "Afrika": ["EG", "NG", "ZA"],
-  "Asien": ["IN", "PK", "CN", "HK", "MO", "TW", "KR", "JP", "MY", "ID", "TH", "PH", "SG"],
+  "Asien": ["IN", "PK", "BD", "CN", "HK", "MO", "TW", "KR", "JP", "MY", "ID", "TH", "PH", "SG"],
   "Ozeanien": ["AU", "NZ"]
 };
 var _welt = null;
@@ -190,7 +190,7 @@ function kursMoeglich(symbol) { return !boerseEndung(symbol); }
 var BOERSE_LAND = { T: "JP", TO: "CA", ST: "SE", L: "GB", DE: "DE", PA: "FR", SW: "CH", AX: "AU", HK: "HK", HE: "FI", MI: "IT",
   OL: "NO", AS: "NL", CO: "DK", MC: "ES", BR: "BE", SI: "SG", IR: "IE", NZ: "NZ", VI: "AT", LS: "PT", WA: "PL", PR: "CZ", BD: "HU",
   MX: "MX", SS: "CN", SZ: "CN", JO: "ZA", SR: "SA", AE: "AE", IS: "TR", AT: "GR", NS: "IN", KS: "KR", KQ: "KR", TW: "TW", TWO: "TW",
-  KL: "MY", SA: "BR", BK: "TH", QA: "QA", KW: "KW", JK: "ID", SN: "CL", PS: "PH", KA: "PK", CA: "EG", LG: "NG", ME: "RU" };
+  KL: "MY", SA: "BR", BK: "TH", QA: "QA", KW: "KW", JK: "ID", SN: "CL", PS: "PH", KA: "PK", DH: "BD", CA: "EG", LG: "NG", ME: "RU" };
 function landVon(symbol, h) {
   var w = welt()[symbolSauber(symbol)];
   return (w && w[2]) || (h && h.land) || BOERSE_LAND[boerseEndung(symbol)] || "US";
@@ -496,7 +496,7 @@ var DEPOT_WERKZEUGE = [
   },
   {
     name: "halal_liste_suchen",
-    description: "Sucht in der weltweiten Halal-Liste der Person (fast 2900 geprüfte Aktien aus 50 Ländern): nach Region, Land oder Suchwort. Zeigt Kürzel, Name, Land, Börse, ob es im Übungs-Depot Kurse gibt und ob IBKR die Börse anbietet.",
+    description: "Sucht in der weltweiten Halal-Liste der Person (über 3600 geprüfte Aktien aus 51 Ländern): nach Region, Land oder Suchwort. Zeigt Kürzel, Name, Land, Börse, ob es im Übungs-Depot Kurse gibt und ob IBKR die Börse anbietet.",
     input_schema: { type: "object", properties: {
       region: { type: "string", enum: ["", "Amerika", "Europa", "Asien", "Naher Osten", "Afrika", "Ozeanien", "Russland"], description: "Region oder leer" },
       land: { type: "string", description: "Land als Code (CN, JP, IN, MY, EG ...) oder deutscher Name, oder leer" },

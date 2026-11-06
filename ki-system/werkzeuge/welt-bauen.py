@@ -86,7 +86,7 @@ LAND_NAME = {
     "AT": "Österreich", "IE": "Irland", "LU": "Luxemburg", "SE": "Schweden", "FI": "Finnland", "NO": "Norwegen",
     "DK": "Dänemark", "PL": "Polen", "CZ": "Tschechien", "HU": "Ungarn", "GR": "Griechenland", "TR": "Türkei",
     "RU": "Russland", "SA": "Saudi-Arabien", "AE": "Vereinigte Arabische Emirate", "QA": "Katar", "KW": "Kuwait",
-    "IL": "Israel", "EG": "Ägypten", "NG": "Nigeria", "ZA": "Südafrika", "IN": "Indien", "PK": "Pakistan",
+    "IL": "Israel", "EG": "Ägypten", "NG": "Nigeria", "ZA": "Südafrika", "IN": "Indien", "PK": "Pakistan", "BD": "Bangladesch",
     "CN": "China", "HK": "Hongkong", "MO": "Macau", "TW": "Taiwan", "KR": "Südkorea", "JP": "Japan",
     "MY": "Malaysia", "ID": "Indonesien", "TH": "Thailand", "PH": "Philippinen", "SG": "Singapur",
     "AU": "Australien", "NZ": "Neuseeland",
@@ -96,7 +96,7 @@ ENDUNG_LAND = {"T": "JP", "TO": "CA", "ST": "SE", "L": "GB", "DE": "DE", "PA": "
     "NZ": "NZ", "VI": "AT", "LS": "PT", "NS": "IN", "SS": "CN", "SZ": "CN", "KS": "KR", "KQ": "KR", "TW": "TW",
     "TWO": "TW", "SR": "SA", "KL": "MY", "SA": "BR", "JO": "ZA", "ME": "RU", "MX": "MX", "BK": "TH", "QA": "QA",
     "AE": "AE", "WA": "PL", "KW": "KW", "AT": "GR", "IS": "TR", "JK": "ID", "BD": "HU", "SN": "CL", "PR": "CZ",
-    "PS": "PH", "KA": "PK", "CA": "EG", "LG": "NG"}
+    "PS": "PH", "KA": "PK", "CA": "EG", "LG": "NG", "DH": "BD"}
 
 FONDS = {
     "SPUS": "SP Funds S&P 500 Sharia (USA), Stand 5.11.2026",
@@ -112,6 +112,9 @@ FONDS = {
     "EGX": "EGX 33 Shariah Index (Ägypten), Stand 5.11.2026",
     "NGX": "NGX Lotus Islamic Index (Nigeria), Stand 5.11.2026",
     "J140": "FTSE/JSE Shari'ah Top 40 (Südafrika, grösste Positionen), Stand 30.9.2026",
+    "SAUDI": "Saudi-Arabien: Scharia-Urteile von Al Rajhi Capital, Dr. Mohammed Al-Osaimi und Albilad Capital (mindestens 2 von 3 konform), via Argaam, Stand Oktober 2026",
+    "XK100": "BIST Katılım 100 (Türkei, Beteiligungsindex nach Scharia-Kriterien), Stand 5.11.2026",
+    "IBSL": "Islami Bank Securities Bangladesch, Scharia-Aktienliste (ohne Fonds und Anleihen)",
 }
 
 STOP = set("INC CORP CORPORATION CO COMPANY LTD LIMITED PLC SA AG NV SE AB ASA OYJ HOLDINGS HOLDING HLDGS GROUP THE CLASS "
@@ -254,6 +257,26 @@ def pakistan():
         aufnehmen(m.group(1) + ".KA", name, "PK", "KMI")
 
 
+def saudi():
+    for datei in ("sa2.md", "sa.md"):
+        for l in open(f"{ORDNER}/{datei}"):
+            m = re.match(r"^\| (\d{4}) \| \[([^\]]+)\]\(https://www.argaam.com/en/tadawul/(tasi|nomu)/[^)]*\) \|(.*)$", l)
+            if m and sum(1 for c in m.group(4).split("|")[:3] if "✔" in c) >= 2:
+                aufnehmen(m.group(1) + ".SR", m.group(2), "SA", "SAUDI")
+
+
+def tuerkei():
+    for code in re.findall(r"canli-borsa/([a-z0-9]+)-hisse/", open(f"{ORDNER}/tr.md").read()):
+        aufnehmen(code.upper() + ".IS", code.upper(), "TR", "XK100")
+
+
+def bangladesch():
+    for l in open(f"{ORDNER}/bd.txt"):
+        m = re.match(r"^\d+ ([A-Z0-9]+) ?\(\s*(.+?)\s*\)\s*(.*)$", l.strip())
+        if m and not re.search(r"Fund|Bond", m.group(3)):
+            aufnehmen(m.group(1) + ".DH", m.group(2).title() if m.group(2).islower() else m.group(2), "BD", "IBSL")
+
+
 AEGYPTEN = [("ACGC", "Arab Cotton Ginning"), ("ETEL", "Telecom Egypt"), ("OCDI", "SODIC"), ("PHDC", "Palm Hills Developments"),
     ("SKPC", "Sidi Kerir Petrochemicals"), ("TMGH", "Talaat Moustafa Group"), ("ETRS", "Egyptian Transport & Commercial Services"),
     ("IFAP", "International Agricultural Products (Mahaseel)"), ("LCSW", "Lecico Egypt"), ("MASR", "Madinet Masr"),
@@ -289,6 +312,9 @@ for t, n in NIGERIA:
 malaysia()
 indonesien()
 pakistan()
+saudi()
+tuerkei()
+bangladesch()
 
 # Gleiche Firma an zwei Börsen (z. B. TSM und 2330.TW): einmal behalten, US-Börse bevorzugt (hat Kurse).
 def us(sym):
@@ -326,9 +352,9 @@ for e in sorted(liste, key=lambda e: (-e["g"], e["s"])):
 js = ("/* Weltweite Halal-Aktienliste für A&T (automatisch erzeugt, nicht von Hand ändern).\n"
       " * Quellen: schariakonforme Fonds und offizielle Scharia-Listen, siehe HALAL_WELT.quellen.\n"
       " * Feld: [Kürzel, Name, Land, Quellen-Bits, Gewicht im Fonds in %, gesperrt (Sanktionen)] */\n"
-      "var HALAL_WELT = {\n  version: 3,\n  stand: \"6. November 2026\",\n"
+      "var HALAL_WELT = {\n  version: 4,\n  stand: \"6. November 2026\",\n"
       "  quellen: " + json.dumps(list(FONDS.values()), ensure_ascii=False) + ",\n"
-      "  kurz: " + json.dumps(["SPUS", "SPWO", "SPTE", "SPRE", "ISUS", "ISWD", "ISEM", "Scharia-Liste Malaysia", "Scharia-Liste Indonesien", "KMI Pakistan", "EGX 33 Shariah", "NGX Lotus Islamic", "JSE Shari'ah Top 40"], ensure_ascii=False) + ",\n"
+      "  kurz: " + json.dumps(["SPUS", "SPWO", "SPTE", "SPRE", "ISUS", "ISWD", "ISEM", "Scharia-Liste Malaysia", "Scharia-Liste Indonesien", "KMI Pakistan", "EGX 33 Shariah", "NGX Lotus Islamic", "JSE Shari'ah Top 40", "Scharia-Urteile Saudi-Arabien", "BIST Katılım 100", "Scharia-Liste Bangladesch"], ensure_ascii=False) + ",\n"
       "  laender: " + json.dumps(LAND_NAME, ensure_ascii=False) + ",\n"
       "  daten: [\n" + ",\n".join("    " + json.dumps(d, ensure_ascii=False) for d in daten) + "\n  ]\n};\n")
 open(ZIEL, "w").write(js)
