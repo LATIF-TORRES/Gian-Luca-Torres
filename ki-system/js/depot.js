@@ -503,7 +503,7 @@ var DEPOT_WERKZEUGE = [
     name: "halal_liste_suchen",
     description: "Sucht in der weltweiten Halal-Liste der Person (über 3600 geprüfte Aktien aus 51 Ländern): nach Region, Land oder Suchwort. Zeigt Kürzel, Name, Land, Börse, ob es im Übungs-Depot Kurse gibt und ob IBKR die Börse anbietet.",
     input_schema: { type: "object", properties: {
-      region: { type: "string", enum: ["", "Amerika", "Europa", "Asien", "Naher Osten", "Afrika", "Ozeanien", "Russland"], description: "Region oder leer" },
+      region: { type: "string", enum: ["alle", "Amerika", "Europa", "Asien", "Naher Osten", "Afrika", "Ozeanien", "Russland"], description: "Region, oder alle" },
       land: { type: "string", description: "Land als Code (CN, JP, IN, MY, EG ...) oder deutscher Name, oder leer" },
       suche: { type: "string", description: "Kürzel oder Teil des Firmennamens, oder leer" },
       nur_mit_kurs: { type: "boolean", description: "true = nur Aktien, die jetzt im Übungs-Depot handelbar sind (US-Börse)" }
@@ -566,7 +566,7 @@ async function depotWerkzeug(name, input) {
       return { text: text };
     }
     if (name === "halal_liste_suchen") {
-      var treffer = halalSuchen({ region: input.region, land: input.land, suche: input.suche, nurMitKurs: input.nur_mit_kurs });
+      var treffer = halalSuchen({ region: input.region === "alle" ? "" : input.region, land: /^(alle)?$/i.test(input.land || "") ? "" : input.land, suche: input.suche, nurMitKurs: input.nur_mit_kurs });
       if (!treffer.length) return { text: "Keine Treffer in der Halal-Liste (" + depot().halalListe.length + " Aktien)." };
       var ww = welt();
       treffer.sort(function (a, b) { return ((ww[b.symbol] || [])[4] || 0) - ((ww[a.symbol] || [])[4] || 0); });
