@@ -763,7 +763,8 @@ function autoFrage() {
     "Handle NUR, wenn du die Gewinnchance als hoch einschätzt: Zuversicht mindestens 8 von 10 und ein konkreter Grund aus den Kursdaten. " +
     "Nichtstun ist die Regel und völlig in Ordnung. Höchstens eine Order, höchstens 20 % des Bargelds. " +
     "Das Programm schützt jede Position selbst: individueller Stop nach Schwankung (höchstens " + a.stop + " % Verlust), nachziehender Stop, ab " + a.ziel + " % Gewinn wird die Hälfte gesichert. " +
-    "Schreib zum Schluss genau eine Zeile: „Entscheidung: … | Zuversicht: x/10 | Grund: …“.";
+    "Willst du handeln, rufst du ZUERST order_aufgeben auf (konkretes Kürzel, Anzahl). Nur Hinschreiben führt keine Order aus. " +
+    "Schreib zum Schluss genau eine Zeile: „Entscheidung: Kauf KÜRZEL für x $ | Zuversicht: x/10 | Grund: …“ oder „Entscheidung: Keine Order | Zuversicht: x/10 | Grund: …“.";
 }
 
 async function autoRunde(test) {
@@ -784,27 +785,48 @@ async function autoRunde(test) {
     var e = Z.einstellungen;
     var chat = { id: "auto", anbieter: e.anbieter, modus: "trader", system: grundauftrag(e.kiName || STANDARD_NAME), nachrichten: [], kosten: 0 };
     var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + MODI.trader.auftrag + "\n" + kontextFuerKi() + "\n</kontext>";
-    var frage = autoFrage();
-    if (chat.anbieter === "gemini") chat.nachrichten.push({ role: "user", parts: [{ text: kontext }, { text: frage }] });
-    else if (chat.anbieter === "lokal") chat.nachrichten.push({ role: "user", content: kontext + "\n\n" + frage });
-    else chat.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: frage }] });
-    var text = "", aktionen = [], fehler = "";
-    await new Promise(function (fertig) {
-      antwortHolen(chat, {
-        text: function (t) { text += t; }, status: function () {}, quelle: function () {},
-        werkzeug: function (name, ergebnis) { if (name === "order_aufgeben") aktionen.push(ergebnis); },
-        fertig: fertig, fehler: function (f) { fehler = f; fertig(); }
-      });
-    });
-    if (fehler) { autoNotiz("Fehler: " + fehler); return; }
-    var zeile = (text.match(/Entscheidung:[^\n]*/) || [""])[0] || text.replace(/\s+/g, " ").slice(-200);
-    autoNotiz((aktionen.length ? aktionen.join(" ") + " " : "Keine Order. ") + zeile.trim());
+    var r = await autoFragen(chat, autoFrage(), kontext);
+    if (r.fehler) { autoNotiz("Fehler: " + r.fehler); return; }
+    var zeile = entscheidungZeile(r.text);
+    // Die KI schreibt „Kaufen/Verkaufen“, hat die Order aber nicht aufgegeben: einmal nachhaken.
+    if (!r.aktionen.length && willHandeln(zeile)) {
+      var r2 = await autoFragen(chat, "Du hast „" + zeile + "“ geschrieben, aber order_aufgeben NICHT aufgerufen. Eine Entscheidung zählt nur, wenn die Order aufgegeben ist. " +
+        "Ruf jetzt order_aufgeben auf (konkretes Kürzel von der Halal-Liste, anzahl = Betrag ÷ Kurs, Bruchteile erlaubt, höchstens 20 % des Bargelds). " +
+        "Willst du doch nicht handeln, schreib „Entscheidung: Keine Order | Zuversicht: x/10 | Grund: …“.");
+      if (!r2.fehler) { r.aktionen = r.aktionen.concat(r2.aktionen); zeile = entscheidungZeile(r2.text) || zeile; }
+      if (!r.aktionen.length && willHandeln(zeile)) zeile += " (Die KI wollte handeln, hat aber trotz Nachfrage keine Order aufgegeben.)";
+    }
+    autoNotiz((r.aktionen.length ? r.aktionen.join(" ") + " " : "Keine Order. ") + zeile.trim());
   } catch (f) {
     autoNotiz("Fehler: " + (f && f.message ? f.message : f));
   } finally {
     AUTO.laeuft = false;
     if (typeof Depot !== "undefined" && document.querySelector("#tab-depot.aktiv")) Depot.zeigen();
   }
+}
+
+// Eine Nachricht an die KI in der Handelsrunde; gibt Text, ausgeführte Orders und Fehler zurück.
+async function autoFragen(chat, frage, kontext) {
+  if (chat.anbieter === "gemini") chat.nachrichten.push({ role: "user", parts: (kontext ? [{ text: kontext }] : []).concat([{ text: frage }]) });
+  else if (chat.anbieter === "lokal") chat.nachrichten.push({ role: "user", content: (kontext ? kontext + "\n\n" : "") + frage });
+  else chat.nachrichten.push({ role: "user", content: (kontext ? [{ type: "text", text: kontext }] : []).concat([{ type: "text", text: frage }]) });
+  var r = { text: "", aktionen: [], fehler: "" };
+  await new Promise(function (fertig) {
+    antwortHolen(chat, {
+      text: function (t) { r.text += t; }, status: function () {}, quelle: function () {},
+      werkzeug: function (name, ergebnis) { if (name === "order_aufgeben") r.aktionen.push(ergebnis); },
+      fertig: fertig, fehler: function (f) { r.fehler = f; fertig(); }
+    });
+  });
+  return r;
+}
+function entscheidungZeile(text) {
+  return ((text.match(/Entscheidung:[^\n]*/) || [""])[0] || text.replace(/\s+/g, " ").slice(-200)).trim();
+}
+// Steht in der Entscheidung ein Kauf oder Verkauf (und nicht „keine Order“)?
+function willHandeln(zeile) {
+  var e = (zeile.match(/Entscheidung:\s*([^|]*)/i) || ["", ""])[1].toLowerCase();
+  return /kauf|verkauf|buy|sell/.test(e) && !/kein|nicht|no order|abwarten|halten/.test(e);
 }
 
 // Läuft, solange A&T offen ist: jede Minute prüfen, ob eine Runde fällig ist.

@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "4.4"; // muss mit version.json übereinstimmen
+var APP_VERSION = "4.5"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { besitzer: true, titel: "Selbstständiger Handel: Order wird wirklich aufgegeben", text: "Schrieb die KI „Kaufen“, ohne die Order aufzugeben, passierte nichts. Jetzt hakt A&T in diesem Fall einmal nach, damit die Order wirklich ausgeführt wird, oder die KI schreibt ausdrücklich „Keine Order“. Im Protokoll steht, wenn sie trotzdem nicht gehandelt hat." },
   { besitzer: true, titel: "Finnhub-Schlüssel testen", text: "Im Depot unter Einstellungen gibt es „Schlüssel testen“. A&T sagt dir jetzt genau, was nicht stimmt: falscher Schlüssel, keine Verbindung oder Limit. Beim Einfügen werden Leerzeichen automatisch entfernt. Liefert Finnhub keine Kurse, überspringt der selbstständige Handel die Runde mit dem Grund im Protokoll, statt die KI zu fragen." },
   { besitzer: true, titel: "Gemini-Fehler behoben", text: "Mit Gemini kam im Besitzer-Modus die Meldung „enum[0]: cannot be empty“. Das ist behoben." },
   { titel: "Freischalten einfacher", text: "Der Besitzer-Code funktioniert jetzt auch mit Kleinbuchstaben oder Leerzeichen. Gibst du versehentlich einen anderen Schlüssel ein, sagt A&T dir, wo er hingehört." },
