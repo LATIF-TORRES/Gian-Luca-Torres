@@ -1,11 +1,14 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "3.8"; // muss mit version.json übereinstimmen
+var APP_VERSION = "4.0"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { besitzer: true, titel: "Weltweite Halal-Liste: 2885 Aktien aus 50 Ländern", text: "Die Halal-Liste kommt jetzt aus 13 geprüften Quellen: Halal-Fonds von SP Funds und iShares (USA, Welt, Schwellenländer) und die offiziellen Scharia-Listen von Malaysia, Indonesien, Pakistan, Ägypten, Nigeria und Südafrika. Dabei sind grosse und ganz kleine Firmen aus Asien (China, Japan, Indien, Taiwan, Korea, Malaysia, Indonesien …), Afrika, dem Nahen Osten, Europa und Amerika. Im Depot siehst du sie nach Region und Land und kannst suchen. Handelbar im Übungs-Depot sind vorerst die Aktien an der US-Börse (auch TSMC, Alibaba, Infosys, Gold Fields usw.), die anderen folgen mit der IBKR-Verbindung. Russische Aktien sind wegen Sanktionen gesperrt." },
+  { besitzer: true, titel: "Eigener Fonds: A&T Welt-Halal-Fonds", text: "Im Depot verteilst du einen Betrag mit einem Klick auf 10 bis 30 Halal-Aktien aus Asien, Amerika, Europa, Afrika und Ozeanien." },
+  { besitzer: true, titel: "Bruchteile und Scanner", text: "Du kannst Bruchteile kaufen (z. B. 0.05 Aktien), damit reichen auch 100 $ für teure Aktien. Der Scanner sucht laufend die Aktien mit der meisten Bewegung; die KI handelt selbstständig nur bei hohen Chancen." },
   { besitzer: true, titel: "Halal-Liste mit einem Klick", text: "Im Depot unter Halal-Liste: „Startliste übernehmen“ nimmt die 24 grössten Aktien des schariakonformen Fonds HLAL auf (Stand 3. November 2026). A&T prüft zusätzlich die Branche. Mehrere Kürzel kannst du auch mit Komma auf einmal eingeben. Ist deine Liste leer, übernimmt A&T die Startliste beim Start von selbst." },
   { besitzer: true, titel: "Nachziehender Stop, für jede Aktie angepasst", text: "Jede Position bekommt einen Stop nach ihrer üblichen Tagesschwankung (höchstens dein Höchstverlust, Standard 3 %). Der Stop zieht mit dem Höchstkurs nach, rückt bei genug Gewinn auf den Kaufkurs, und beim Gewinnziel (mindestens 8 %) wird die Hälfte gesichert. Der Rest läuft weiter." },
   { besitzer: true, titel: "Selbstständiger Handel", text: "Im Depot kannst du einschalten, dass A&T alle 15, 30 oder 60 Minuten selbst eine Handelsrunde macht, solange A&T offen ist und die US-Börse offen hat. Gehandelt wird nur bei hoher Zuversicht. Stop-Loss und Gewinnziel setzt das Programm selbst um. Alles steht im Protokoll." },

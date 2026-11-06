@@ -289,6 +289,7 @@
     if (name === "kurs_abfragen") return "📈 Kurs " + (input.symbol || "");
     if (name === "halal_pruefen") return "🔎 Halal-Prüfung " + (input.symbol || "");
     if (name === "depot_anzeigen") return "📊 Depot angesehen";
+    if (name === "kandidaten_scannen") return "🔭 Kandidaten gescannt";
     if (name === "order_aufgeben") return "🧾 Order: " + (input.seite || "") + " " + (input.anzahl || "") + " " + (input.symbol || "");
     if (name === "ueberweisung_vorbereiten") return "💸 Überweisung vorbereitet: " + (Number(input.betrag) || 0).toFixed(2) + " " + (input.waehrung || "") + " an " + (input.empfaenger || "");
     if (name === "buchung_eintragen") return (input.art === "sadaqa" ? "🤲 " : "💰 ") + (BUCHUNGSARTEN[input.art] || "Buchung") + " " + geld(input.betrag) + " · " + (input.quelle || "") + (input.halal === "nicht_halal" ? " · nicht halal" : "");
@@ -825,7 +826,7 @@
       $("#besitzer-code").value = "";
       besitzerAnzeigen();
       toast("Besitzer-Modus an: Depot und Überweisungen sind freigeschaltet.");
-      startlisteAutomatisch(function (r) { toast("Halal-Liste gefüllt: " + r.neu.length + " Aktien aus dem Halal-ETF übernommen."); });
+      startlisteAutomatisch(function (r) { toast("Halal-Liste ergänzt: " + r.neu.length.toLocaleString("de-CH") + " Aktien aus der weltweiten Halal-Liste übernommen."); });
     } else {
       toast("Code falsch.");
     }
@@ -845,7 +846,7 @@
   alles();
   $("#b-art").onchange.call($("#b-art"));
   Neuigkeiten.beimStart();
-  startlisteAutomatisch(function (r) { toast("Halal-Liste gefüllt: " + r.neu.length + " Aktien aus dem Halal-ETF übernommen."); });
+  startlisteAutomatisch(function (r) { toast("Halal-Liste ergänzt: " + r.neu.length.toLocaleString("de-CH") + " Aktien aus der weltweiten Halal-Liste übernommen."); });
   if (!Z.einstellungen.eingerichtet) Einrichtung.start(function () { alles(); zeigeTab("heute"); });
   $("#neu-zeigen").onclick = Neuigkeiten.zeigen;
   $("#update-link").href = DOWNLOAD_URL;

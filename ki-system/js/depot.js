@@ -57,16 +57,23 @@ function usd(n) {
   var x = Number(n) || 0;
   return (x < -0.004 ? "−" : "") + "$" + Math.abs(x).toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+function anzahlText(n) { return (Math.round(n * 10000) / 10000).toLocaleString("de-CH", { maximumFractionDigits: 4 }); }
 function symbolSauber(s) { return String(s || "").trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, ""); }
 
-// Auf Wunsch des Besitzers: Ist die Halal-Liste leer, wird die Startliste einmal automatisch übernommen.
+// Auf Wunsch des Besitzers: Die geprüfte Startliste wird automatisch übernommen und bei neuen Versionen ergänzt.
+// Aktien, die die Person selbst entfernt hat, kommen nicht zurück.
 function startlisteAutomatisch(fertig) {
   var d = depot();
-  if (!istBesitzer() || d.startlisteGeladen || d.halalListe.length) return;
+  if (istBesitzer()) halalListeErgaenzen();
+  if (!istBesitzer() || (d.startlisteVersion || 0) >= HALAL_STARTLISTE.version) return;
+  if (d.startlisteGeladen && !d.startlisteVersion && !d.halalListe.length) { d.startlisteVersion = HALAL_STARTLISTE.version; speichern(); return; } // Liste bewusst geleert
+  d.startlisteVersion = HALAL_STARTLISTE.version;
   d.startlisteGeladen = true;
+  var entfernt = d.halalEntfernt || [];
+  var fehlend = HALAL_STARTLISTE.symbole.filter(function (s) { return !aufHalalListe(s) && entfernt.indexOf(s) === -1; });
   speichern();
-  halalMehrereAufnehmen(HALAL_STARTLISTE.symbole, HALAL_STARTLISTE.quelle).then(function (r) {
-    if (fertig) fertig(r);
+  halalMehrereAufnehmen(fehlend, HALAL_STARTLISTE.quelle, null, true).then(function (r) {
+    if (fertig && r.neu.length) fertig(r);
   });
 }
 
@@ -82,8 +89,15 @@ async function finnhub(pfad) {
   if (!r.ok) throw new Error("Finnhub antwortet nicht (" + r.status + ").");
   return r.json();
 }
+function keinKursText(symbol) {
+  var e = boerseEndung(symbol), b = BOERSEN[e] || ["?", "?"];
+  return "„" + symbol + "“ ist an der Börse " + b[0] + " (" + landName(landVon(symbol)) + "). Dafür gibt es im Übungs-Depot noch keine Kurse: Der Gratis-Finnhub-Schlüssel liefert nur US-Börsen. " +
+    (b[1] === "ja" ? "Mit der IBKR-Verbindung wird sie handelbar." : b[1] === "prüfen" ? "Ob IBKR sie anbietet, muss noch geprüft werden." : b[1] === "gesperrt" ? "Russische Aktien sind wegen Sanktionen gesperrt." : "IBKR bietet diese Börse voraussichtlich nicht an.") +
+    " Tipp: Viele ausländische Firmen gibt es auch an der US-Börse (z. B. TSM für Taiwan Semiconductor, BABA für Alibaba).";
+}
 async function kursHolen(symbol, frisch) {
   symbol = symbolSauber(symbol);
+  if (!kursMoeglich(symbol)) throw new Error(keinKursText(symbol));
   var c = _kursCache[symbol];
   if (!frisch && c && Date.now() - c.zeit < 15000) return c;
   var q = await finnhub("quote?symbol=" + encodeURIComponent(symbol));
@@ -132,34 +146,185 @@ function schutzWerte(symbol) {
   return { schwankung: v, abstand: abstand, nachziehen: nachziehen, ziel: ziel };
 }
 
-/* ---------- Halal-Liste ---------- */
+/* ---------- Halal-Liste: weltweit ---------- */
 
-// Startliste: die grössten Positionen eines schariakonformen ETF (von einem Scharia-Rat geprüft).
-// Alphabet nur einmal (GOOGL). Die Liste ändert sich mit der Zeit; die Person bestätigt die Übernahme.
+// Die geprüfte Weltliste steht in halal-welt.js (schariakonforme Fonds und offizielle Scharia-Listen).
+// Börsen-Endungen wie bei Yahoo: 7203.T = Tokio, 0700.HK = Hongkong, 600519.SS = Shanghai usw.
+var BOERSEN = {
+  T: ["Tokio", "ja"], TO: ["Toronto", "ja"], ST: ["Stockholm", "ja"], L: ["London", "ja"], DE: ["Xetra", "ja"],
+  PA: ["Paris", "ja"], SW: ["SIX Schweiz", "ja"], AX: ["Sydney", "ja"], HK: ["Hongkong", "ja"], HE: ["Helsinki", "ja"],
+  MI: ["Mailand", "ja"], OL: ["Oslo", "ja"], AS: ["Amsterdam", "ja"], CO: ["Kopenhagen", "ja"], MC: ["Madrid", "ja"],
+  BR: ["Brüssel", "ja"], SI: ["Singapur", "ja"], IR: ["Dublin", "ja"], NZ: ["Neuseeland", "ja"], VI: ["Wien", "ja"],
+  LS: ["Lissabon", "ja"], WA: ["Warschau", "ja"], PR: ["Prag", "ja"], BD: ["Budapest", "ja"], MX: ["Mexiko", "ja"],
+  SS: ["Shanghai", "prüfen"], SZ: ["Shenzhen", "prüfen"], JO: ["Johannesburg", "prüfen"], SR: ["Riad (Tadawul)", "prüfen"],
+  AE: ["Dubai/Abu Dhabi", "prüfen"], IS: ["Istanbul", "prüfen"], AT: ["Athen", "prüfen"],
+  NS: ["Indien (NSE)", "nein"], KS: ["Seoul", "nein"], KQ: ["Seoul (Kosdaq)", "nein"], TW: ["Taipeh", "nein"],
+  TWO: ["Taipeh (OTC)", "nein"], KL: ["Kuala Lumpur", "nein"], SA: ["São Paulo", "nein"], BK: ["Bangkok", "nein"],
+  QA: ["Katar", "nein"], KW: ["Kuwait", "nein"], JK: ["Jakarta", "nein"], SN: ["Santiago", "nein"], PS: ["Manila", "nein"],
+  KA: ["Karachi", "nein"], CA: ["Kairo", "nein"], LG: ["Lagos", "nein"], ME: ["Moskau", "gesperrt"]
+};
+var REGIONEN = {
+  "Amerika": ["US", "CA", "MX", "BR", "CL", "PE", "CO", "AR", "UY"],
+  "Europa": ["GB", "CH", "DE", "FR", "NL", "BE", "IT", "ES", "PT", "AT", "IE", "LU", "SE", "FI", "NO", "DK", "PL", "CZ", "HU", "GR"],
+  "Russland": ["RU"],
+  "Naher Osten": ["SA", "AE", "QA", "KW", "IL", "TR"],
+  "Afrika": ["EG", "NG", "ZA"],
+  "Asien": ["IN", "PK", "CN", "HK", "MO", "TW", "KR", "JP", "MY", "ID", "TH", "PH", "SG"],
+  "Ozeanien": ["AU", "NZ"]
+};
+var _welt = null;
+function welt() {
+  if (_welt) return _welt;
+  _welt = {};
+  if (typeof HALAL_WELT === "undefined") return _welt;
+  HALAL_WELT.daten.forEach(function (d) { _welt[d[0]] = d; });
+  return _welt;
+}
+function boerseEndung(symbol) {
+  var t = symbolSauber(symbol).split(".");
+  return t.length > 1 && BOERSEN[t[t.length - 1]] ? t[t.length - 1] : "";
+}
+// Kurse gibt es (mit dem Gratis-Finnhub-Schlüssel) nur für Aktien an US-Börsen, auch für ausländische Firmen (ADR).
+function kursMoeglich(symbol) { return !boerseEndung(symbol); }
+// Land der Börse (für Kürzel, die nicht in der Weltliste stehen)
+var BOERSE_LAND = { T: "JP", TO: "CA", ST: "SE", L: "GB", DE: "DE", PA: "FR", SW: "CH", AX: "AU", HK: "HK", HE: "FI", MI: "IT",
+  OL: "NO", AS: "NL", CO: "DK", MC: "ES", BR: "BE", SI: "SG", IR: "IE", NZ: "NZ", VI: "AT", LS: "PT", WA: "PL", PR: "CZ", BD: "HU",
+  MX: "MX", SS: "CN", SZ: "CN", JO: "ZA", SR: "SA", AE: "AE", IS: "TR", AT: "GR", NS: "IN", KS: "KR", KQ: "KR", TW: "TW", TWO: "TW",
+  KL: "MY", SA: "BR", BK: "TH", QA: "QA", KW: "KW", JK: "ID", SN: "CL", PS: "PH", KA: "PK", CA: "EG", LG: "NG", ME: "RU" };
+function landVon(symbol, h) {
+  var w = welt()[symbolSauber(symbol)];
+  return (w && w[2]) || (h && h.land) || BOERSE_LAND[boerseEndung(symbol)] || "US";
+}
+function landName(code) { return (typeof HALAL_WELT !== "undefined" && HALAL_WELT.laender[code]) || code; }
+function regionVon(land) {
+  for (var r in REGIONEN) if (REGIONEN[r].indexOf(land) !== -1) return r;
+  return "Welt";
+}
+// Bei Interactive Brokers handelbar? ja / prüfen / nein / gesperrt (Einschätzung, vor Echthandel in IBKR prüfen)
+function ibkrStatus(symbol) {
+  var e = boerseEndung(symbol);
+  return e ? BOERSEN[e][1] : "ja";
+}
+function istGesperrt(symbol) {
+  var w = welt()[symbolSauber(symbol)];
+  return !!(w && w[5]) || boerseEndung(symbol) === "ME";
+}
+function quellenText(bits) {
+  if (typeof HALAL_WELT === "undefined") return "";
+  return (HALAL_WELT.kurz || HALAL_WELT.quellen).filter(function (q, i) { return bits & (1 << i); }).join(" · ");
+}
+
+// Startliste = ganze Weltliste. Neue Versionen werden automatisch ergänzt; selbst entfernte Aktien kommen nicht zurück.
 var HALAL_STARTLISTE = {
-  quelle: "Wahed FTSE USA Shariah ETF (HLAL), grösste Positionen, Stand 3. November 2026",
-  symbole: ["AAPL", "NVDA", "MSFT", "GOOGL", "AVGO", "META", "TSLA", "LLY", "MU", "AMD", "XOM", "JNJ",
-    "CVX", "CSCO", "PG", "KO", "AMAT", "LRCX", "TXN", "PANW", "INTC", "GEV", "LIN", "ADI"]
+  version: typeof HALAL_WELT !== "undefined" ? HALAL_WELT.version : 2,
+  quelle: "Weltliste " + (typeof HALAL_WELT !== "undefined" ? HALAL_WELT.stand : ""),
+  symbole: typeof HALAL_WELT !== "undefined" ? HALAL_WELT.daten.map(function (d) { return d[0]; }) : []
 };
 
+// Ergänzt Name und Land bei Einträgen, die schon auf der Liste stehen (z. B. aus älteren Versionen).
+function halalListeErgaenzen() {
+  var w = welt(), geaendert = false;
+  depot().halalListe.forEach(function (h) {
+    var x = w[h.symbol];
+    if (!x) return;
+    if (!h.name) { h.name = x[1]; geaendert = true; }
+    if (!h.land) { h.land = x[2]; geaendert = true; }
+    if (h.q === undefined) { h.q = x[3]; geaendert = true; }
+  });
+  if (geaendert) speichern();
+}
+
+// Überblick: Anzahl Aktien pro Region und Land
+function halalUeberblick(liste) {
+  var regionen = {}, laender = {};
+  (liste || depot().halalListe).forEach(function (h) {
+    var l = landVon(h.symbol, h), r = regionVon(l);
+    regionen[r] = (regionen[r] || 0) + 1;
+    laender[l] = (laender[l] || 0) + 1;
+  });
+  return { regionen: regionen, laender: laender };
+}
+
+// Suche in der Halal-Liste: Region, Land (Code oder Name), Suchwort (Kürzel oder Name)
+function halalSuchen(filter) {
+  filter = filter || {};
+  var wort = String(filter.suche || "").trim().toLowerCase(), land = String(filter.land || "").trim().toLowerCase(), region = filter.region || "";
+  var nurKurs = !!filter.nurMitKurs;
+  return depot().halalListe.filter(function (h) {
+    var l = landVon(h.symbol, h);
+    if (region && regionVon(l) !== region) return false;
+    if (land && l.toLowerCase() !== land && landName(l).toLowerCase().indexOf(land) !== 0) return false;
+    if (nurKurs && !kursMoeglich(h.symbol)) return false;
+    if (wort && h.symbol.toLowerCase().indexOf(wort) !== 0 && String(h.name || "").toLowerCase().indexOf(wort) === -1) return false;
+    return true;
+  });
+}
+
+/* ---------- Eigener Fonds: A&T Welt-Halal-Fonds ---------- */
+// Verteilt einen Betrag auf Aktien aus allen Regionen. Nur Aktien mit Kurs (US-Börse, auch ausländische Firmen als ADR),
+// damit der Fonds im Übungs-Depot gekauft werden kann. Grösste Fondsgewichte zuerst.
+// Naher Osten: Saudi-Arabien, Emirate, Katar und Kuwait haben keine Aktien an der US-Börse, sie kommen mit der IBKR-Verbindung dazu.
+var FONDS_ZIEL = { "Amerika": 30, "Asien": 35, "Europa": 20, "Afrika": 10, "Ozeanien": 5 };
+function fondsZusammenstellen(anzahl) {
+  anzahl = Math.max(5, Math.min(40, anzahl || 20));
+  var w = welt(), proRegion = {};
+  depot().halalListe.forEach(function (h) {
+    if (!kursMoeglich(h.symbol) || istGesperrt(h.symbol)) return;
+    var r = regionVon(landVon(h.symbol, h));
+    (proRegion[r] = proRegion[r] || []).push({ symbol: h.symbol, name: h.name || "", land: landVon(h.symbol, h), g: (w[h.symbol] || [])[4] || 0 });
+  });
+  Object.keys(proRegion).forEach(function (r) { proRegion[r].sort(function (a, b) { return b.g - a.g; }); });
+  // Ziel-Anteile nur für Regionen mit Aktien; Rest wird verteilt
+  var regionen = Object.keys(FONDS_ZIEL).filter(function (r) { return FONDS_ZIEL[r] > 0 && proRegion[r] && proRegion[r].length; });
+  var summe = regionen.reduce(function (s, r) { return s + FONDS_ZIEL[r]; }, 0) || 1;
+  var teile = [];
+  regionen.forEach(function (r) {
+    var anteil = FONDS_ZIEL[r] / summe * 100;
+    var n = Math.max(1, Math.min(proRegion[r].length, Math.round(anzahl * anteil / 100)));
+    proRegion[r].slice(0, n).forEach(function (a) { teile.push({ symbol: a.symbol, name: a.name, land: a.land, region: r, gewicht: anteil / n }); });
+  });
+  return teile;
+}
+async function fondsKaufen(betrag, anzahl, fortschritt) {
+  var teile = fondsZusammenstellen(anzahl), d = depot(), ok = [], fehler = [];
+  betrag = Math.round(Number(betrag) * 100) / 100;
+  if (!(betrag >= teile.length)) return { fehler: true, text: "Für " + teile.length + " Aktien braucht der Fonds mindestens " + usd(teile.length) + " (1 $ pro Aktie)." };
+  if (betrag > d.bargeld) return { fehler: true, text: "Nicht genug Bargeld: " + usd(betrag) + " nötig, " + usd(d.bargeld) + " vorhanden." };
+  for (var i = 0; i < teile.length; i++) {
+    var t = teile[i];
+    try {
+      var k = await kursHolen(t.symbol);
+      var stueck = Math.floor(betrag * t.gewicht / 100 / k.kurs * 10000) / 10000;
+      var r = await orderAufgeben(t.symbol, "kauf", stueck, "ich", "A&T Welt-Halal-Fonds (" + t.region + ", " + landName(t.land) + ")");
+      (r.fehler ? fehler : ok).push(t.symbol + (r.fehler ? ": " + r.text : ""));
+    } catch (e) { fehler.push(t.symbol + ": " + e.message); }
+    if (fortschritt) fortschritt(i + 1, teile.length);
+    await new Promise(function (res) { setTimeout(res, 250); });
+  }
+  return { text: "Fonds gekauft: " + ok.length + " von " + teile.length + " Aktien." + (fehler.length ? " Nicht gekauft: " + fehler.join("; ") : ""), ok: ok, fehler: fehler };
+}
+
 // Nimmt mehrere Aktien auf. Verbotene Branchen werden übersprungen (Prüfung über Finnhub, falls Schlüssel da).
-async function halalMehrereAufnehmen(symbole, quelle, fortschritt) {
+async function halalMehrereAufnehmen(symbole, quelle, fortschritt, ohneEinzelpruefung) {
   var d = depot(), neu = [], verboten = [], schon = [], ohneDaten = [];
   for (var i = 0; i < symbole.length; i++) {
     var s = symbolSauber(symbole[i]);
     if (!s) continue;
     if (aufHalalListe(s)) { schon.push(s); continue; }
     var eintrag = { symbol: s, name: "", branche: "", datum: heuteISO(), quelle: quelle || "" };
-    if (d.finnhubSchluessel) {
+    var w = welt()[s];
+    if (w) { eintrag.name = w[1]; eintrag.land = w[2]; eintrag.q = w[3]; }
+    if (d.finnhubSchluessel && !ohneEinzelpruefung && kursMoeglich(s)) {
       try {
         var f = await firmaHolen(s);
         if (f.verboten) { verboten.push(s + " (" + f.branche + ")"); continue; }
         eintrag.name = f.name; eintrag.branche = f.branche;
       } catch (e) { ohneDaten.push(s); }
-    } else {
+    } else if (!w) {
       ohneDaten.push(s);
     }
     d.halalListe.push(eintrag);
+    if (_halalIndex.liste === d.halalListe) { _halalIndex.map[s] = eintrag; _halalIndex.laenge++; _halalIndex.letzter = eintrag; if (!_halalIndex.erster) _halalIndex.erster = eintrag; }
     neu.push(s);
     if (fortschritt) fortschritt(i + 1, symbole.length);
   }
@@ -167,9 +332,17 @@ async function halalMehrereAufnehmen(symbole, quelle, fortschritt) {
   return { neu: neu, verboten: verboten, schon: schon, ohneDaten: ohneDaten };
 }
 
+// Schneller Zugriff auch bei Tausenden Einträgen (Index wird neu gebaut, wenn sich die Liste ändert)
+var _halalIndex = { liste: null, laenge: -1, erster: null, letzter: null, map: {} };
 function aufHalalListe(symbol) {
   symbol = symbolSauber(symbol);
-  return depot().halalListe.filter(function (h) { return h.symbol === symbol; })[0] || null;
+  var l = depot().halalListe, ix = _halalIndex;
+  if (ix.liste !== l || ix.laenge !== l.length || ix.erster !== l[0] || ix.letzter !== l[l.length - 1]) {
+    ix.map = {}; l.forEach(function (h) { ix.map[h.symbol] = h; });
+    ix.liste = l; ix.laenge = l.length; ix.erster = l[0]; ix.letzter = l[l.length - 1];
+  }
+  var h = ix.map[symbol];
+  return h || null;
 }
 
 /* ---------- Orders ---------- */
@@ -183,10 +356,12 @@ function heuteAutomatisch() {
 // Prüft alle festen Regeln. Gibt einen Fehlertext zurück oder null.
 function orderRegeln(symbol, seite, anzahl, kurs) {
   var d = depot();
+  if (istGesperrt(symbol)) return "„" + symbol + "“ ist wegen Sanktionen gesperrt (russische Aktien können nicht gehandelt werden).";
   // Kaufen nur von der Halal-Liste. Verkaufen (aussteigen) geht immer, auch wenn eine Aktie von der Liste entfernt wurde.
   if (seite === "kauf" && !aufHalalListe(symbol)) return "„" + symbol + "“ ist nicht auf deiner Halal-Liste. Nur geprüfte Aktien dürfen gekauft werden.";
   if (seite !== "kauf" && seite !== "verkauf") return "Seite muss kauf oder verkauf sein.";
-  if (!(anzahl >= 1) || Math.floor(anzahl) !== anzahl) return "Anzahl muss eine ganze Zahl ab 1 sein.";
+  if (!(anzahl > 0)) return "Anzahl muss grösser als 0 sein (Bruchteile wie 0.25 sind erlaubt).";
+  if (kurs * anzahl < 1) return "Eine Order muss mindestens 1 $ wert sein.";
   var wert = kurs * anzahl;
   if (seite === "kauf" && wert > d.bargeld + 0.005) return "Nicht genug Geld: " + usd(wert) + " nötig, " + usd(d.bargeld) + " vorhanden. Kauf auf Kredit (Hebel) ist nicht erlaubt.";
   var pos = d.positionen[symbol];
@@ -220,7 +395,9 @@ function orderBuchen(symbol, seite, anzahl, kurs, quelle, begruendung) {
 // quelle: "ki" (zählt zum Tageslimit) oder "ich" (vom Menschen ausgelöst oder freigegeben)
 async function orderAufgeben(symbol, seite, anzahl, quelle, begruendung) {
   symbol = symbolSauber(symbol);
-  anzahl = Number(anzahl);
+  anzahl = Math.floor(Number(anzahl) * 10000) / 10000; // Bruchteile bis 4 Nachkommastellen
+  if (istGesperrt(symbol)) return { fehler: true, text: "„" + symbol + "“ ist wegen Sanktionen gesperrt (russische Aktien können nicht gehandelt werden)." };
+  if (!kursMoeglich(symbol)) return { fehler: true, text: keinKursText(symbol) };
   var k = await kursHolen(symbol);
   var fehler = orderRegeln(symbol, seite, anzahl, k.kurs);
   if (fehler) return { fehler: true, text: fehler };
@@ -248,15 +425,24 @@ async function depotText() {
   }
   return "Übungs-Depot (Spielgeld, USD). Bargeld " + usd(d.bargeld) + ". Gesamtwert " + usd(gesamt) + " (Start " + usd(d.start) + ", Ergebnis " + usd(gesamt - d.start) + ").\n" +
     (zeilen.length ? zeilen.join("\n") : "Keine Positionen.") +
-    "\nHalal-Liste: " + (d.halalListe.map(function (h) { return h.symbol; }).join(", ") || "leer") +
+    "\nHalal-Liste: " + halalListeKurz() +
     ". Heute automatisch gehandelt: " + usd(heuteAutomatisch()) + " von " + usd(d.tageslimit) + " Tageslimit.";
 }
 
+function halalListeKurz() {
+  var l = depot().halalListe;
+  if (!l.length) return "leer";
+  if (l.length <= 30) return l.map(function (h) { return h.symbol; }).join(", ");
+  var u = halalUeberblick(l), mitKurs = l.filter(function (h) { return kursMoeglich(h.symbol); }).length;
+  return l.length + " Aktien aus " + Object.keys(u.laender).length + " Ländern (" +
+    Object.keys(u.regionen).sort(function (a, b) { return u.regionen[b] - u.regionen[a]; }).map(function (r) { return r + " " + u.regionen[r]; }).join(", ") +
+    "), davon " + mitKurs + " mit Kurs an der US-Börse und im Übungs-Depot handelbar. Suchen: halal_liste_suchen; Bewegung: kandidaten_scannen";
+}
 function depotKurzFuerKi() {
   var d = depot();
   return "Übungs-Depot (Spielgeld, USD): Bargeld " + usd(d.bargeld) + ", Positionen: " +
     (Object.keys(d.positionen).map(function (s) { return d.positionen[s].anzahl + " " + s; }).join(", ") || "keine") +
-    ". Halal-Liste: " + (d.halalListe.map(function (h) { return h.symbol; }).join(", ") || "leer") +
+    ". Halal-Liste: " + halalListeKurz() +
     ". Tageslimit automatisch: " + usd(d.tageslimit) + ", heute schon: " + usd(heuteAutomatisch()) + "." +
     (d.offen.length ? " Wartet auf Freigabe: " + d.offen.length + " Order(s)." : "") +
     (d.finnhubSchluessel ? "" : " Für echte Kurse fehlt noch der Finnhub-Schlüssel.");
@@ -309,6 +495,23 @@ var DEPOT_WERKZEUGE = [
     eager_input_streaming: true
   },
   {
+    name: "halal_liste_suchen",
+    description: "Sucht in der weltweiten Halal-Liste der Person (fast 2900 geprüfte Aktien aus 50 Ländern): nach Region, Land oder Suchwort. Zeigt Kürzel, Name, Land, Börse, ob es im Übungs-Depot Kurse gibt und ob IBKR die Börse anbietet.",
+    input_schema: { type: "object", properties: {
+      region: { type: "string", enum: ["", "Amerika", "Europa", "Asien", "Naher Osten", "Afrika", "Ozeanien", "Russland"], description: "Region oder leer" },
+      land: { type: "string", description: "Land als Code (CN, JP, IN, MY, EG ...) oder deutscher Name, oder leer" },
+      suche: { type: "string", description: "Kürzel oder Teil des Firmennamens, oder leer" },
+      nur_mit_kurs: { type: "boolean", description: "true = nur Aktien, die jetzt im Übungs-Depot handelbar sind (US-Börse)" }
+    }, required: ["region", "land", "suche", "nur_mit_kurs"], additionalProperties: false },
+    eager_input_streaming: true
+  },
+  {
+    name: "kandidaten_scannen",
+    description: "Liefert die Aktien der Halal-Liste mit der meisten Bewegung heute (Tagesänderung und Tagesspanne), mit Kurs. Nutze das, um Handelschancen zu finden, statt alle Aktien einzeln abzufragen.",
+    input_schema: { type: "object", properties: { anzahl: { type: "integer", description: "Wie viele Kandidaten (3 bis 20)" } }, required: ["anzahl"], additionalProperties: false },
+    eager_input_streaming: true
+  },
+  {
     name: "depot_anzeigen",
     description: "Zeigt das Übungs-Depot: Bargeld, Positionen mit aktuellen Kursen, Ergebnis, Halal-Liste, Tageslimit.",
     input_schema: { type: "object", properties: { mit_kursen: { type: "boolean", description: "true = aktuelle Kurse holen" } }, required: ["mit_kursen"], additionalProperties: false },
@@ -320,7 +523,7 @@ var DEPOT_WERKZEUGE = [
     input_schema: { type: "object", properties: {
       symbol: { type: "string", description: "Börsenkürzel" },
       seite: { type: "string", enum: ["kauf", "verkauf"] },
-      anzahl: { type: "integer", description: "Anzahl Aktien, ganze Zahl ab 1" },
+      anzahl: { type: "number", description: "Anzahl Aktien. Bruchteile erlaubt, z. B. 0.25. Für einen Betrag: Betrag ÷ Kurs (z. B. 20 $ ÷ 400 $ = 0.05)" },
       begruendung: { type: "string", description: "Kurze Begründung der Order" }
     }, required: ["symbol", "seite", "anzahl", "begruendung"], additionalProperties: false },
     eager_input_streaming: true
@@ -348,13 +551,32 @@ async function depotWerkzeug(name, input) {
     }
     if (name === "halal_pruefen") {
       var s = symbolSauber(input.symbol), eintrag = aufHalalListe(s), text = s + ": ";
-      text += eintrag ? "steht auf der Halal-Liste (bestätigt am " + eintrag.datum + "). " : "steht NICHT auf der Halal-Liste, darf also nicht gehandelt werden. ";
+      text += eintrag ? "steht auf der Halal-Liste (bestätigt am " + eintrag.datum + (eintrag.q ? ", Quelle: " + quellenText(eintrag.q) : "") + "). " : "steht NICHT auf der Halal-Liste, darf also nicht gehandelt werden. ";
+      if (!kursMoeglich(s)) return { text: text + "Land: " + landName(landVon(s)) + ". " + keinKursText(s) };
       try {
         var f = await firmaHolen(s);
         text += "Firma: " + f.name + ", Branche: " + (f.branche || "unbekannt") + ". " +
           (f.verboten ? "Diese Branche ist nicht halal." : f.pruefen ? "Branche genau prüfen (Produkte, Einnahmen)." : "Branche an sich unproblematisch; Schulden- und Zinsquote trotzdem prüfen (z. B. mit Zoya oder Musaffa).");
       } catch (e) { text += "Firmendaten nicht verfügbar: " + e.message; }
       return { text: text };
+    }
+    if (name === "halal_liste_suchen") {
+      var treffer = halalSuchen({ region: input.region, land: input.land, suche: input.suche, nurMitKurs: input.nur_mit_kurs });
+      if (!treffer.length) return { text: "Keine Treffer in der Halal-Liste (" + depot().halalListe.length + " Aktien)." };
+      var ww = welt();
+      treffer.sort(function (a, b) { return ((ww[b.symbol] || [])[4] || 0) - ((ww[a.symbol] || [])[4] || 0); });
+      return { text: treffer.length + " Treffer" + (treffer.length > 30 ? ", die 30 grössten" : "") + ":\n" + treffer.slice(0, 30).map(function (h) {
+        var l = landVon(h.symbol, h), e = boerseEndung(h.symbol);
+        return h.symbol + " · " + (h.name || "") + " · " + landName(l) + " · Börse " + (e ? BOERSEN[e][0] : "USA") +
+          (istGesperrt(h.symbol) ? " · gesperrt (Sanktionen)" : kursMoeglich(h.symbol) ? " · im Übungs-Depot handelbar" : " · noch keine Kurse, IBKR: " + ibkrStatus(h.symbol));
+      }).join("\n") };
+    }
+    if (name === "kandidaten_scannen") {
+      var n = Math.min(20, Math.max(3, parseInt(input.anzahl, 10) || 10));
+      if (scannerFrisch().length < 30) await scannerSchritt(35);
+      var liste = kandidaten(n);
+      if (!liste.length) return { text: "Noch keine Kursdaten. Ist der Finnhub-Schlüssel eingetragen und die Halal-Liste gefüllt?" };
+      return { text: "Aktien mit der meisten Bewegung (" + scannerFrisch().length + " von " + mitKursAnzahl() + " Aktien mit Kurs geprüft):\n" + kandidatenText(liste) };
     }
     if (name === "depot_anzeigen") return { text: input.mit_kursen === false ? depotKurzFuerKi() : await depotText() };
     if (name === "order_aufgeben") {
@@ -372,6 +594,54 @@ async function depotWerkzeug(name, input) {
     return { fehler: true, text: e.message };
   }
   return null;
+}
+
+/* ---------- Scanner: findet Aktien mit Bewegung auf der Halal-Liste ---------- */
+// Prüft die Liste nach und nach (Finnhub erlaubt etwa 60 Abfragen pro Minute) und merkt sich
+// Kurs, Tagesänderung und Tagesspanne. Die KI bekommt daraus nur die besten Kandidaten.
+var SCANNER = { daten: {}, pos: 0, laeuft: false, letzte: 0 };
+
+async function scannerSchritt(anzahl) {
+  var d = depot();
+  if (SCANNER.laeuft || !d.finnhubSchluessel || !d.halalListe.length) return;
+  if (!d.halalListe.some(function (h) { return kursMoeglich(h.symbol); })) return;
+  SCANNER.laeuft = true;
+  try {
+    var liste = d.halalListe.map(function (h) { return h.symbol; }).filter(function (s) { return kursMoeglich(s) && !istGesperrt(s); });
+    for (var i = 0; i < Math.min(anzahl, liste.length); i++) {
+      if (SCANNER.pos >= liste.length) SCANNER.pos = 0;
+      var s = liste[SCANNER.pos++];
+      try {
+        var k = await kursHolen(s, true);
+        SCANNER.daten[s] = { kurs: k.kurs, aenderung: Number(k.aenderung) || 0,
+          spanne: k.vortag > 0 ? (k.hoch - k.tief) / k.vortag * 100 : 0, zeit: Date.now() };
+      } catch (e) {
+        if (/Limit/.test(e.message)) break;
+      }
+      await new Promise(function (r) { setTimeout(r, 250); });
+    }
+    SCANNER.letzte = Date.now();
+  } finally {
+    SCANNER.laeuft = false;
+  }
+}
+function mitKursAnzahl() { return depot().halalListe.filter(function (h) { return kursMoeglich(h.symbol) && !istGesperrt(h.symbol); }).length; }
+function scannerFrisch() {
+  var jetzt = Date.now();
+  return Object.keys(SCANNER.daten).filter(function (s) { return aufHalalListe(s) && jetzt - SCANNER.daten[s].zeit < 45 * 60000; });
+}
+// Punkte: Tagesänderung (Richtung egal) und Tagesspanne zählen. Mehr Bewegung = mehr Chancen (und mehr Risiko).
+function kandidaten(n) {
+  return scannerFrisch().map(function (s) {
+    var x = SCANNER.daten[s];
+    return { symbol: s, kurs: x.kurs, aenderung: x.aenderung, spanne: x.spanne, punkte: Math.abs(x.aenderung) * 0.6 + x.spanne * 0.4 };
+  }).sort(function (a, b) { return b.punkte - a.punkte; }).slice(0, n || 10);
+}
+function kandidatenText(liste) {
+  return liste.map(function (k) {
+    var l = landVon(k.symbol);
+    return k.symbol + (l !== "US" ? " (" + landName(l) + ")" : "") + ": " + usd(k.kurs) + ", heute " + (k.aenderung >= 0 ? "+" : "") + k.aenderung.toFixed(2) + " %, Tagesspanne " + k.spanne.toFixed(1) + " %";
+  }).join("\n");
 }
 
 /* ---------- Selbstständiger Handel ---------- */
@@ -431,8 +701,8 @@ async function regelnPruefen() {
     // Gewinnziel erreicht: Hälfte sichern (bei 1 Aktie: Stop enger ziehen)
     if (!p.teilVerkauft && k >= p.einstand * (1 + s.werte.ziel / 100)) {
       p.teilVerkauft = true;
-      var haelfte = Math.floor(p.anzahl / 2);
-      if (haelfte >= 1) {
+      var haelfte = Math.floor(p.anzahl / 2 * 10000) / 10000;
+      if (haelfte * k >= 1) {
         r = await orderAufgeben(sym, "verkauf", haelfte, "regel", "Gewinnziel +" + s.werte.ziel.toFixed(1) + " %: Hälfte gesichert");
         meldungen.push(sym + " Gewinnziel: " + r.text + " Rest läuft mit nachziehendem Stop weiter.");
       } else {
@@ -458,7 +728,8 @@ async function regelnPruefen() {
 function autoFrage() {
   var a = autoEinstellungen();
   return "Selbstständige Handelsrunde (" + new Date().toLocaleString("de-CH") + "). " +
-    "Hol mit kurs_abfragen die Kurse der Aktien auf der Halal-Liste und schau mit depot_anzeigen ins Depot. " +
+    "Hol mit kandidaten_scannen die 10 Aktien der Halal-Liste mit der meisten Bewegung (nur Aktien mit Kurs an der US-Börse, auch ausländische Firmen), prüfe Interessantes mit kurs_abfragen und schau mit depot_anzeigen ins Depot. " +
+    "Bruchteile sind erlaubt: Bei wenig Geld rechnest du anzahl = Betrag ÷ Kurs. " +
     "Handle NUR, wenn du die Gewinnchance als hoch einschätzt: Zuversicht mindestens 8 von 10 und ein konkreter Grund aus den Kursdaten. " +
     "Nichtstun ist die Regel und völlig in Ordnung. Höchstens eine Order, höchstens 20 % des Bargelds. " +
     "Das Programm schützt jede Position selbst: individueller Stop nach Schwankung (höchstens " + a.stop + " % Verlust), nachziehender Stop, ab " + a.ziel + " % Gewinn wird die Hälfte gesichert. " +
@@ -509,6 +780,8 @@ function autoTakt() {
   if (!istBesitzer()) return;
   var a = autoEinstellungen();
   if (!boerseOffen() || !depot().finnhubSchluessel) return;
+  // Scanner läuft, wenn selbstständig gehandelt wird oder das Depot offen ist
+  if (a.an || document.querySelector("#tab-depot.aktiv")) scannerSchritt(35);
   if (a.an && Date.now() - a.letzte >= a.intervall * 60000) { autoRunde(false); return; }
   // Schutz (Stop, nachziehender Stop, Gewinnziel) für alle Positionen alle 2 Minuten
   if (!AUTO.laeuft && Object.keys(depot().positionen).length && Date.now() - AUTO.letzteRegel >= 120000) {
@@ -556,7 +829,7 @@ var Depot = (function () {
       var p = d.positionen[s], k = kurs(s, p), w = k * p.anzahl, e = w - p.einstand * p.anzahl;
       var li = document.createElement("li"); li.className = "buchung";
       var sb = stopBerechnen(s, p), stopK = p.stopKurs || sb.stop;
-      li.innerHTML = "<span class='datum'><strong>" + esc(s) + "</strong></span><span class='wachsen'>" + p.anzahl + " × " + usd(k) + "<br><span class='leise klein-text'>Einstand " + usd(p.einstand) +
+      li.innerHTML = "<span class='datum'><strong>" + esc(s) + "</strong></span><span class='wachsen'>" + anzahlText(p.anzahl) + " × " + usd(k) + "<br><span class='leise klein-text'>Einstand " + usd(p.einstand) +
         " · Stop " + usd(stopK) + (stopK >= p.einstand ? " (ohne Verlust)" : "") + (p.teilVerkauft ? " · Hälfte gesichert" : "") +
         "<br>Schwankung ca. " + sb.werte.schwankung.toFixed(1) + " %/Tag · Ziel +" + sb.werte.ziel.toFixed(1) + " %</span></span><strong class='" + (e >= 0 ? "plus" : "minus") + "'>" + usd(w) + "<br><span class='klein-text'>" + (e >= 0 ? "+" : "") + usd(e) + "</span></strong>";
       ul.appendChild(li);
@@ -581,17 +854,15 @@ var Depot = (function () {
       off.appendChild(li);
     });
 
-    var sel = $("#o-symbol");
-    sel.innerHTML = d.halalListe.length ? d.halalListe.map(function (h) { return "<option>" + esc(h.symbol) + "</option>"; }).join("") : "<option value=''>Zuerst Halal-Liste füllen</option>";
+    // Order-Auswahl: nur Aktien mit Kurs (US-Börse) plus Positionen zum Verkaufen
+    var sel = $("#o-symbol"), vorher = sel.value;
+    var handelbar = d.halalListe.filter(function (h) { return kursMoeglich(h.symbol) && !istGesperrt(h.symbol); })
+      .map(function (h) { return h.symbol; }).concat(syms).filter(function (x, i, a) { return a.indexOf(x) === i; }).sort();
+    sel.innerHTML = handelbar.length ? handelbar.map(function (x) { var l = landVon(x); return "<option value='" + esc(x) + "'>" + esc(x) + (l !== "US" ? " · " + esc(landName(l)) : "") + "</option>"; }).join("") : "<option value=''>Zuerst Halal-Liste füllen</option>";
+    if (vorher && handelbar.indexOf(vorher) !== -1) sel.value = vorher;
 
-    var hl = $("#halal-liste");
-    hl.innerHTML = d.halalListe.length ? "" : "<li class='leise'>Noch leer. Nur Aktien auf dieser Liste können gehandelt werden.</li>";
-    d.halalListe.forEach(function (h) {
-      var li = document.createElement("li");
-      li.innerHTML = "<span class='wachsen'><strong>" + esc(h.symbol) + "</strong> " + esc(h.name || "") + "<br><span class='leise klein-text'>" + esc(h.branche || "Branche unbekannt") + " · bestätigt " + esc(h.datum) + "</span></span><button class='mini' title='Entfernen'>✕</button>";
-      li.querySelector("button").onclick = function () { d.halalListe = d.halalListe.filter(function (x) { return x !== h; }); speichern(); zeigen(); };
-      hl.appendChild(li);
-    });
+    halalListeZeigen();
+    fondsZeigen();
 
     var a = autoEinstellungen();
     $("#auto-an").checked = !!a.an;
@@ -611,6 +882,17 @@ var Depot = (function () {
       var li = document.createElement("li"); li.className = "buchung";
       li.innerHTML = "<span class='leise datum'>" + esc(new Date(x.zeit).toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" })) + "</span><span class='wachsen klein-text'>" + esc(x.text) + "</span>";
       pl.appendChild(li);
+    });
+
+    var frisch = scannerFrisch().length;
+    $("#scanner-stand").textContent = frisch ? frisch + " von " + d.halalListe.length + " Aktien geprüft" + (SCANNER.letzte ? ", zuletzt vor " + Math.max(0, Math.round((Date.now() - SCANNER.letzte) / 60000)) + " Min." : "") +
+      ". Der Scanner läuft, solange das Depot offen ist oder selbstständig gehandelt wird." : "Noch keine Daten. Tipp auf „Jetzt scannen“ (braucht den Finnhub-Schlüssel).";
+    var sl = $("#scanner-liste");
+    sl.innerHTML = "";
+    kandidaten(10).forEach(function (k) {
+      var li = document.createElement("li"); li.className = "buchung";
+      li.innerHTML = "<span class='datum'><strong>" + esc(k.symbol) + "</strong></span><span class='wachsen klein-text'>" + usd(k.kurs) + " · Spanne " + k.spanne.toFixed(1) + " %</span><strong class='" + (k.aenderung >= 0 ? "plus" : "minus") + "'>" + (k.aenderung >= 0 ? "+" : "−") + Math.abs(k.aenderung).toFixed(2) + " %</strong>";
+      sl.appendChild(li);
     });
 
     var ol = $("#depot-orders");
@@ -652,6 +934,11 @@ var Depot = (function () {
       var d = depot(); d.start = start; d.bargeld = start; d.positionen = {}; d.orders = []; d.offen = []; speichern(); zeigen();
     };
     $("#d-aktualisieren").onclick = aktualisieren;
+    $("#scanner-jetzt").onclick = async function () {
+      this.disabled = true; meldung("Scanne " + Math.min(35, depot().halalListe.length) + " Aktien …");
+      await scannerSchritt(35);
+      this.disabled = false; zeigen();
+    };
     $("#order-form").onsubmit = async function (ev) {
       ev.preventDefault();
       var knopf = this.querySelector("button"); knopf.disabled = true;
@@ -663,21 +950,40 @@ var Depot = (function () {
       await kurseLaden(); zeigen();
     };
     var gefunden = null;
+    function aufzaehlen(a) { return a.length > 15 ? a.slice(0, 15).join(", ") + " und " + (a.length - 15).toLocaleString("de-CH") + " weitere" : a.join(", "); }
     function mehrereMelden(r) {
-      var t = r.neu.length + (r.neu.length === 1 ? " Aktie" : " Aktien") + " aufgenommen" + (r.neu.length ? ": " + r.neu.join(", ") : "") + ".";
-      if (r.verboten.length) t += " Nicht aufgenommen (verbotene Branche): " + r.verboten.join(", ") + ".";
-      if (r.schon.length) t += " Schon auf der Liste: " + r.schon.join(", ") + ".";
-      if (r.ohneDaten.length) t += " Ohne Branchenprüfung (Finnhub-Schlüssel fehlt oder keine Daten): " + r.ohneDaten.join(", ") + ".";
+      var t = r.neu.length.toLocaleString("de-CH") + (r.neu.length === 1 ? " Aktie" : " Aktien") + " aufgenommen" + (r.neu.length ? ": " + aufzaehlen(r.neu) : "") + ".";
+      if (r.verboten.length) t += " Nicht aufgenommen (verbotene Branche): " + aufzaehlen(r.verboten) + ".";
+      if (r.schon.length) t += " Schon auf der Liste: " + (r.schon.length > 15 ? r.schon.length.toLocaleString("de-CH") + " Aktien" : r.schon.join(", ")) + ".";
+      if (r.ohneDaten.length) t += " Ohne Branchenprüfung (Finnhub-Schlüssel fehlt oder keine Daten): " + aufzaehlen(r.ohneDaten) + ".";
       var info = $("#h-info"); info.className = "klein-text"; info.textContent = t;
       zeigen();
     }
+    ["#h-region", "#h-land", "#h-nurkurs"].forEach(function (id) { $(id).onchange = function () { if (id === "#h-region") $("#h-land").value = ""; halalListeZeigen(); }; });
+    var suchTimer = null;
+    $("#h-suche").oninput = function () { clearTimeout(suchTimer); suchTimer = setTimeout(halalListeZeigen, 200); };
+    $("#fonds-anzahl").onchange = fondsZeigen;
+    $("#fonds-form").onsubmit = async function (ev) {
+      ev.preventDefault();
+      var betrag = Number($("#fonds-betrag").value), anzahl = Number($("#fonds-anzahl").value);
+      var teile = fondsZusammenstellen(anzahl);
+      if (!teile.length) { meldung("Zuerst die Halal-Liste füllen."); return; }
+      if (!depot().finnhubSchluessel) { meldung("Für Kurse braucht der Fonds den Finnhub-Schlüssel (Einstellungen unten)."); return; }
+      if (!confirm("A&T Welt-Halal-Fonds kaufen?\n\n" + usd(betrag) + " verteilt auf " + teile.length + " Aktien aus " +
+        Object.keys(teile.reduce(function (o, t) { o[t.region] = 1; return o; }, {})).join(", ") + ".\nSpielgeld im Übungs-Depot.")) return;
+      var knopf = this.querySelector("button"); knopf.disabled = true;
+      var r = await fondsKaufen(betrag, anzahl, function (i, n) { $("#fonds-info").textContent = "Kaufe " + i + " von " + n + " …"; });
+      $("#fonds-info").textContent = r.text; knopf.disabled = false;
+      await kurseLaden(); zeigen();
+    };
     $("#h-startliste").onclick = async function () {
       var L = HALAL_STARTLISTE;
-      if (!confirm("Startliste übernehmen?\n\n" + L.symbole.length + " Aktien aus dem schariakonformen Fonds " + L.quelle + ":\n" + L.symbole.join(", ") +
-        "\n\nDer Fonds wird regelmässig von einem Scharia-Rat geprüft. A&T prüft zusätzlich die Branche und lässt verbotene weg. Die Bewertung einzelner Aktien kann sich ändern: Prüfe sie ab und zu in Zoya oder Musaffa.")) return;
+      if (!confirm("Weltliste übernehmen?\n\n" + L.symbole.length + " Halal-Aktien aus schariakonformen Fonds und offiziellen Scharia-Listen (Stand " + HALAL_WELT.stand + "):\n- " + HALAL_WELT.quellen.join("\n- ") +
+        "\n\nDie Listen werden regelmässig nach Scharia-Regeln geprüft. Die Bewertung einzelner Aktien kann sich ändern: Prüfe sie ab und zu in Zoya oder Musaffa.")) return;
       var knopf = this; knopf.disabled = true;
       $("#h-info").className = "klein-text leise"; $("#h-info").textContent = "Nehme auf …";
-      var r = await halalMehrereAufnehmen(L.symbole, L.quelle, function (n, gesamt) { $("#h-info").textContent = "Nehme auf … " + n + " von " + gesamt; });
+      var r = await halalMehrereAufnehmen(L.symbole.filter(function (x) { return (depot().halalEntfernt || []).indexOf(x) === -1; }), L.quelle, null, true);
+      depot().startlisteVersion = L.version; speichern();
       knopf.disabled = false;
       mehrereMelden(r);
     };
@@ -723,6 +1029,64 @@ var Depot = (function () {
     };
   }
   async function aktualisieren() { await kurseLaden(); zeigen(); }
+
+  /* Halal-Liste: Überblick nach Regionen, Filter und höchstens 50 Zeilen */
+  function halalListeZeigen() {
+    var d = depot(), u = halalUeberblick(d.halalListe);
+    var mitKurs = d.halalListe.filter(function (h) { return kursMoeglich(h.symbol) && !istGesperrt(h.symbol); }).length;
+    $("#h-startliste").textContent = "Weltliste übernehmen (" + HALAL_STARTLISTE.symbole.length.toLocaleString("de-CH") + " Halal-Aktien aus " + Object.keys(halalUeberblick(HALAL_STARTLISTE.symbole.map(function (x) { return { symbol: x }; })).laender).length + " Ländern)";
+    $("#h-ueberblick").textContent = d.halalListe.length ? d.halalListe.length.toLocaleString("de-CH") + " Aktien aus " + Object.keys(u.laender).length + " Ländern. " +
+      mitKurs + " davon haben jetzt Kurse (US-Börse) und sind im Übungs-Depot handelbar; die anderen folgen mit der IBKR-Verbindung. Russische Aktien sind wegen Sanktionen gesperrt." : "";
+    var rb = $("#h-regionen"); rb.innerHTML = "";
+    Object.keys(u.regionen).sort(function (a, b) { return u.regionen[b] - u.regionen[a]; }).forEach(function (r) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "chip";
+      b.textContent = r + " " + u.regionen[r].toLocaleString("de-CH");
+      b.onclick = function () { $("#h-region").value = $("#h-region").value === r ? "" : r; landAuswahl(); halalListeZeigen(); };
+      rb.appendChild(b);
+    });
+    landAuswahl();
+    var treffer = halalSuchen({ region: $("#h-region").value, land: $("#h-land").value, suche: $("#h-suche").value, nurMitKurs: $("#h-nurkurs").checked });
+    var w = welt();
+    treffer.sort(function (a, b) { return ((w[b.symbol] || [])[4] || 0) - ((w[a.symbol] || [])[4] || 0) || (a.symbol < b.symbol ? -1 : 1); });
+    var hl = $("#halal-liste");
+    hl.innerHTML = d.halalListe.length ? (treffer.length ? "" : "<li class='leise'>Keine Treffer.</li>") : "<li class='leise'>Noch leer. Nur Aktien auf dieser Liste können gehandelt werden.</li>";
+    treffer.slice(0, 50).forEach(function (h) {
+      var li = document.createElement("li"), l = landVon(h.symbol, h), e = boerseEndung(h.symbol);
+      var status = istGesperrt(h.symbol) ? "<em class='marke-klein schlecht'>gesperrt (Sanktionen)</em>" :
+        kursMoeglich(h.symbol) ? "<em class='marke-klein gut'>handelbar</em>" :
+        "<em class='marke-klein mittel'>IBKR: " + esc(ibkrStatus(h.symbol)) + "</em>";
+      li.innerHTML = "<span class='wachsen'><strong>" + esc(h.symbol) + "</strong> " + esc(h.name || "") + " " + status +
+        "<br><span class='leise klein-text'>" + esc(landName(l)) + " · Börse " + esc(e ? BOERSEN[e][0] : "USA") +
+        (h.q ? " · " + esc(quellenText(h.q)) : h.branche ? " · " + esc(h.branche) : "") + "</span></span><button class='mini' title='Entfernen'>✕</button>";
+      li.querySelector("button").onclick = function () {
+        d.halalListe = d.halalListe.filter(function (x) { return x !== h; });
+        d.halalEntfernt = (d.halalEntfernt || []).concat([h.symbol]);
+        speichern(); halalListeZeigen();
+      };
+      hl.appendChild(li);
+    });
+    $("#h-mehr").textContent = treffer.length > 50 ? "Angezeigt: 50 von " + treffer.length.toLocaleString("de-CH") + " (die grössten zuerst). Filtere nach Region, Land oder Name." : "";
+  }
+  function landAuswahl() {
+    var region = $("#h-region").value, ls = $("#h-land"), vorher = ls.value;
+    var u = halalUeberblick(halalSuchen({ region: region }));
+    var laender = Object.keys(u.laender).sort(function (a, b) { return landName(a).localeCompare(landName(b), "de"); });
+    ls.innerHTML = "<option value=''>Alle</option>" + laender.map(function (l) { return "<option value='" + esc(l) + "'>" + esc(landName(l)) + " (" + u.laender[l] + ")</option>"; }).join("");
+    if (laender.indexOf(vorher) !== -1) ls.value = vorher;
+  }
+
+  function fondsZeigen() {
+    var teile = fondsZusammenstellen(Number($("#fonds-anzahl").value) || 20), proRegion = {};
+    teile.forEach(function (t) { (proRegion[t.region] = proRegion[t.region] || []).push(t); });
+    var fl = $("#fonds-liste"); fl.innerHTML = teile.length ? "" : "<li class='leise'>Zuerst die Halal-Liste füllen.</li>";
+    Object.keys(proRegion).forEach(function (r) {
+      var anteil = proRegion[r].reduce(function (s, t) { return s + t.gewicht; }, 0);
+      var li = document.createElement("li"); li.className = "buchung";
+      li.innerHTML = "<span class='datum'><strong>" + esc(r) + "</strong><br><span class='klein-text'>" + anteil.toFixed(0) + " %</span></span><span class='wachsen klein-text'>" +
+        proRegion[r].map(function (t) { return esc(t.symbol) + (t.land !== "US" ? " (" + esc(landName(t.land)) + ")" : ""); }).join(", ") + "</span>";
+      fl.appendChild(li);
+    });
+  }
 
   /* Überweisungen im Geld-Tab */
   function ueberweisungenZeigen() {

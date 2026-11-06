@@ -202,6 +202,25 @@
       </div>
 
       <div class="karte">
+        <h2>Scanner: Aktien mit Bewegung</h2>
+        <p class="klein-text leise" id="scanner-stand"></p>
+        <ul id="scanner-liste" class="liste"></ul>
+        <button class="knopf klein zart" id="scanner-jetzt" type="button">Jetzt scannen</button>
+      </div>
+
+      <div class="karte">
+        <h2>Eigener Fonds: A&amp;T Welt-Halal-Fonds</h2>
+        <p class="leise klein-text">Dein Betrag wird auf Halal-Aktien aus allen Kontinenten verteilt: Asien 35 %, Amerika 30 %, Europa 20 %, Afrika 10 %, Ozeanien 5 %. Im Übungs-Depot nur Aktien mit Kurs an der US-Börse (auch ausländische Firmen wie TSMC aus Taiwan oder Gold Fields aus Südafrika). Aktien aus dem Nahen Osten (Saudi-Arabien, Emirate, Katar) gibt es dort nicht; sie kommen mit der IBKR-Verbindung dazu.</p>
+        <ul id="fonds-liste" class="liste"></ul>
+        <form id="fonds-form" class="zeile" style="flex-wrap: wrap;">
+          <label>Betrag in $ <input id="fonds-betrag" type="number" min="5" step="any" value="100"></label>
+          <label>Anzahl Aktien <select id="fonds-anzahl"><option>10</option><option selected>20</option><option>30</option></select></label>
+          <button class="knopf">Fonds kaufen</button>
+        </form>
+        <p id="fonds-info" class="klein-text leise"></p>
+      </div>
+
+      <div class="karte">
         <h2>Positionen</h2>
         <ul id="depot-positionen" class="liste"></ul>
         <button class="knopf klein" id="d-aktualisieren" type="button">Kurse aktualisieren</button>
@@ -228,7 +247,7 @@
         <form id="order-form" class="formular">
           <label>Aktie <select id="o-symbol"></select></label>
           <label>Kauf oder Verkauf <select id="o-seite"><option value="kauf">Kauf</option><option value="verkauf">Verkauf</option></select></label>
-          <label>Anzahl <input id="o-anzahl" type="number" min="1" step="1" value="1"></label>
+          <label>Anzahl (Bruchteile wie 0.25 erlaubt) <input id="o-anzahl" type="number" min="0.0001" step="any" value="1"></label>
           <button class="knopf">Order ausführen</button>
         </form>
       </div>
@@ -240,10 +259,19 @@
           <input id="h-symbol" placeholder="Kürzel, z. B. AAPL (mehrere mit Komma)" autocomplete="off">
           <button class="knopf">Prüfen</button>
         </form>
-        <button class="knopf klein zart" id="h-startliste" type="button" style="white-space: normal; margin-top: 8px;">Startliste übernehmen (24 Halal-Aktien)</button>
+        <button class="knopf klein zart" id="h-startliste" type="button" style="white-space: normal; margin-top: 8px;">Weltliste übernehmen</button>
         <p id="h-info" class="klein-text leise"></p>
         <button class="knopf klein versteckt" id="h-bestaetigen" type="button">Ich habe sie geprüft: aufnehmen</button>
+        <p id="h-ueberblick" class="klein-text"></p>
+        <div id="h-regionen" class="chips"></div>
+        <div class="zeile" style="flex-wrap: wrap; margin-top: 8px;">
+          <label>Region <select id="h-region"><option value="">Alle</option><option>Amerika</option><option>Europa</option><option>Asien</option><option>Naher Osten</option><option>Afrika</option><option>Ozeanien</option><option>Russland</option></select></label>
+          <label>Land <select id="h-land"><option value="">Alle</option></select></label>
+          <label>Suche <input id="h-suche" placeholder="Name oder Kürzel" autocomplete="off"></label>
+          <label class="haken"><input type="checkbox" id="h-nurkurs"> <span>Nur mit Kurs (jetzt handelbar)</span></label>
+        </div>
         <ul id="halal-liste" class="liste"></ul>
+        <p id="h-mehr" class="klein-text leise"></p>
       </div>
 
       <div class="karte">
@@ -432,6 +460,7 @@
 
   <script src="js/daten.js"></script>
   <script src="js/speicher.js"></script>
+  <script src="js/halal-welt.js"></script>
   <script src="js/depot.js"></script>
   <script src="js/ki.js"></script>
   <script src="js/gemini.js"></script>
