@@ -20,7 +20,8 @@ const key = unb64(keyB64);
 
 // OPEN_ALL=1: Version ohne Sperre (ganzer Kurs offen, kein Code) im Ordner preview-open/
 const OPEN = !!process.env.OPEN_ALL;
-const out = new URL(OPEN ? 'preview-open/' : 'preview/', root);
+// OUT_DIR=…: weitere gesperrte Version in einem eigenen Ordner (z. B. für einen zweiten Link), TITLE=… ihr Name
+const out = new URL(process.env.OUT_DIR ? process.env.OUT_DIR.replace(/\/?$/, '/') : OPEN ? 'preview-open/' : 'preview/', root);
 const web = new URL('web/', root);
 rmSync(out, { recursive: true, force: true });
 mkdirSync(new URL('js/', out), { recursive: true });
@@ -43,7 +44,7 @@ writeFileSync(new URL('js/course-locked.js', out),
   `// Ganzer Kurs, verschlüsselt. Öffnet sich nur mit einem Freischalt-Code.\nexport const LOCKED_COURSE = ${JSON.stringify(await encryptCourse(COURSE, key))};\n`);
 writeFileSync(new URL('styles.css', out), readFileSync(new URL('styles.css', web)));
 // Seiten ohne <html>/<head>/<body>: claude.ai ergänzt das Gerüst beim Veröffentlichen.
-writeFileSync(new URL('index.html', out), `<title>${OPEN ? 'Hallo Deutsch Komplett' : 'Hallo Deutsch!'}</title>
+writeFileSync(new URL('index.html', out), `<title>${process.env.TITLE || (OPEN ? 'Hallo Deutsch Komplett' : 'Hallo Deutsch!')}</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +55,7 @@ writeFileSync(new URL('index.html', out), `<title>${OPEN ? 'Hallo Deutsch Komple
 `);
 
 // ---------- Admin-Seite
-if (OPEN) { console.log('preview-open/ erstellt (alles offen).'); process.exit(0); }
+if (OPEN || process.env.OUT_DIR) { console.log(`${out.pathname.split('/').slice(-2, -1)[0]}/ erstellt.`); process.exit(0); }
 const admin = new URL('preview-admin/', root);
 rmSync(admin, { recursive: true, force: true });
 mkdirSync(admin, { recursive: true });

@@ -215,13 +215,14 @@ const unlockAll = backend.demo && new URLSearchParams(location.search).has('unlo
 
 function lessonState(ui, li) {
   const u = data.course.units[ui];
-  if (store.isDone(u.id, li)) return 'done';
   const paid = data.premium || (ui === 0 && li === 0);
+  // Ohne Code bleibt alles ausser Lektion 1 zu, auch Lektionen, die früher schon erledigt wurden
+  if (!paid) return 'pay';
+  if (store.isDone(u.id, li)) return 'done';
   // Vorherige Lektion fertig?
   let prevDone = true;
   if (li > 0) prevDone = store.isDone(u.id, li - 1);
   else if (ui > 0) prevDone = store.isDone(data.course.units[ui - 1].id, LESSONS.length - 1);
-  if (!paid) return prevDone ? 'pay' : 'locked';
   return prevDone || unlockAll || CONFIG.openAll ? 'open' : 'locked';
 }
 
@@ -436,14 +437,19 @@ function gamePool() {
   return makePool(words, sentences);
 }
 
+// Ohne Code: genau ein Spiel einmal ausprobieren, danach sind alle Spiele gesperrt.
+const freeGameUsed = () => !data.premium && !!store.get().freeGameUsed;
+
 function gamesScreen() {
   const pool = gamePool();
+  const trial = !data.premium;
+  const used = freeGameUsed();
   app.innerHTML = '';
   const el = h(`
     <div class="games-page">
       <header class="topbar"><div class="brand">${logoMark(34)} <span>${t('gamesTitle')}</span></div>
         <div class="chips"><span class="chip xp">⭐ ${store.get().xp}</span></div></header>
-      <section class="cat-card">${catSays('cheer', t('gamesSub'), 84)}</section>
+      <section class="cat-card">${catSays(used ? 'comfort' : 'cheer', trial ? t(used ? 'gameTrialUsed' : 'gameTrialHint') : t('gamesSub'), 84)}</section>
       <main class="games-grid"></main>
       ${tabbar('games')}
     </div>`);
@@ -451,21 +457,24 @@ function gamesScreen() {
   wireTabs(el);
   const grid = $('.games-grid', el);
   GAMES.forEach((g) => {
-    const ok = gameAvailable(g, pool);
+    const ok = gameAvailable(g, pool) && !used;
     const card = h(`
       <article class="game-card${ok ? '' : ' locked'}" style="--gc:${g.color}">
         <div class="gc-head"><span class="gc-icon">${g.icon}</span><div><h3>${t('g_' + g.id)}</h3><p>${t('g_' + g.id + '_d')}</p></div></div>
         ${ok ? `<div class="gc-levels">${LEVELS.map((lv) => `
           <button class="lv" data-lv="${lv}"><b>${t({ easy: 'levelEasy', medium: 'levelMedium', hard: 'levelHard' }[lv])}</b><small>${store.bestGame(g.id, lv) ? `🏆 ${store.bestGame(g.id, lv)}` : '–'}</small></button>`).join('')}</div>`
-        : `<button class="gc-lock">${data.premium ? '🔒' : '💎'} ${t(data.premium ? 'gameNeedWords' : 'gameLocked')}</button>`}
+        : `<button class="gc-lock">${data.premium ? '🔒' : '🔒💎'} ${t(data.premium ? 'gameNeedWords' : used ? 'gameTrialLocked' : 'gameLocked')}</button>`}
       </article>`);
     card.querySelectorAll('[data-lv]').forEach((b) => (b.onclick = () => {
       sfx.tap();
+      if (freeGameUsed()) return paywall();
       warnNoVoice();
+      if (trial) store.setFlag('freeGameUsed', true); // das eine Gratis-Spiel ist damit verbraucht
       startGame(app, g.id, b.dataset.lv, {
         pool, lang: getLang(),
         onDone: ({ xp }) => store.addXp(xp),
         onExit: gamesScreen,
+        beforeAgain: () => (freeGameUsed() ? (paywall(), false) : true),
       });
     }));
     card.querySelector('.gc-lock')?.addEventListener('click', () => (data.premium ? toast(t('gameNeedWords')) : paywall()));

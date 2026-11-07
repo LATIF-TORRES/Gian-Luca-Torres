@@ -676,10 +676,13 @@ function typing(api, P, level, lang) {
 
 const RUN = { memory, pretzel, sprint, anagram, rain, listen, truefalse, sentence, typing };
 
-export function startGame(root, id, level, { pool, lang, onExit, onDone }) {
+// beforeAgain: wird vor „Nochmal spielen“ aufgerufen. Gibt sie false zurück, startet kein neues Spiel
+// (z. B. Gratis-Spiel schon verbraucht → Bezahlseite).
+export function startGame(root, id, level, { pool, lang, onExit, onDone, beforeAgain }) {
   const g = GAMES.find((x) => x.id === id);
+  const again = () => { if (beforeAgain && beforeAgain() === false) return; go(); };
   const go = () => {
-    const api = shell(root, g, level, { onExit, onDone, onAgain: go });
+    const api = shell(root, g, level, { onExit, onDone, onAgain: again });
     RUN[id](api, pool, level, lang);
   };
   go();
