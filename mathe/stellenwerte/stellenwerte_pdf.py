@@ -5,9 +5,9 @@ Ausgabe (je Blatt eine Aufgaben- und eine Lösungsdatei, je 2 Seiten):
   blatt1-stellenwerte.pdf         / blatt1-stellenwerte-loesungen.pdf        (Lernziele 1, 2, 3)
   blatt2-zahlen-bilden.pdf        / blatt2-zahlen-bilden-loesungen.pdf       (Lernziel 4)
   blatt3-zaehlen-rechnen.pdf      / blatt3-zaehlen-rechnen-loesungen.pdf     (Lernziele 5, 6)
-  abschlusstest.pdf               / abschlusstest-loesungen.pdf              (alle Lernziele, neue Zahlen)
+  lernkontrolle.pdf               / lernkontrolle-loesungen.pdf              (alle Lernziele, neue Zahlen)
   ablaufplan-90-minuten.pdf       (1 Seite für die Lehrperson)
-Zeit: Blatt 1 ca. 25 Min., Blatt 2 ca. 15 Min., Blatt 3 ca. 20 Min., Test ca. 20 Min. = 90 Min. mit Pause und Besprechung.
+Zeit: Blatt 1 ca. 25 Min., Blatt 2 ca. 15 Min., Blatt 3 ca. 20 Min., Lernkontrolle ca. 20 Min. = 90 Min. mit Pause und Besprechung.
 
 Alle Lösungen werden berechnet (Stellen zerlegen, Ziffernkarten durchprobieren, Rätselzahlen mit allen
 möglichen Zahlen prüfen, Folgen und Rechnungen ausrechnen). Nichts ist von Hand eingetragen.
@@ -24,7 +24,25 @@ from reportlab.lib.units import mm  # noqa: E402
 from reportlab.pdfbase import pdfmetrics  # noqa: E402
 from reportlab.pdfgen import canvas  # noqa: E402
 
-from zeichnen import FIG, INK, L, LINE, MUTED, PAGE_H, R, SOFT, W, ctext, header, hline, text  # noqa: E402
+import re  # noqa: E402
+
+import zeichnen  # noqa: E402
+from zeichnen import FIG, INK, L, LINE, MUTED, PAGE_H, R, SOFT, W, header, hline  # noqa: E402
+
+_GROUP = re.compile(r"(?<=\d)[ \u00a0](?=\d{3}(?!\d))")
+
+
+def ch(s):
+    """Schweizer Schreibweise: Tausendergruppen mit Apostroph (30 400 -> 30'400, 1 000 000 -> 1'000'000)."""
+    return _GROUP.sub("'", s)
+
+
+def text(c, x, y, s, *a, **k):
+    return zeichnen.text(c, x, y, ch(s), *a, **k)
+
+
+def ctext(c, x, y, s, *a, **k):
+    return zeichnen.ctext(c, x, y, ch(s), *a, **k)
 
 OUT_DIR = Path(__file__).parent
 SOL = HexColor("#d0342c")
@@ -50,8 +68,8 @@ GOALS = {
 
 # ---------- Hilfen ----------
 def z(n):
-    """Zahl mit Leerzeichen zwischen den Dreiergruppen, z. B. 30 400 (geschützt gegen Umbruch)."""
-    return f"{n:,}".replace(",", NB)
+    """Zahl in Schweizer Schreibweise mit Apostroph, z. B. 30'400 und 1'000'000."""
+    return f"{n:,}".replace(",", "'")
 
 
 def digits_of(n):
@@ -391,7 +409,7 @@ def b2_page1(c, sol):
           (f"e) Bilde die Zahl, die am nächsten bei 500{NB}000 liegt.", closest)]
     assert len({v for _, v in qa}) == len(qa), qa
     y = task_head(c, y, 1, "Zahlen aus 6 Ziffernkarten",
-                  "Du hast diese 6 Ziffernkarten. Bilde damit sechsstellige Zahlen. Brauche jede Karte genau einmal.",
+                  "Du hast diese 6 Ziffernkarten. Bilde damit sechsstellige Zahlen. Verwende jede Karte genau einmal.",
                   [4])
     card_row(c, L + 9 * mm, y + 2 * mm, CARDS_A)
     y -= 14 * mm
@@ -412,7 +430,7 @@ def b2_page1(c, sol):
           (f"c) Bilde die kleinste Zahl, die grösser als 50{NB}000 ist.", over)]
     assert len({v for _, v in qb}) == len(qb)
     y = task_head(c, y, 2, "Zahlen aus 5 Ziffernkarten mit zwei Nullen",
-                  "Du hast diese 5 Ziffernkarten. Bilde damit fünfstellige Zahlen. Brauche jede Karte genau einmal.", [4])
+                  "Du hast diese 5 Ziffernkarten. Bilde damit fünfstellige Zahlen. Verwende jede Karte genau einmal.", [4])
     card_row(c, L + 9 * mm, y + 2 * mm, CARDS_B)
     y -= 14 * mm
     for q, v in qb:
@@ -485,8 +503,8 @@ HEAD_CALC = [(340_000, "+", 60_000), (1_000_000, "−", 250_000), (703_000, "−
              (999_999, "+", 1), (500_000, "−", 1)]
 WRITTEN = [(245_386, "+", 371_548), (700_000, "−", 238_465)]
 WORD = [
-    ("Ein Verein sammelt Geld. Sein Ziel sind 1 000 000 Franken. Bis jetzt hat er 785 400 Franken gesammelt. "
-     "Wie viele Franken fehlen noch?", 1_000_000 - 785_400, "Franken"),
+    ("Ein Verein sammelt Geld. Sein Ziel sind Fr. 1 000 000. Bis jetzt hat er Fr. 785 400 gesammelt. "
+     "Wie viel Geld fehlt noch?", 1_000_000 - 785_400, "Franken"),
 ]
 
 
@@ -606,7 +624,7 @@ def b3_page2(c, sol):
                   "Lies die Aufgabe genau. Schreibe die Rechnung auf. Schreibe dann einen Antwortsatz.", [6])
     for q, res, unit in WORD:
         y = wrap(c, L + 9 * mm, y, q.replace("1 000 000", f"1{NB}000{NB}000").replace("384 250", f"384{NB}250")
-                 .replace("12 750", f"12{NB}750").replace("785 400", f"785{NB}400"), W - 9 * mm, 10) - 1.5 * mm
+                 .replace("12 750", f"12{NB}750").replace("785 400", f"785{NB}400").replace("Fr. ", f"Fr.{NB}"), W - 9 * mm, 10) - 1.5 * mm
         text(c, L + 9 * mm, y, "Rechnung:", 9.5, "Sans", MUTED)
         rech = (f"384{NB}250 + 12{NB}750 = {z(res)}" if unit == "Einwohner"
                 else f"1{NB}000{NB}000 − 785{NB}400 = {z(res)}")
@@ -614,7 +632,7 @@ def b3_page2(c, sol):
         y -= 8 * mm
         text(c, L + 9 * mm, y, "Antwort:", 9.5, "Sans", MUTED)
         ans = (f"Die Stadt hat jetzt {z(res)} Einwohner." if unit == "Einwohner"
-               else f"Es fehlen noch {z(res)} Franken.")
+               else f"Es fehlen noch Fr.{NB}{z(res)}.")
         answer(c, L + 30 * mm, y, W - 30 * mm, sol, ans)
         y -= 9 * mm
     footer_note(c, sol, 2)
@@ -622,7 +640,7 @@ def b3_page2(c, sol):
 
 
 # =====================================================================
-# Abschlusstest (alle Lernziele, neue Zahlen), ca. 20 Minuten
+# Lernkontrolle (alle Lernziele, neue Zahlen), ca. 20 Minuten
 # =====================================================================
 T_ORDER = ["Zehntausender", "Einer", "Millionen", "Hunderter", "Hunderttausender", "Zehner", "Tausender"]
 T_VALUES = ["ZT", "HT", "M"]
@@ -651,7 +669,7 @@ def t_head(c, y, nr, title, instruction):
 
 
 def test_page1(c, sol):
-    header(c, "Abschlusstest", "Stellenwerte, Ziffern und Zahlen · ca. 20 Minuten · Seite 1", name_fields=not sol)
+    header(c, "Lernkontrolle", "Stellenwerte, Ziffern und Zahlen · ca. 20 Minuten · Seite 1", name_fields=not sol)
     y = PAGE_H - 38 * mm
     y = t_head(c, y, 1, "Die Stellen der Reihe nach",
                "Ordne die Namen der Stellen. Schreibe sie in der richtigen Reihenfolge auf. Beginne bei den Einern.")
@@ -712,7 +730,7 @@ def test_page1(c, sol):
 
 
 def test_page2(c, sol):
-    header(c, "Abschlusstest", "Stellenwerte, Ziffern und Zahlen · Seite 2", name_fields=False)
+    header(c, "Lernkontrolle", "Stellenwerte, Ziffern und Zahlen · Seite 2", name_fields=False)
     y = PAGE_H - 38 * mm
     nums = all_numbers(T_CARDS)
     odd = [n for n in nums if n % 2]
@@ -725,7 +743,7 @@ def test_page2(c, sol):
           (f"d) Bilde die Zahl, die am nächsten bei 600{NB}000 liegt.", closest)]
     assert len({v for _, v in qa}) == 4
     y = t_head(c, y, 4, "Zahlen bilden",
-               "a) bis d): Bilde mit diesen 6 Ziffernkarten sechsstellige Zahlen. Brauche jede Karte genau einmal.  "
+               "a) bis d): Bilde mit diesen 6 Ziffernkarten sechsstellige Zahlen. Verwende jede Karte genau einmal.  "
                "e) Löse die Rätselzahl.")
     card_row(c, L + 9 * mm, y + 2 * mm, T_CARDS, size=8 * mm)
     y -= 12 * mm
@@ -796,11 +814,11 @@ PLAN = [
     ("40–60 Min.", "Übungsblatt 3: Zählen und Rechnen",
      "Bei den Übergängen (z. B. 299 900 → 300 000) genau hinschauen. Schriftlich: Überträge klein notieren."),
     ("60–65 Min.", "Kurze Pause", "Etwas trinken, bewegen."),
-    ("65–85 Min.", "Abschlusstest", "Allein lösen, ohne Hilfe und ohne Merkkasten. Danach mit dem Lösungsblatt korrigieren."),
-    ("85–90 Min.", "Test besprechen", "Pro Aufgabe = Lernziel: Was hat geklappt? Was üben wir vor dem 12.11. noch einmal?"),
+    ("65–85 Min.", "Lernkontrolle", "Allein lösen, ohne Hilfe und ohne Merkkasten. Danach mit dem Lösungsblatt korrigieren."),
+    ("85–90 Min.", "Lernkontrolle besprechen", "Pro Aufgabe = Lernziel: Was hat geklappt? Was üben wir vor dem 12.11. noch einmal?"),
 ]
 SHORT = ("Wenn die Zeit knapp wird: Blatt 1 Aufgabe 2 nur mündlich lösen. Blatt 2 Aufgabe 5 weglassen. "
-         "Blatt 3 nur eine schriftliche Rechnung lösen. Der Test sollte immer ganz gemacht werden.")
+         "Blatt 3 nur eine schriftliche Rechnung lösen. Die Lernkontrolle immer ganz lösen.")
 
 
 def ablauf(c):
@@ -815,10 +833,11 @@ def ablauf(c):
              W - 36 * mm, 8.5, color=MUTED)
         y -= 20 * mm
     y = wrap(c, L, y - 2 * mm, SHORT, W, 9.5) - 6 * mm
-    text(c, L, y, "Lernziele der Lernzielkontrolle 3 (Test am 12.11.2026)", 11, "Sans-Bold")
+    text(c, L, y, "Lernziele der Lernzielkontrolle 3 am 12.11.2026 (LK = Lernkontrolle in diesem Paket)", 11, "Sans-Bold")
     y -= 6 * mm
-    where = {1: "Blatt 1 (Aufg. 1), Test 1", 2: "Blatt 1 (Aufg. 2–4, 7), Test 2", 3: "Blatt 1 (Aufg. 5–7), Test 3",
-             4: "Blatt 2, Test 4", 5: "Blatt 3 (Aufg. 1–4), Test 5", 6: "Blatt 3 (Aufg. 5–7), Test 6"}
+    where = {1: "Blatt 1 (Aufg. 1), LK Aufg. 1", 2: "Blatt 1 (Aufg. 2–4, 7), LK Aufg. 2",
+             3: "Blatt 1 (Aufg. 5–7), LK Aufg. 3", 4: "Blatt 2, LK Aufg. 4", 5: "Blatt 3 (Aufg. 1–4), LK Aufg. 5",
+             6: "Blatt 3 (Aufg. 5–7), LK Aufg. 6"}
     for g, txt in GOALS.items():
         yy = wrap(c, L + 6 * mm, y, txt, W - 70 * mm, 8.5)
         text(c, L, y, f"{g}.", 8.5, "Sans-Bold", FIG)
@@ -831,7 +850,7 @@ SHEETS = [
     ("blatt1-stellenwerte", "Übungsblatt 1: Stellenwerte", [b1_page1, b1_page2]),
     ("blatt2-zahlen-bilden", "Übungsblatt 2: Zahlen bilden", [b2_page1, b2_page2]),
     ("blatt3-zaehlen-rechnen", "Übungsblatt 3: Zählen und Rechnen", [b3_page1, b3_page2]),
-    ("abschlusstest", "Abschlusstest: Stellenwerte, Ziffern und Zahlen", [test_page1, test_page2]),
+    ("lernkontrolle", "Lernkontrolle: Stellenwerte, Ziffern und Zahlen", [test_page1, test_page2]),
 ]
 
 
