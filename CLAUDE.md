@@ -13,6 +13,7 @@ Gilt für jedes Übungsblatt, jeden Probetest, jedes Lösungsblatt und jedes and
 - Genaue Angaben machen: Anzahl der gesuchten Paare/Lösungen nennen, Einheiten nennen („Würfel“, nicht „Häuschen“), Grössen ausschreiben („2 Würfel lang, 2 breit, 2 hoch“).
 - Aufgaben möglichst so stellen, dass es eine eindeutige, überprüfbare Lösung gibt. Wenn mehrere Lösungen richtig sind, im Lösungsblatt sagen.
 - Schweizer Rechtschreibung: „ss“ statt „ß“ (gross, heisst, süss).
+- Schweizer Hochdeutsch, wie es in Basel unterrichtet wird: Zahlen ab 1000 mit Apostroph schreiben (30'400, 1'000'000); Geldbeträge mit „Fr.“ (Fr. 785'400); Schweizer Wörter wählen (z. B. „Verwende“ statt „Brauche“, „Lernkontrolle“ statt „Abschlusstest“, „Lehrperson“).
 - Lieber zeichnen und schreiben lassen als ankreuzen.
 
 ## Lösungsblätter
