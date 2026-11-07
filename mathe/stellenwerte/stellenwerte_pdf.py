@@ -5,6 +5,9 @@ Ausgabe (je Blatt eine Aufgaben- und eine Lösungsdatei, je 2 Seiten):
   blatt1-stellenwerte.pdf         / blatt1-stellenwerte-loesungen.pdf        (Lernziele 1, 2, 3)
   blatt2-zahlen-bilden.pdf        / blatt2-zahlen-bilden-loesungen.pdf       (Lernziel 4)
   blatt3-zaehlen-rechnen.pdf      / blatt3-zaehlen-rechnen-loesungen.pdf     (Lernziele 5, 6)
+  abschlusstest.pdf               / abschlusstest-loesungen.pdf              (alle Lernziele, neue Zahlen)
+  ablaufplan-90-minuten.pdf       (1 Seite für die Lehrperson)
+Zeit: Blatt 1 ca. 25 Min., Blatt 2 ca. 15 Min., Blatt 3 ca. 20 Min., Test ca. 20 Min. = 90 Min. mit Pause und Besprechung.
 
 Alle Lösungen werden berechnet (Stellen zerlegen, Ziffernkarten durchprobieren, Rätselzahlen mit allen
 möglichen Zahlen prüfen, Folgen und Rechnungen ausrechnen). Nichts ist von Hand eingetragen.
@@ -188,16 +191,12 @@ COMPOSE = [  # (Teile in der angegebenen Reihenfolge)
     [("T", 8), ("H", 4), ("Z", 1)],
     [("HT", 2), ("ZT", 5)],
     [("E", 7), ("Z", 3), ("HT", 9)],
-    [("ZT", 4), ("T", 4), ("E", 4)],
-    [("HT", 1), ("E", 1)],
 ]
-DECOMPOSE = [472_305, 60_018, 905_060, 7_302]
-WRITE_IN = [305_070, 48_006, 1_000_000, 720_400, 9_050]
-READ_OUT = [640_205, 7_003, 80_090, 300_000, 999_999]
-DIGIT7 = [470_120, 7_315, 125_007, 732_000]       # Wert der Ziffer 7
-WHERE5 = [153_000, 205, 500_312, 8_451, 35_004]    # Stelle der Ziffer 5
-PLACE_CALC = [(305_070, "+", 2, "HT"), (48_006, "+", 3, "T"), (720_400, "−", 1, "ZT"),
-              (9_050, "+", 5, "H"), (999_000, "+", 1, "T"), (400_000, "−", 1, "E")]
+DECOMPOSE = [472_305, 60_018, 905_060]
+WRITE_IN = [305_070, 48_006, 1_000_000, 720_400]
+READ_OUT = [640_205, 7_003, 80_090, 999_999]
+DIGIT7 = [470_120, 7_315]       # Wert der Ziffer 7
+WHERE5 = [153_000, 500_312, 8_451]    # Stelle der Ziffer 5
 
 
 def compose(parts):
@@ -205,7 +204,7 @@ def compose(parts):
 
 
 def b1_page1(c, sol):
-    header(c, "Übungsblatt 1", "Stellenwerte · Zahlen bis 1 000 000 · Seite 1", name_fields=not sol)
+    header(c, "Übungsblatt 1", "Stellenwerte · ca. 25 Minuten · Seite 1", name_fields=not sol)
     y = PAGE_H - 37 * mm
     text(c, L, y, "Merke: die Stellenwerttabelle", 11.5, "Sans-Bold")
     y -= 3 * mm
@@ -264,7 +263,7 @@ def b1_page1(c, sol):
 
 
 def b1_page2(c, sol):
-    header(c, "Übungsblatt 1", "Stellenwerte · Zahlen bis 1 000 000 · Seite 2", name_fields=False)
+    header(c, "Übungsblatt 1", "Stellenwerte · ca. 25 Minuten · Seite 2", name_fields=False)
     y = PAGE_H - 38 * mm
     y = task_head(c, y, 4, "Zahlen zerlegen",
                   "Zerlege die Zahl in ihre Stellen. Schreibe nur die Stellen auf, die nicht 0 sind.", [2])
@@ -295,13 +294,7 @@ def b1_page2(c, sol):
                     labels=[f"{l})" for l in "abcde"])
     for i, n in enumerate(READ_OUT):
         answer(c, L + 16 * mm + 7 * cw + 8 * mm, top - 12.6 * mm - i * 8 * mm, 32 * mm, sol, z(n))
-    footer_note(c, sol, 2)
-    c.showPage()
-
-
-def b1_page3(c, sol):
-    header(c, "Übungsblatt 1", "Stellenwerte · Zahlen bis 1 000 000 · Seite 3", name_fields=False)
-    y = PAGE_H - 38 * mm
+    y -= 9 * mm
     y = task_head(c, y, 7, "Wert einer Ziffer",
                   "a) Welchen Wert hat die Ziffer 7 in der Zahl? Schreibe den Wert als Zahl auf.  "
                   "b) An welcher Stelle steht die Ziffer 5? Schreibe die Abkürzung auf.", [2, 3])
@@ -315,7 +308,7 @@ def b1_page3(c, sol):
         yy = y - (i // 2) * 8 * mm
         text(c, xx, yy, f"{z(n)}:", 10)
         answer(c, xx + 24 * mm, yy, 30 * mm, sol, z(7 * VALUE[a]))
-    y -= 2 * 8 * mm + 2 * mm
+    y -= ((len(DIGIT7) + 1) // 2) * 8 * mm + 2 * mm
     for i, n in enumerate(WHERE5):
         d = digits_of(n)
         assert list(d.values()).count(5) == 1
@@ -326,21 +319,7 @@ def b1_page3(c, sol):
         yy = y - (i // 3) * 8 * mm
         text(c, xx, yy, f"{z(n)}:", 10)
         answer(c, xx + 24 * mm, yy, 14 * mm, sol, a)
-    y -= 2 * 8 * mm + 10 * mm
-
-    y = task_head(c, y, 8, "Mit Stellenwerten rechnen",
-                  "Rechne. Überlege zuerst, wie viel die Teile wert sind. Beispiel: 2 HT sind 200 000.", [2])
-    for i, (n, op, k, a) in enumerate(PLACE_CALC):
-        res = n + k * VALUE[a] if op == "+" else n - k * VALUE[a]
-        assert 0 <= res <= 1_000_000
-        xx = L + 9 * mm + (i % 2) * 85 * mm
-        yy = y - (i // 2) * 8.5 * mm
-        lbl = f"{z(n)} {op} {k}{NB}{a} ="
-        text(c, xx, yy, lbl, 10)
-        answer(c, xx + pdfmetrics.stringWidth(lbl, "Sans", 10) + 2 * mm, yy, 26 * mm, sol, z(res))
-    y -= 3 * 8.5 * mm + 8 * mm
-    goals_box(c, y, [1, 2, 3])
-    footer_note(c, sol, 3)
+    footer_note(c, sol, 2)
     c.showPage()
 
 
@@ -362,8 +341,8 @@ RIDDLES = [
      range(600_001, 700_000)),
 ]
 ORDER_NUMS = [405_300, 45_030, 450_300, 40_530, 405_030, 54_030]
-COMPARE = [(99_999, "100 000", 100_000), (307_040, "307 400", 307_400), (1_000_000, "999 999", 999_999),
-           ("8 ZT", "80 000", None), ("5 HT", "50 ZT", None), (620_500, "602 500", 602_500)]
+COMPARE = [(99_999, "100 000", 100_000), (307_040, "307 400", 307_400),
+           ("8 ZT", "80 000", None), ("5 HT", "50 ZT", None)]
 
 
 def all_numbers(cards):
@@ -392,7 +371,7 @@ def term_value(t):
 
 
 def b2_page1(c, sol):
-    header(c, "Übungsblatt 2", "Zahlen bilden · Zahlen bis 1 000 000 · Seite 1", name_fields=not sol)
+    header(c, "Übungsblatt 2", "Zahlen bilden · ca. 15 Minuten · Seite 1", name_fields=not sol)
     y = PAGE_H - 37 * mm
     y = merkkasten(c, y, 38 * mm, "Merke: Ziffern und Zahlen", [
         "Ziffern sind die 10 Zeichen 0, 1, 2, 3, 4, 5, 6, 7, 8 und 9. Aus Ziffern bildest du Zahlen.",
@@ -445,7 +424,7 @@ def b2_page1(c, sol):
 
 
 def b2_page2(c, sol):
-    header(c, "Übungsblatt 2", "Zahlen bilden · Zahlen bis 1 000 000 · Seite 2", name_fields=False)
+    header(c, "Übungsblatt 2", "Zahlen bilden · ca. 15 Minuten · Seite 2", name_fields=False)
     y = PAGE_H - 38 * mm
     y = task_head(c, y, 3, "Rätselzahlen",
                   "Lies jeden Hinweis genau. Finde die Zahl und schreibe sie auf.", [2, 4])
@@ -487,11 +466,10 @@ def b2_page2(c, sol):
         if sol:
             ctext(c, bx + 3.5 * mm, yy, cmp_sign(va, vb), 12, "Sans-Bold", SOL)
         text(c, bx + 11 * mm, yy, b_txt.replace(" ", NB), 11)
-    y -= 3 * 10 * mm + 4 * mm
+    y -= 2 * 10 * mm + 4 * mm
     if sol:
         y = wrap(c, L, y, f"Hilfe: 8{NB}ZT = 80{NB}000.  5{NB}HT = 500{NB}000 und 50{NB}ZT = 500{NB}000.", W, 8.5,
                  color=SOL) - 3 * mm
-    goals_box(c, y, [4])
     footer_note(c, sol, 2)
     c.showPage()
 
@@ -499,18 +477,15 @@ def b2_page2(c, sol):
 # =====================================================================
 # Blatt 3: Zählen und Rechnen (Lernziele 5, 6)
 # =====================================================================
-FORWARD = [(995_000, 1_000), (299_700, 100), (47_500, 2_500), (750_000, 50_000)]
-BACKWARD = [(1_000_000, 10_000), (403_000, 1_000), (60_200, 100), (525_000, 25_000)]
+FORWARD = [(995_000, 1_000), (299_700, 100), (750_000, 50_000)]
+BACKWARD = [(1_000_000, 10_000), (403_000, 1_000), (525_000, 25_000)]
 RULE = [120_000, 145_000, 170_000, 195_000]
-NEIGHBOURS = [400_000, 99_999, 700_010, 50_909]
+NEIGHBOURS = [400_000, 99_999, 50_909]
 HEAD_CALC = [(340_000, "+", 60_000), (1_000_000, "−", 250_000), (703_000, "−", 5_000), (45_600, "+", 400),
-             (999_999, "+", 1), (500_000, "−", 1), (650_000, "+", 350_000), (1_000_000, "−", 1_000),
-]
-WRITTEN = [(245_386, "+", 371_548), (508_290, "+", 96_735), (700_000, "−", 238_465), (815_042, "−", 47_386)]
+             (999_999, "+", 1), (500_000, "−", 1)]
+WRITTEN = [(245_386, "+", 371_548), (700_000, "−", 238_465)]
 WORD = [
-    ("a) Eine Stadt hat 384 250 Einwohner. Ein Jahr später wohnen 12 750 Menschen mehr dort. "
-     "Wie viele Einwohner hat die Stadt jetzt?", 384_250 + 12_750, "Einwohner"),
-    ("b) Ein Verein sammelt Geld. Sein Ziel sind 1 000 000 Franken. Bis jetzt hat er 785 400 Franken gesammelt. "
+    ("Ein Verein sammelt Geld. Sein Ziel sind 1 000 000 Franken. Bis jetzt hat er 785 400 Franken gesammelt. "
      "Wie viele Franken fehlen noch?", 1_000_000 - 785_400, "Franken"),
 ]
 
@@ -532,7 +507,7 @@ def seq_row(c, x, y, start, step, sol, count=6, bw=27 * mm):
 
 
 def b3_page1(c, sol):
-    header(c, "Übungsblatt 3", "Zählen und Rechnen · Zahlen bis 1 000 000 · Seite 1", name_fields=not sol)
+    header(c, "Übungsblatt 3", "Zählen und Rechnen · ca. 20 Minuten · Seite 1", name_fields=not sol)
     y = PAGE_H - 37 * mm
     y = merkkasten(c, y, 27 * mm, "Merke: in Schritten zählen", [
         "Vorwärts zählen: Du rechnest immer gleich viel dazu. Rückwärts zählen: Du rechnest immer gleich viel weg.",
@@ -603,7 +578,7 @@ def written_grid(c, x, y_top, a, op, b, sol, cols=8):
 
 
 def b3_page2(c, sol):
-    header(c, "Übungsblatt 3", "Zählen und Rechnen · Zahlen bis 1 000 000 · Seite 2", name_fields=False)
+    header(c, "Übungsblatt 3", "Zählen und Rechnen · ca. 20 Minuten · Seite 2", name_fields=False)
     y = PAGE_H - 38 * mm
     y = task_head(c, y, 5, "Im Kopf rechnen", "Rechne im Kopf. Schreibe das Ergebnis auf.", [6])
     for i, (a, op, b) in enumerate(HEAD_CALC):
@@ -614,7 +589,7 @@ def b3_page2(c, sol):
         lbl = f"{z(a)} {op} {z(b)} ="
         text(c, xx, yy, lbl, 10)
         answer(c, xx + pdfmetrics.stringWidth(lbl, "Sans", 10) + 2 * mm, yy, 26 * mm, sol, z(res))
-    y -= 4 * 8.5 * mm + 4 * mm
+    y -= ((len(HEAD_CALC) + 1) // 2) * 8.5 * mm + 4 * mm
 
     y = task_head(c, y, 6, "Schriftlich rechnen",
                   "Rechne schriftlich. Die Zahlen stehen schon richtig untereinander: Einer unter Einern, Zehner unter Zehnern.  "
@@ -625,9 +600,9 @@ def b3_page2(c, sol):
         text(c, gx - 7 * mm, gy - 4.4 * mm, f"{'abcd'[i]})", 9.5, "Sans-Bold", FIG)
         res = written_grid(c, gx, gy, a, op, b, sol)
         assert 0 <= res <= 1_000_000
-    y -= 2 * 30 * mm + 4 * mm
+    y -= ((len(WRITTEN) + 1) // 2) * 30 * mm + 4 * mm
 
-    y = task_head(c, y, 7, "Textaufgaben",
+    y = task_head(c, y, 7, "Textaufgabe",
                   "Lies die Aufgabe genau. Schreibe die Rechnung auf. Schreibe dann einen Antwortsatz.", [6])
     for q, res, unit in WORD:
         y = wrap(c, L + 9 * mm, y, q.replace("1 000 000", f"1{NB}000{NB}000").replace("384 250", f"384{NB}250")
@@ -642,15 +617,221 @@ def b3_page2(c, sol):
                else f"Es fehlen noch {z(res)} Franken.")
         answer(c, L + 30 * mm, y, W - 30 * mm, sol, ans)
         y -= 9 * mm
-    goals_box(c, y, [5, 6])
     footer_note(c, sol, 2)
     c.showPage()
 
 
+# =====================================================================
+# Abschlusstest (alle Lernziele, neue Zahlen), ca. 20 Minuten
+# =====================================================================
+T_ORDER = ["Zehntausender", "Einer", "Millionen", "Hunderter", "Hunderttausender", "Zehner", "Tausender"]
+T_VALUES = ["ZT", "HT", "M"]
+T_COMPOSE = [[("HT", 7), ("ZT", 3), ("E", 5)], [("T", 2), ("Z", 6)], [("Z", 9), ("HT", 1), ("H", 4)],
+             [("ZT", 5), ("E", 5)]]
+T_DECOMPOSE = 603_080
+T_WRITE = [206_040, 90_007, 800_500]
+T_READ = [502_060, 70_009]
+T_CARDS = "508261"
+T_RIDDLE = ("Meine Zahl liegt zwischen 20 000 und 30 000. An der Tausender-, der Hunderter-, der Zehner- "
+            "und der Einerstelle steht immer die Ziffer 5.",
+            lambda n: 20_000 < n < 30_000 and str(n)[1:] == "5555", range(20_001, 30_000))
+T_FORWARD = (698_000, 1_000)
+T_BACKWARD = (1_000_000, 50_000)
+T_NEIGHBOUR = 299_999
+T_HEAD = [(600_000, "+", 400_000), (1_000_000, "−", 1), (350_000, "−", 50_000), (99_990, "+", 10)]
+T_WRITTEN = [(347_589, "+", 268_734), (900_000, "−", 356_718)]
+T_POINTS = {1: 3, 2: 8, 3: 5, 4: 5, 5: 8, 6: 8}   # Aufgabe = Lernziel
+T_TOTAL = sum(T_POINTS.values())
+
+
+def t_head(c, y, nr, title, instruction):
+    y2 = task_head(c, y, nr, title, instruction, [nr])
+    text(c, R - 22 * mm, y, f"____ / {T_POINTS[nr]} P.", 9.5, "Sans", MUTED)
+    return y2
+
+
+def test_page1(c, sol):
+    header(c, "Abschlusstest", "Stellenwerte, Ziffern und Zahlen · ca. 20 Minuten · Seite 1", name_fields=not sol)
+    y = PAGE_H - 38 * mm
+    y = t_head(c, y, 1, "Die Stellen der Reihe nach",
+               "Ordne die Namen der Stellen. Schreibe sie in der richtigen Reihenfolge auf. Beginne bei den Einern.")
+    text(c, L + 9 * mm, y, ",  ".join(T_ORDER), 9.5, "Sans-Bold")
+    y -= 8 * mm
+    names = [n for _, n, _ in reversed(PLACES)]
+    assert sorted(names) == sorted(T_ORDER)
+    bw = (W - 9 * mm) / 3
+    for i, n in enumerate(names):
+        xx, yy = L + 9 * mm + (i % 3) * bw, y - (i // 3) * 8.5 * mm
+        text(c, xx, yy, f"{i + 1}.", 9.5, "Sans-Bold", FIG)
+        answer(c, xx + 6 * mm, yy, bw - 10 * mm, sol, n, 9.5)
+    y -= 3 * 8.5 * mm + 4 * mm
+
+    y = t_head(c, y, 2, "Werte und Zahlen zusammensetzen",
+               "a) Schreibe den Wert der Stelle als Zahl auf.  "
+               "b) Setze die Zahl aus den Teilen zusammen. Schreibe sie mit Ziffern auf.  "
+               "c) Zerlege die Zahl in ihre Stellen. Schreibe nur die Stellen auf, die nicht 0 sind.")
+    text(c, L + 9 * mm, y, "a)", 10, "Sans-Bold", FIG)
+    for i, a in enumerate(T_VALUES):
+        xx = L + 17 * mm + i * 55 * mm
+        text(c, xx, y, f"1{NB}{a} =", 10)
+        answer(c, xx + 15 * mm, y, 28 * mm, sol, z(VALUE[a]))
+    y -= 9 * mm
+    text(c, L + 9 * mm, y, "b)", 10, "Sans-Bold", FIG)
+    half = (W - 17 * mm) / 2
+    for i, parts in enumerate(T_COMPOSE):
+        xx, yy = L + 17 * mm + (i % 2) * half, y - (i // 2) * 8.5 * mm
+        desc = ", ".join(f"{d}{NB}{a}" for a, d in parts[:-1]) + f" und {parts[-1][1]}{NB}{parts[-1][0]} ="
+        text(c, xx, yy, desc, 10)
+        answer(c, xx + pdfmetrics.stringWidth(desc, "Sans", 10) + 2 * mm, yy, 24 * mm, sol, z(compose(parts)))
+    y -= 2 * 8.5 * mm + 1 * mm
+    text(c, L + 9 * mm, y, "c)", 10, "Sans-Bold", FIG)
+    text(c, L + 17 * mm, y, f"{z(T_DECOMPOSE)} =", 10)
+    answer(c, L + 40 * mm, y, 80 * mm, sol, parts_of(T_DECOMPOSE))
+    y -= 12 * mm
+
+    y = t_head(c, y, 3, "Stellenwerttabelle",
+               "a) Schreibe die Zahlen in die Stellenwerttabelle. Schreibe in jedes Feld genau eine Ziffer.  "
+               "b) Lies die Zahlen in der Tabelle. Schreibe sie rechts mit Ziffern auf.")
+    cw = 13 * mm
+    rows = len(T_WRITE) + len(T_READ)
+    for i in range(rows):
+        yy = y - 12.6 * mm - i * 8 * mm
+        if i == 0 or i == len(T_WRITE):
+            text(c, L + 9 * mm, yy, "a)" if i == 0 else "b)", 10, "Sans-Bold", FIG)
+        if i < len(T_WRITE):
+            text(c, L + 16 * mm, yy, z(T_WRITE[i]), 10, "Sans-Bold")
+    given = [None] * len(T_WRITE) + [{a: str(v) for a, v in table_digits(n).items()} for n in T_READ]
+    solu = [{a: str(v) for a, v in table_digits(n).items()} for n in T_WRITE] + [None] * len(T_READ)
+    x0 = L + 42 * mm
+    top = y
+    place_table(c, x0, y, cw, rows, sol, solutions=solu, given=given)
+    for i, n in enumerate(T_READ):
+        answer(c, x0 + 7 * cw + 6 * mm, top - 12.6 * mm - (len(T_WRITE) + i) * 8 * mm, 30 * mm, sol, z(n))
+    footer_note(c, sol, 1)
+    c.showPage()
+
+
+def test_page2(c, sol):
+    header(c, "Abschlusstest", "Stellenwerte, Ziffern und Zahlen · Seite 2", name_fields=False)
+    y = PAGE_H - 38 * mm
+    nums = all_numbers(T_CARDS)
+    odd = [n for n in nums if n % 2]
+    closest = min(nums, key=lambda n: abs(n - 600_000))
+    assert sum(abs(n - 600_000) == abs(closest - 600_000) for n in nums) == 1
+    hits = [n for n in T_RIDDLE[2] if T_RIDDLE[1](n)]
+    assert len(hits) == 1
+    qa = [("a) Bilde die grösste Zahl.", max(nums)), ("b) Bilde die kleinste Zahl.", min(nums)),
+          ("c) Bilde die grösste ungerade Zahl.", max(odd)),
+          (f"d) Bilde die Zahl, die am nächsten bei 600{NB}000 liegt.", closest)]
+    assert len({v for _, v in qa}) == 4
+    y = t_head(c, y, 4, "Zahlen bilden",
+               "a) bis d): Bilde mit diesen 6 Ziffernkarten sechsstellige Zahlen. Brauche jede Karte genau einmal.  "
+               "e) Löse die Rätselzahl.")
+    card_row(c, L + 9 * mm, y + 2 * mm, T_CARDS, size=8 * mm)
+    y -= 12 * mm
+    for q, v in qa:
+        text(c, L + 9 * mm, y, q, 10)
+        answer(c, R - 38 * mm, y, 38 * mm, sol, z(v))
+        y -= 8 * mm
+    y = wrap(c, L + 9 * mm, y, "e) " + T_RIDDLE[0].replace("20 000", f"20{NB}000").replace("30 000", f"30{NB}000"),
+             W - 52 * mm, 10)
+    answer(c, R - 38 * mm, y + 4.5 * mm, 38 * mm, sol, z(hits[0]))
+    y -= 7 * mm
+
+    y = t_head(c, y, 5, "In Schritten zählen",
+               "a) Zähle vorwärts. Schreibe die nächsten 3 Zahlen auf.  b) Zähle rückwärts. Schreibe die nächsten 3 Zahlen auf.  "
+               "c) Schreibe die Zahl davor (1 weniger) und die Zahl danach (1 mehr) auf.")
+    for lbl, (st, step) in (("a)", T_FORWARD), ("b)", (T_BACKWARD[0], -T_BACKWARD[1]))):
+        text(c, L + 9 * mm, y, f"{lbl}  {'+' if step > 0 else '−'}{z(abs(step))}", 9.5, "Sans-Bold", FIG)
+        seq_row(c, L + 40 * mm, y, st, step, sol, count=4, bw=32 * mm)
+        y -= 9 * mm
+    text(c, L + 9 * mm, y, "c)", 9.5, "Sans-Bold", FIG)
+    answer(c, L + 20 * mm, y, 34 * mm, sol, z(T_NEIGHBOUR - 1))
+    text(c, L + 62 * mm, y, z(T_NEIGHBOUR), 11, "Sans-Bold")
+    answer(c, L + 90 * mm, y, 34 * mm, sol, z(T_NEIGHBOUR + 1))
+    y -= 10 * mm
+
+    y = t_head(c, y, 6, "Rechnen",
+               "a) Rechne im Kopf.  b) Rechne schriftlich. Die Zahlen stehen schon richtig untereinander.")
+    for i, (a, op, b) in enumerate(T_HEAD):
+        res = calc(a, op, b)
+        assert 0 <= res <= 1_000_000
+        xx = L + 9 * mm + (i % 2) * 85 * mm
+        yy = y - (i // 2) * 8.5 * mm
+        lbl = f"{'a) ' if i == 0 else ''}{z(a)} {op} {z(b)} ="
+        text(c, xx if i == 0 else xx + (6 * mm if i == 2 else 0), yy, lbl, 10)
+        x_ans = (xx if i == 0 else xx + (6 * mm if i == 2 else 0)) + pdfmetrics.stringWidth(lbl, "Sans", 10) + 2 * mm
+        answer(c, x_ans, yy, 24 * mm, sol, z(res))
+    y -= 2 * 8.5 * mm + 2 * mm
+    text(c, L + 9 * mm, y - 4.4 * mm, "b)", 10, "Sans-Bold", FIG)
+    for i, (a, op, b) in enumerate(T_WRITTEN):
+        res = written_grid(c, L + 18 * mm + i * 85 * mm, y, a, op, b, sol)
+        assert 0 <= res <= 1_000_000
+    y -= 4 * 6 * mm + 5 * mm
+
+    bx, bw2, bh2 = R - 66 * mm, 66 * mm, 11 * mm
+    c.setStrokeColor(INK); c.setLineWidth(1)
+    c.roundRect(bx, y - bh2, bw2, bh2, 3 * mm, stroke=1, fill=0)
+    text(c, bx + 4 * mm, y - bh2 + 4 * mm, f"Total:  ______ / {T_TOTAL} Punkte", 11, "Sans-Bold")
+    if sol:
+        yy = y - 3 * mm
+        text(c, L, yy, "Bewertung", 10, "Sans-Bold", SOL)
+        yy -= 4.5 * mm
+        for line in ["Punkte je Aufgabe (Aufgabe = Lernziel): " + " · ".join(f"{k}: {v}" for k, v in T_POINTS.items()),
+                     "Aufgabe 1: alles richtig 3 P., 1 Fehler 2 P., 2 Fehler 1 P.",
+                     "Aufgabe 6b: je 2 P. (1 P. bei nur einer falschen Ziffer). Alle anderen Lücken: je 1 P.",
+                     f"Richtwert: ab {round(T_TOTAL * .9)} P. sehr gut · ab {round(T_TOTAL * .75)} P. gut · "
+                     f"ab {round(T_TOTAL * .6)} P. Lernziele erreicht."]:
+            yy = wrap(c, L, yy, line, W - 72 * mm, 8, color=SOL)
+        assert yy > 14 * mm, yy / mm
+    footer_note(c, sol, 2)
+    c.showPage()
+
+
+PLAN = [
+    ("0–25 Min.", "Übungsblatt 1: Stellenwerte",
+     "Zuerst den Merkkasten gemeinsam lesen. Nach jeder Aufgabe kurz mit dem Lösungsblatt vergleichen."),
+    ("25–40 Min.", "Übungsblatt 2: Zahlen bilden",
+     "Den Merkkasten laut lesen lassen. Bei Aufgabe 1 die Ziffernkarten auf dem Tisch legen lassen hilft sehr."),
+    ("40–60 Min.", "Übungsblatt 3: Zählen und Rechnen",
+     "Bei den Übergängen (z. B. 299 900 → 300 000) genau hinschauen. Schriftlich: Überträge klein notieren."),
+    ("60–65 Min.", "Kurze Pause", "Etwas trinken, bewegen."),
+    ("65–85 Min.", "Abschlusstest", "Allein lösen, ohne Hilfe und ohne Merkkasten. Danach mit dem Lösungsblatt korrigieren."),
+    ("85–90 Min.", "Test besprechen", "Pro Aufgabe = Lernziel: Was hat geklappt? Was üben wir vor dem 12.11. noch einmal?"),
+]
+SHORT = ("Wenn die Zeit knapp wird: Blatt 1 Aufgabe 2 nur mündlich lösen. Blatt 2 Aufgabe 5 weglassen. "
+         "Blatt 3 nur eine schriftliche Rechnung lösen. Der Test sollte immer ganz gemacht werden.")
+
+
+def ablauf(c):
+    header(c, "Ablaufplan: 90 Minuten", "Stellenwerte, Ziffern und Zahlen · Für die Lehrperson", name_fields=False)
+    y = PAGE_H - 40 * mm
+    for zeit, was, tipp in PLAN:
+        c.setFillColor(SOFT)
+        c.roundRect(L, y - 15 * mm, W, 17 * mm, 2 * mm, stroke=0, fill=1)
+        text(c, L + 3 * mm, y - 4 * mm, zeit, 10.5, "Sans-Bold", FIG)
+        text(c, L + 32 * mm, y - 4 * mm, was, 10.5, "Sans-Bold")
+        wrap(c, L + 32 * mm, y - 9.5 * mm, tipp.replace("299 900", f"299{NB}900").replace("300 000", f"300{NB}000"),
+             W - 36 * mm, 8.5, color=MUTED)
+        y -= 20 * mm
+    y = wrap(c, L, y - 2 * mm, SHORT, W, 9.5) - 6 * mm
+    text(c, L, y, "Lernziele der Lernzielkontrolle 3 (Test am 12.11.2026)", 11, "Sans-Bold")
+    y -= 6 * mm
+    where = {1: "Blatt 1 (Aufg. 1), Test 1", 2: "Blatt 1 (Aufg. 2–4, 7), Test 2", 3: "Blatt 1 (Aufg. 5–7), Test 3",
+             4: "Blatt 2, Test 4", 5: "Blatt 3 (Aufg. 1–4), Test 5", 6: "Blatt 3 (Aufg. 5–7), Test 6"}
+    for g, txt in GOALS.items():
+        yy = wrap(c, L + 6 * mm, y, txt, W - 70 * mm, 8.5)
+        text(c, L, y, f"{g}.", 8.5, "Sans-Bold", FIG)
+        text(c, R - 58 * mm, y, where[g], 8, "Sans", MUTED)
+        y = yy - 2.5 * mm
+    c.showPage()
+
+
 SHEETS = [
-    ("blatt1-stellenwerte", "Übungsblatt 1: Stellenwerte", [b1_page1, b1_page2, b1_page3]),
+    ("blatt1-stellenwerte", "Übungsblatt 1: Stellenwerte", [b1_page1, b1_page2]),
     ("blatt2-zahlen-bilden", "Übungsblatt 2: Zahlen bilden", [b2_page1, b2_page2]),
     ("blatt3-zaehlen-rechnen", "Übungsblatt 3: Zählen und Rechnen", [b3_page1, b3_page2]),
+    ("abschlusstest", "Abschlusstest: Stellenwerte, Ziffern und Zahlen", [test_page1, test_page2]),
 ]
 
 
@@ -664,6 +845,12 @@ def build():
                 p(c, sol)
             c.save()
             print(out)
+    out = OUT_DIR / "ablaufplan-90-minuten.pdf"
+    c = canvas.Canvas(str(out), pagesize=A4)
+    c.setTitle("Ablaufplan: 90 Minuten")
+    ablauf(c)
+    c.save()
+    print(out)
 
 
 if __name__ == "__main__":
