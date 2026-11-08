@@ -3,6 +3,7 @@
   const ZW = window.ZW;
   const { h } = ZW;
   const app = document.getElementById('app');
+  document.documentElement.lang = 'de-CH';
 
   const state = {
     name: ZW.store.get('name', ''),
@@ -70,7 +71,7 @@
     const stufen = h('div', { class: 'stufen', role: 'group', 'aria-label': 'Stufe' }, [1, 2, 3].map((ss) => {
       const S = ZW.STUFEN[ss];
       return h('button', { type: 'button', class: 'stufe', 'aria-pressed': ss === s ? 'true' : 'false', onclick: () => { state.s = ss; ZW.store.set('stufe', ss); zeigeUebersicht(); } },
-        h('b', {}, `${S.name}: ${S.titel}`), h('span', {}, S.text), h('span', { class: 'st' }, `★ ${summeStufe(k, ss)} von ${maxStufe()}`));
+        h('b', {}, `${S.name}: ${S.titel}`), h('span', {}, `${K.stufen[ss - 1]}. ${S.text}`), h('span', { class: 'st' }, `★ ${summeStufe(k, ss)} von ${maxStufe()}`));
     }));
     const spiele = h('div', { class: 'spiele' }, ZW.SPIELE.map((sp) =>
       h('button', { type: 'button', class: 'spiel-card papier', onclick: () => starteSpiel(sp.id) },
@@ -100,8 +101,12 @@
     const info = h('details', { class: 'info papier' },
       h('summary', {}, 'Für Lehrpersonen und Eltern'),
       h('div', { class: 'inhalt' },
-        h('p', {}, "Die Zahlenwerkstatt passt zum Lehrplan 21, Mathematik, Zyklus 2. Die Zahlenräume: 3. Klasse bis 1'000, 4. Klasse bis 100'000, 5. Klasse bis 1'000'000 sowie erste Dezimalzahlen und Brüche."),
-        h('p', {}, 'Stufe 1 festigt die Grundlagen. Stufe 2 entspricht dem Stoff der Klasse. Stufe 3 ist für Kinder, die mehr wollen. Alle Stufen sind immer offen, damit Lehrpersonen frei zuteilen können.'),
+        h('p', {}, 'Die Zahlenwerkstatt passt zum Lehrplan 21, Mathematik, Zyklus 2. Die Zahlenräume steigen von Stufe zu Stufe:'),
+        h('div', { class: 'tabelle-wrap' }, h('table', {},
+          h('thead', {}, h('tr', {}, h('th', {}, 'Klasse'), h('th', {}, 'Stufe 1: Einstieg'), h('th', {}, 'Stufe 2: Sicher'), h('th', {}, 'Stufe 3: Königsdisziplin'))),
+          h('tbody', {}, [3, 4, 5].map((kk) => h('tr', {}, h('td', {}, h('b', {}, ZW.KLASSEN[kk].name)), ZW.KLASSEN[kk].stufen.map((t) => h('td', {}, t))))))),
+        h('p', {}, "In der 3. Klasse rechnen die Kinder mit grossen Zahlen vereinfacht: lesen, legen, ordnen, mit runden Zahlen rechnen (300'000 + 200'000) und in Schritten bis 1'000'000 ergänzen. Das Einmaleins bleibt in allen Stufen dabei."),
+        h('p', {}, 'Alle Stufen sind immer offen, damit Lehrpersonen frei zuteilen können.'),
         h('div', { class: 'tabelle-wrap' }, h('table', {},
           h('thead', {}, h('tr', {}, h('th', {}, 'Spiel'), h('th', {}, 'Was geübt wird'), h('th', {}, 'Lehrplan 21'))),
           h('tbody', {}, ZW.SPIELE.map((sp) => h('tr', {}, h('td', {}, h('b', {}, sp.name)), h('td', {}, sp.was), h('td', {}, sp.lp)))))),
@@ -135,7 +140,7 @@
         h('div', { class: 'game-head' },
           h('button', { type: 'button', class: 'zurueck', onclick: zeigeUebersicht }, '← Übersicht'),
           h('h1', {}, sp.name),
-          h('span', { class: 'meta' }, `${k}. Klasse · ${ZW.STUFEN[s].name}: ${ZW.STUFEN[s].titel}`)),
+          h('span', { class: 'meta' }, `${k}. Klasse · ${ZW.STUFEN[s].name}: ${ZW.STUFEN[s].titel} · ${ZW.KLASSEN[k].stufen[s - 1]}`)),
         h('div', { class: 'fortschritt', role: 'progressbar', 'aria-label': 'Fortschritt' }, balken),
         buehne)));
     const g = {

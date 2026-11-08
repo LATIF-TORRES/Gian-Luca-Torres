@@ -40,13 +40,20 @@
   const ZEHN = ['', '', 'zwanzig', 'dreissig', 'vierzig', 'fünfzig', 'sechzig', 'siebzig', 'achtzig', 'neunzig'];
   const u100 = (n) => (n < 20 ? EIN[n] : (n % 10 ? EIN[n % 10] + 'und' : '') + ZEHN[Math.floor(n / 10)]);
   const u1000 = (n) => (n >= 100 ? EIN[Math.floor(n / 100)] + 'hundert' : '') + u100(n % 100);
+  const unterMillion = (n) => {
+    const t = Math.floor(n / 1000), r = n % 1000;
+    return (t ? u1000(t) + 'tausend' : '') + u1000(r);
+  };
+  // Anzahl vor „Million(en)“ / „Milliarde(n)“: eine, zwei, einhunderteine …
+  const anzahlWort = (n) => (n === 1 ? 'eine' : n % 100 === 1 ? unterMillion(n) + 'e' : unterMillion(n));
   ZW.zahlwort = (n) => {
     if (n === 0) return 'null';
-    if (n === 1000000) return 'eine Million';
-    const t = Math.floor(n / 1000), r = n % 1000;
-    let s = (t ? u1000(t) + 'tausend' : '') + u1000(r);
-    if (n % 100 === 1) s += 's';
-    return s;
+    const mia = Math.floor(n / 1e9), mio = Math.floor(n / 1e6) % 1000, rest = n % 1e6;
+    const teile = [];
+    if (mia) teile.push(anzahlWort(mia) + (mia === 1 ? ' Milliarde' : ' Milliarden'));
+    if (mio) teile.push(anzahlWort(mio) + (mio === 1 ? ' Million' : ' Millionen'));
+    if (rest) teile.push(unterMillion(rest) + (rest % 100 === 1 ? 's' : ''));
+    return teile.join(' ');
   };
 
   // Speicher im Browser (kann fehlen, dann läuft alles ohne Speichern)
@@ -122,7 +129,7 @@
   // opts: { decimal: bool, maxLen, onOk(value, text), prefix }
   ZW.NumInput = class {
     constructor(opts) {
-      this.opts = Object.assign({ decimal: false, maxLen: 9 }, opts);
+      this.opts = Object.assign({ decimal: false, maxLen: 10 }, opts);
       this.text = '';
       this.display = ZW.h('span', { class: 'anzeige leer', 'aria-live': 'polite' });
       this.pad = this.buildPad();

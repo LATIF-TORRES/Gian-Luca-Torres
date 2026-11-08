@@ -123,7 +123,11 @@
           const zeigen = istGross && (c.labels === 'alle' || v === c.min || v === c.max || i === anzahlGross / 2);
           if (zeigen) {
             const lab = h('div', { class: 'tick-label', style: `left:${pct(v)}%` }, ZW.strahlText(c, v));
-            if (c.labels === 'alle' && i % 2 === 1 && anzahlGross >= 10) lab.classList.add('ungerade');
+            const lang = ZW.strahlText(c, c.max).length > 5;
+            const randOderMitte = v === c.min || v === c.max || i === anzahlGross / 2;
+            if (c.labels === 'alle' && !randOderMitte && (lang || i % 2 === 1)) lab.classList.add('ungerade');
+            if (v === c.min) lab.classList.add('links');
+            if (v === c.max) lab.classList.add('rechts');
             linie.append(lab);
           }
         }
@@ -186,7 +190,7 @@
   const stellen = {
     id: 'stellen', name: 'Stellenwert-Werkstatt', thema: 'Stellenwerte',
     kurz: 'Lege Zahlen mit Plättchen in die Stellenwerttafel.',
-    lp: 'MA.1.A.1', was: 'Zahlen lesen und schreiben, Stellenwerte (E, Z, H, T, ZT, HT), Zahlwörter, Bündeln und Entbündeln.',
+    lp: 'MA.1.A.1', was: 'Zahlen lesen und schreiben, Stellenwerte von E bis HM (Hundertmillionen), Zahlwörter, Bündeln und Entbündeln.',
     bild: svg('<rect x="6" y="8" width="108" height="48" rx="6"/><path d="M42 8v48M78 8v48M6 22h108"/><circle cx="24" cy="38" r="5"/><circle cx="60" cy="34" r="5"/><circle cx="60" cy="46" r="5"/><circle cx="96" cy="40" r="5"/>'),
     start(g) {
       const RUNDEN = 6;
@@ -203,7 +207,7 @@
         const a = ZW.stellenAufgabe(g.k, g.s);
         const anz = Array(n).fill(0);
         let fertig = false;
-        const tafel = h('div', { class: 'tafel', style: `--cols:${n}` });
+        const tafel = h('div', { class: 'tafel' + (n >= 5 ? ' eng' : ''), style: `--cols:${n}` });
         const spalten = [];
         for (let i = n - 1; i >= 0; i--) {
           const st = ZW.STELLEN[i];
@@ -252,7 +256,7 @@
           h('p', { class: 'auftrag' }, auftrag[0], h('span', { class: 'gross' }, a.text)),
           auftrag[1] ? h('p', { class: 'hinweis' }, auftrag[1]) : null,
           h('p', { class: 'hinweis' }, 'Drücke + und −. In jeder Spalte liegen höchstens 9 Plättchen.'),
-          tafel, fb, h('div', { class: 'aktionen' }, knopf, h('span', { class: 'chip' }, `Zahl ${runde + 1} von ${RUNDEN}`))].filter(Boolean));
+          h('div', { class: 'tafel-wrap' }, tafel), fb, h('div', { class: 'aktionen' }, knopf, h('span', { class: 'chip' }, `Zahl ${runde + 1} von ${RUNDEN}`))].filter(Boolean));
       };
       naechste();
     },
@@ -296,7 +300,7 @@
           m.append(reihe);
         }
         const inp = new ZW.NumInput({
-          maxLen: 7,
+          maxLen: 10,
           onChange: (t) => { if (!aktiv) return; eingaben[aktiv] = t; steine[aktiv].textContent = t === '' ? '?' : fmt(ZW.parseNum(t)); },
           onOk: () => { const naechsterLeer = reihenfolge.find((k) => k !== aktiv && !eingaben[k]); if (naechsterLeer) waehle(naechsterLeer); else knopf.focus(); },
         });
@@ -513,7 +517,7 @@
   const memory = {
     id: 'memory', name: 'Rechen-Memory', thema: 'Rechnen',
     kurz: 'Finde Paare: Rechnung und Ergebnis gehören zusammen.',
-    lp: 'MA.1.A.3', was: 'Einmaleins und Umkehraufgaben automatisieren, Zehner- und Hunderter-Einmaleins; in der 5. Klasse Dezimalzahlen und Brüche gleichsetzen.',
+    lp: 'MA.1.A.3', was: 'Einmaleins und Umkehraufgaben automatisieren, Zehner- und Hunderter-Einmaleins; Zahlwort und Zahl bei grossen Zahlen; Dezimalzahlen und Brüche gleichsetzen.',
     bild: svg('<rect x="8" y="10" width="34" height="44" rx="5"/><rect x="48" y="10" width="34" height="44" rx="5"/><path d="M18 32h14M65 26v12M59 32h12"/><rect x="88" y="10" width="26" height="44" rx="5" stroke-dasharray="4 5"/>'),
     start(g) {
       ZW.keyHandler = null;
@@ -523,7 +527,7 @@
       const zugEl = h('span', { class: 'chip' }, 'Züge: 0');
       const fb = feedback();
       const knoepfe = karten.map((k, idx) => {
-        const b = h('button', { type: 'button', class: 'karte', 'aria-label': 'Verdeckte Karte ' + (idx + 1), onclick: () => klick(idx) }, h('span', { class: 'rueck', 'aria-hidden': 'true' }, '?'));
+        const b = h('button', { type: 'button', class: 'karte' + (k.text.length > 14 ? ' lang' : ''), 'aria-label': 'Verdeckte Karte ' + (idx + 1), onclick: () => klick(idx) }, h('span', { class: 'rueck', 'aria-hidden': 'true' }, '?'));
         return b;
       });
       const zeige = (idx) => {
@@ -561,9 +565,7 @@
         }
       }
       const n = paare.length;
-      const auftrag = g.k === 5 && g.s === 2
-        ? 'Finde die Paare: Eine Dezimalzahl und ein Bruch, die gleich gross sind.'
-        : 'Finde die Paare: Eine Rechnung und ihr Ergebnis gehören zusammen.';
+      const auftrag = 'Finde die Paare: Eine Rechnung und ihr Ergebnis gehören zusammen. Oder: Zwei Karten zeigen dieselbe Zahl, zum Beispiel als Wort und als Zahl.';
       g.buehne.append(h('div', { class: 'buehne papier' },
         h('p', { class: 'auftrag' }, auftrag),
         h('p', { class: 'hinweis' }, `Decke immer zwei Karten auf. Es gibt ${n} Paare. Mit höchstens ${n + 4} Zügen bekommst du 3 Sterne.`),

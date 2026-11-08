@@ -44,6 +44,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { min-height: 100%; }
 body {
   margin: 0;
@@ -228,7 +229,7 @@ th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: .06em; color
 .buehne { padding: 20px; display: grid; gap: 18px; min-width: 0; }
 @media (max-width: 520px) { .buehne { padding: 14px; } }
 .auftrag { font-size: 1.15rem; font-weight: 700; }
-.auftrag .gross { font-family: var(--font-display); font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 800; display: block; overflow-wrap: anywhere; }
+.auftrag .gross { font-family: var(--font-display); font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 800; display: block; overflow-wrap: anywhere; hyphens: auto; }
 .hinweis { color: var(--muted); font-size: 0.95rem; }
 .feedback { min-height: 1.6em; font-weight: 700; font-size: 1.05rem; }
 .feedback.good { color: var(--good); }
@@ -283,6 +284,8 @@ th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: .06em; color
 .marker.ziel b { background: var(--good); }
 .marker.ziel i { background: var(--good); height: 30px; }
 @media (max-width: 600px) { .tick-label.ungerade { display: none; } }
+.tick-label.links { transform: translateX(-15%); }
+.tick-label.rechts { transform: translateX(-85%); }
 
 /* Stellenwerttafel */
 .tafel { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; }
@@ -400,4 +403,12 @@ th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: .06em; color
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
-@media (max-width: 520px) { .tafel[style*="--cols:6"] .kopf small, .tafel[style*="--cols:5"] .kopf small { display: none; } }
+@media (max-width: 520px) { .tafel.eng .kopf small { display: none; } }
+.tafel-wrap { overflow-x: auto; padding-bottom: 2px; }
+.tafel { min-width: calc(var(--cols) * 32px); }
+@media (max-width: 520px) { .tafel.eng .kopf { font-size: 0.8rem; padding: 4px 0; } .tafel.eng .ziffer { font-size: 1.4rem; } .tafel.eng .pm button { font-size: 1.1rem; padding: 4px 0; } }
+.p-M { --pc: #3fc1c9; width: 26px; height: 26px; border-radius: 6px; }
+.p-ZM { --pc: #8f6f4a; width: 26px; height: 26px; border-radius: 6px; }
+.p-HM { --pc: #5f6fd8; width: 26px; height: 26px; border-radius: 6px; }
+@media (max-width: 520px) { .p-M, .p-ZM, .p-HM { width: 18px; height: 18px; } }
+.karte.lang.offen, .karte.lang.paar { font-size: clamp(0.62rem, 2.4vw, 0.95rem); overflow-wrap: anywhere; hyphens: auto; }
