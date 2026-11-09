@@ -396,3 +396,11 @@ body[data-tab="chat"] .akhi-start { top: 12px; bottom: auto; right: 16px; width:
 .akhi-hochladen input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
 .akhi-text { white-space: pre-wrap; font: inherit; font-size: .9rem; color: #d7f6ff; max-height: 55vh; overflow: auto; background: rgba(4, 12, 20, .6); padding: 10px; border-radius: 8px; }
 .akhi input[type="password"], .akhi input[type="text"], .akhi input[type="number"], .akhi input:not([type]) { background: rgba(4, 12, 20, .8); color: #e3f7ff; border: 1px solid rgba(58, 214, 255, .35); }
+
+.akhi-erweitert { margin-top: 12px; border-top: 1px solid rgba(58, 214, 255, .2); padding-top: 8px; }
+.akhi-erweitert summary { cursor: pointer; color: #3ad6ff; font-size: .78rem; letter-spacing: .15em; text-transform: uppercase; }
+.akhi-erweitert[open] summary { margin-bottom: 8px; }
+.akhi-ki-hinweis { width: 100%; max-width: 760px; margin: 8px 0; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(232, 184, 74, .6); background: rgba(232, 184, 74, .1); }
+.akhi-ki-hinweis p { margin: 0 0 8px; }
+.akhi-ki-hinweis .zeile { margin-bottom: 8px; }
+.akhi-ki-hinweis input { flex: 1; min-width: 0; }

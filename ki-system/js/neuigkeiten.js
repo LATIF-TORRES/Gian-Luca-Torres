@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "5.1"; // muss mit version.json übereinstimmen
+var APP_VERSION = "5.2"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "Einfacher: Google Docs und KI direkt bei Akhi verbinden", text: "Unter „⬇ Speichern als …“ steht jetzt zuerst „Google Docs“: Das Dokument wird mit Formatierung kopiert und ein neues Google-Dokument geöffnet, du fügst nur noch ein. Daneben gibt es PDF, Word-Datei und Text. Ist noch keine KI verbunden, kannst du den kostenlosen Schlüssel direkt bei Akhi einfügen. Profi-Einstellungen (Rat der KIs, Stimmenwahl) liegen eingeklappt unter „Erweitert“." },
   { titel: "Akhi: Word, PDF, Upload und Rat der KIs", text: "Dokumente, Checklisten und Module speicherst du jetzt als PDF, Word (.docx und .doc), Text oder Markdown („⬇ Speichern als …“). Du kannst PDFs, Word- und Textdateien hochladen und von Akhi analysieren lassen. Neu ist der „Rat der KIs“: Akhi fragt Claude, Gemini, ChatGPT und die lokale KI gleichzeitig, prüft ihre Antworten gegeneinander, wirft Fehler raus und gibt dir die beste Antwort. Die Bibliothek hat jetzt 22 Module, angeführt von „Automatisierter Cashflow“. Akhi antwortet gezielter, ist ganz auf regelmässigen, automatisierten Cashflow ausgerichtet und schlägt Nasheed statt Musik vor." },
   { titel: "Neu: AKHI, dein Sprach-Assistent", text: "Tipp unten rechts auf den leuchtenden Knopf „AKHI“ oder sag „Hey Akhi“. Akhi hat ein eigenes Dashboard, spricht mit Männerstimme und hört im Gesprächsmodus nach jeder Antwort wieder zu. Er kennt sich aus mit Businessplan, Marketing, Digistore24, Reselling, Social Media, KI-Werkzeugen und Konnektoren, Gründen in der Schweiz und Halal-Business. Er erstellt dir Dokumente (als PDF speicherbar), Checklisten und Aufgaben nach Bereichen. Dazu gibt es ein Businessplan-Formular, das deine Zahlen sofort durchrechnet." },
   { besitzer: true, titel: "Echtgeld mit Yuh (halbautomatisch)", text: "Im Depot oben: „Echtgeld mit Yuh“. Trag ein, wie viel Geld bei Yuh für A&T verfügbar ist, und schalte die Vorschläge ein. Der Mentor und der selbstständige Handel schlagen dir dann echte Käufe vor (mit Stop und Ziel). Du kaufst in der Yuh-App und tippst auf „Gekauft“. Danach überwacht A&T die Position und meldet sich, wenn du verkaufen solltest. Tipp: „Benachrichtigungen erlauben“." },

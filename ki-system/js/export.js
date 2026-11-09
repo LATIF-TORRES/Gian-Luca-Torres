@@ -4,7 +4,9 @@
  * damit es auch offline und aus dem Windows-Paket (file://) funktioniert.
  */
 
-var EXPORT_FORMATE = [["pdf", "PDF"], ["docx", "Word (.docx)"], ["doc", "Word 97 (.doc)"], ["txt", "Text (.txt)"], ["md", "Markdown (.md)"]];
+// Einfach gehalten: Google Docs zuerst, dann PDF, Word-Datei (öffnet auch Google Docs, Pages, LibreOffice), Text.
+// .doc und .md gibt es weiterhin über dokumentExport, aber nicht im Menü.
+var EXPORT_FORMATE = [["gdocs", "Google Docs"], ["pdf", "PDF"], ["docx", "Word-Datei (.docx)"], ["txt", "Text"]];
 
 function exportAuswahlHtml(klasse) {
   return "<select class='export-wahl " + (klasse || "") + "' title='Speichern als'><option value=''>⬇ Speichern als …</option>" +
@@ -34,10 +36,43 @@ function herunterladen(blob, name) {
 function dokumentExport(titel, markdown, format) {
   markdown = String(markdown || "");
   if (format === "pdf") return alsPdf(titel, markdown);
+  if (format === "gdocs") return inGoogleDocs(titel, markdown);
   if (format === "md") return herunterladen(new Blob(["# " + titel + "\n\n" + markdown], { type: "text/markdown;charset=utf-8" }), dateiName(titel, "md"));
   if (format === "txt") return herunterladen(new Blob([titel + "\n\n" + mdZuText(markdown)], { type: "text/plain;charset=utf-8" }), dateiName(titel, "txt"));
   if (format === "doc") return herunterladen(new Blob(["﻿" + mdZuWordHtml(titel, markdown)], { type: "application/msword" }), dateiName(titel, "doc"));
   if (format === "docx") return herunterladen(mdZuDocx(titel, markdown), dateiName(titel, "docx"));
+}
+
+/* ---------- Google Docs: formatiert kopieren, neues Google-Dokument öffnen, einfügen ---------- */
+// Ohne Google-Anmeldung in A&T: docs.new legt im eigenen Google-Konto ein leeres Dokument an.
+function inGoogleDocs(titel, md) {
+  var html = "<h1>" + String(titel || "").replace(/</g, "&lt;") + "</h1>" + (window.marked ? marked.parse(md) : "<pre>" + md.replace(/</g, "&lt;") + "</pre>");
+  if (window.DOMPurify) html = DOMPurify.sanitize(html);
+  var text = titel + "\n\n" + mdZuText(md);
+  var fenster = window.open("https://docs.new", "_blank"); // sofort öffnen, sonst blockiert der Browser das Fenster
+  try { if (fenster) fenster.opener = null; } catch (e) {}
+  function fertig(formatiert) {
+    var t = "Kopiert. Im neuen Google-Dokument einfügen: Strg+V (Mac: Cmd+V, Handy: lange tippen → Einfügen)." + (formatiert ? "" : " (ohne Formatierung)");
+    var el = document.querySelector("#toast");
+    if (el) { el.textContent = t; el.classList.add("sichtbar"); setTimeout(function () { el.classList.remove("sichtbar"); }, 7000); }
+    if (!fenster) { // Fenster blockiert: Link anbieten statt A&T zu verlassen
+      var l = document.createElement("a"); l.href = "https://docs.new"; l.target = "_blank"; l.rel = "noopener"; document.body.appendChild(l); l.click(); l.remove();
+    }
+  }
+  try {
+    if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+      navigator.clipboard.write([new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }), "text/plain": new Blob([text], { type: "text/plain" }) })])
+        .then(function () { fertig(true); }, function () { kopierenEinfach(text); fertig(false); });
+      return;
+    }
+  } catch (e) { /* weiter mit einfachem Kopieren */ }
+  kopierenEinfach(text); fertig(false);
+}
+function kopierenEinfach(text) {
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).catch(function () {}); return; }
+  var x = document.createElement("textarea"); x.value = text; document.body.appendChild(x); x.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  x.remove();
 }
 
 /* ---------- Markdown → Text ---------- */

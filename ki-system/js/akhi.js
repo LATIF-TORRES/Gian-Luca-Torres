@@ -222,6 +222,7 @@ var Akhi = (function () {
   function zeichnen() {
     if (!offen()) return;
     uhr(); werte();
+    $("#akhi-ki-hinweis").classList.toggle("versteckt", hatSchluessel());
     // Module (Bibliothek)
     $("#akhi-module").innerHTML = WISSEN.map(function (w) {
       return "<button class='akhi-modul' data-id='" + w.id + "'><span class='akhi-symbol'>" + w.symbol + "</span><span><strong>" + esc(w.titel) + "</strong><small>" + esc(w.bereich) + "</small></span></button>";
@@ -348,7 +349,7 @@ var Akhi = (function () {
     return senden(text);
   }
   function senden(text, vorAktion) {
-    if (!hatSchluessel()) { antwortZeigen("Ich brauche zuerst eine KI-Verbindung. Unter „Ich“ trägst du den kostenlosen Gemini-Schlüssel ein, oder auf dem Laptop die lokale KI.", true); return; }
+    if (!hatSchluessel()) { zeichnen(); $("#akhi-ki-hinweis").scrollIntoView({ behavior: "smooth", block: "center" }); antwortZeigen("Ich brauche zuerst eine KI-Verbindung. Verbinde sie einmal oben, das dauert etwa 2 Minuten und ist kostenlos.", true); return; }
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     var c = akhiChat();
     var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + AKHI_AUFTRAG + "\n" + kontextFuerKi() + "\n</kontext>";
@@ -416,6 +417,18 @@ var Akhi = (function () {
       toastAkhi(this.checked ? "Sag „Hey Akhi“, solange A&T offen ist." : "„Hey Akhi“ aus.");
     };
     $("#akhi-gespraech").onchange = function () { Z.einstellungen.akhiGespraech = this.checked; speichern(); };
+    $("#akhi-ki-form").onsubmit = async function (ev) {
+      ev.preventDefault();
+      var k = $("#akhi-ki-schluessel").value.replace(/\s/g, "");
+      if (!k) return toastAkhi("Bitte zuerst den Schlüssel einfügen.");
+      toastAkhi("Prüfe den Schlüssel …");
+      try { await geminiModelleLaden(k); }
+      catch (f) { return toastAkhi(f.message === "schluessel" ? "Dieser Schlüssel funktioniert nicht. Kopiere ihn nochmal ganz." : "Keine Verbindung zu Google. Prüfe dein Internet."); }
+      Z.einstellungen.geminiSchluessel = k;
+      if (Z.einstellungen.anbieter !== "lokal" || !hatSchluessel()) Z.einstellungen.anbieter = "gemini";
+      speichern(); $("#akhi-ki-schluessel").value = ""; zeichnen();
+      antwortZeigen("Verbunden. Ich bin bereit, Akhi hier. Wobei kann ich dir helfen?", false);
+    };
     $("#akhi-rat").onchange = function () { Z.einstellungen.akhiRat = this.checked; speichern(); zeichnen(); };
     $("#akhi-openai").onchange = function () { Z.einstellungen.openaiSchluessel = this.value.replace(/\s/g, ""); speichern(); zeichnen(); toastAkhi(this.value ? "ChatGPT-Schlüssel gespeichert." : "ChatGPT-Schlüssel entfernt."); };
     $("#akhi-datei").onchange = async function () {

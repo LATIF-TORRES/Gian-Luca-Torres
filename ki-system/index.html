@@ -495,6 +495,7 @@
         <h3>Stimme</h3>
         <label class="haken"><input type="checkbox" id="akhi-weck"> <span>„Hey Akhi“ hören (solange A&amp;T offen ist)</span></label>
         <label class="haken"><input type="checkbox" id="akhi-gespraech"> <span>Gesprächsmodus: nach der Antwort wieder zuhören</span></label>
+        <details class="akhi-erweitert"><summary>Erweitert</summary>
         <label>Akhis Stimme <select id="akhi-stimme-wahl"></select></label>
         <button class="knopf klein zart" id="akhi-stimme-test" type="button">Stimme testen</button>
         <p id="akhi-stimme-info" class="klein-text leise"></p>
@@ -503,6 +504,7 @@
         <p id="akhi-rat-info" class="klein-text leise"></p>
         <label>ChatGPT-Schlüssel (optional, von platform.openai.com) <input id="akhi-openai" type="password" autocomplete="off" placeholder="sk-…"></label>
         <p class="klein-text leise">Schlüssel bleiben nur in diesem Browser. Mit dem Rat geht deine Frage an jede verbundene KI.</p>
+        </details>
       </aside>
 
       <main class="akhi-mitte">
@@ -510,6 +512,12 @@
           <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span><span class="akhi-kern-innen">AKHI</span>
         </button>
         <p id="akhi-status" class="akhi-status"></p>
+        <div id="akhi-ki-hinweis" class="akhi-ki-hinweis versteckt">
+          <p><strong>Damit Akhi antworten kann: einmal eine KI verbinden.</strong> Kostenlos, etwa 2 Minuten: Auf der Google-Seite anmelden, „API-Schlüssel erstellen“ tippen, kopieren, hier einfügen.</p>
+          <div class="zeile"><a class="knopf klein" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">1. Gratis-Schlüssel holen</a></div>
+          <form id="akhi-ki-form" class="zeile"><input id="akhi-ki-schluessel" type="password" autocomplete="off" placeholder="2. Einfügen"><button class="knopf klein">Verbinden</button></form>
+          <p class="klein-text leise">Auf dem Laptop geht es auch ganz ohne Schlüssel mit der lokalen KI („Lokale KI installieren“ im A&amp;T-Ordner).</p>
+        </div>
         <p id="akhi-du" class="akhi-du"></p>
         <div id="akhi-aktionen" class="aktionen"></div>
         <div id="akhi-antwort" class="akhi-antwort md"></div>
