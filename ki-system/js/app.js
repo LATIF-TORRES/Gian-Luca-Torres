@@ -742,10 +742,14 @@
 
   $("#export").onclick = function () {
     var kopie = JSON.parse(JSON.stringify(Z));
-    kopie.einstellungen.schluessel = ""; // Schlüssel nie in die Datei
-    kopie.einstellungen.geminiSchluessel = "";
-    kopie.einstellungen.openaiSchluessel = "";
-    if (kopie.depot) kopie.depot.finnhubSchluessel = "";
+    var mitSchluesseln = $("#export-schluessel") && $("#export-schluessel").checked;
+    if (!mitSchluesseln) { // Standard: Schlüssel nie in die Datei
+      kopie.einstellungen.schluessel = "";
+      kopie.einstellungen.geminiSchluessel = "";
+      kopie.einstellungen.openaiSchluessel = "";
+      kopie.einstellungen.besitzer = false;
+      if (kopie.depot) kopie.depot.finnhubSchluessel = "";
+    } else if (!confirm("Die Datei enthält dann deine Schlüssel und die Besitzer-Freischaltung. Bewahre sie nur für dich auf (z. B. in deinem eigenen Google Drive) und schick sie niemandem. Weiter?")) return;
     var blob = new Blob([JSON.stringify(kopie, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -759,11 +763,12 @@
     f.text().then(function (t) {
       var d = JSON.parse(t);
       if (!d || !d.einstellungen) throw new Error("keine Sicherung");
-      var schluessel = Z.einstellungen.schluessel, gSchluessel = Z.einstellungen.geminiSchluessel, oSchluessel = Z.einstellungen.openaiSchluessel;
+      var schluessel = Z.einstellungen.schluessel, gSchluessel = Z.einstellungen.geminiSchluessel, oSchluessel = Z.einstellungen.openaiSchluessel, besitzerVorher = Z.einstellungen.besitzer;
       Object.keys(d).forEach(function (k) { Z[k] = d[k]; });
       if (!Z.einstellungen.schluessel) Z.einstellungen.schluessel = schluessel;
       if (!Z.einstellungen.geminiSchluessel) Z.einstellungen.geminiSchluessel = gSchluessel;
       if (!Z.einstellungen.openaiSchluessel) Z.einstellungen.openaiSchluessel = oSchluessel;
+      if (!Z.einstellungen.besitzer && besitzerVorher) Z.einstellungen.besitzer = true;
       speichern();
       alles();
       toast("Sicherung geladen.");
@@ -875,6 +880,7 @@
   }
   if (Z.einstellungen.weckwort) Stimme.weckwort(true);
   if (typeof Akhi !== "undefined") Akhi.verbinden();
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(function (ja) { if (!ja) navigator.storage.persist(); }); } catch (e) {}
   var start = "heute";
   try { start = sessionStorage.getItem("aundt-tab") || "heute"; } catch (e) {}
   zeigeTab(start);
