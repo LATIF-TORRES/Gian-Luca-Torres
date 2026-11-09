@@ -91,13 +91,13 @@ function merken(text) {
   return "Gespeichert: " + text;
 }
 
-function aufgabeAnlegen(text, wichtig) {
+function aufgabeAnlegen(text, wichtig, bereich) {
   text = String(text || "").trim();
   if (!text) return "Keine Aufgabe angegeben.";
   if (wichtig) Z.aufgaben.forEach(function (a) { a.wichtig = false; });
-  Z.aufgaben.push({ id: neueId(), text: text, erledigt: false, wichtig: !!wichtig, datum: heuteISO() });
+  Z.aufgaben.push({ id: neueId(), text: text, erledigt: false, wichtig: !!wichtig, datum: heuteISO(), bereich: bereich || "" });
   speichern();
-  return "Aufgabe angelegt: " + text + (wichtig ? " (wichtigste heute)" : "");
+  return "Aufgabe angelegt: " + text + (bereich ? " (" + bereich + ")" : "") + (wichtig ? " (wichtigste heute)" : "");
 }
 
 var BUCHUNGSARTEN = {

@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "4.7"; // muss mit version.json übereinstimmen
+var APP_VERSION = "5.0"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "Neu: AKHI, dein Sprach-Assistent", text: "Tipp unten rechts auf den leuchtenden Knopf „AKHI“ oder sag „Hey Akhi“. Akhi hat ein eigenes Dashboard, spricht mit Männerstimme und hört im Gesprächsmodus nach jeder Antwort wieder zu. Er kennt sich aus mit Businessplan, Marketing, Digistore24, Reselling, Social Media, KI-Werkzeugen und Konnektoren, Gründen in der Schweiz und Halal-Business. Er erstellt dir Dokumente (als PDF speicherbar), Checklisten und Aufgaben nach Bereichen. Dazu gibt es ein Businessplan-Formular, das deine Zahlen sofort durchrechnet." },
   { besitzer: true, titel: "Echtgeld mit Yuh (halbautomatisch)", text: "Im Depot oben: „Echtgeld mit Yuh“. Trag ein, wie viel Geld bei Yuh für A&T verfügbar ist, und schalte die Vorschläge ein. Der Mentor und der selbstständige Handel schlagen dir dann echte Käufe vor (mit Stop und Ziel). Du kaufst in der Yuh-App und tippst auf „Gekauft“. Danach überwacht A&T die Position und meldet sich, wenn du verkaufen solltest. Tipp: „Benachrichtigungen erlauben“." },
   { besitzer: true, titel: "Mutiger handeln: ab Zuversicht 5 von 10", text: "Der selbstständige Handel kauft jetzt schon ab einer Zuversicht von 5 von 10 (vorher 8). Im Depot unter „Selbstständiger Handel“ stellst du das zwischen 3 und 9 ein. Die Schutzregeln bleiben: höchstens 20 % des Bargelds pro Order (jetzt auch vom Programm geprüft), Stop-Loss, Tageslimit, Höchstzahl Trades." },
   { besitzer: true, titel: "Selbstständiger Handel: Order wird wirklich aufgegeben", text: "Schrieb die KI „Kaufen“, ohne die Order aufzugeben, passierte nichts. Jetzt hakt A&T in diesem Fall einmal nach, damit die Order wirklich ausgeführt wird, oder die KI schreibt ausdrücklich „Keine Order“. Im Protokoll steht, wenn sie trotzdem nicht gehandelt hat." },

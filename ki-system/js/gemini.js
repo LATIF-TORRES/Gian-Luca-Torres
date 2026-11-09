@@ -11,6 +11,7 @@ function geminiSchema(s) {
     t.properties = {};
     Object.keys(s.properties).forEach(function (k) { t.properties[k] = geminiSchema(s.properties[k]); });
   }
+  if (s.items) t.items = geminiSchema(s.items);
   if (s.required) t.required = s.required;
   return t;
 }

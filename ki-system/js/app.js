@@ -32,6 +32,7 @@
     document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("aktiv", t.id === "tab-" + name); });
     document.querySelectorAll("#tabs button").forEach(function (b) { b.classList.toggle("aktiv", b.dataset.tab === name); });
     try { sessionStorage.setItem("aundt-tab", name); } catch (e) {}
+    document.body.setAttribute("data-tab", name);
     if (name === "heute") heuteZeigen();
     if (name === "geld") geldZeigen();
     if (name === "chat") { verlaufZeigen(); setTimeout(function () { $("#frage").focus(); }, 50); }
@@ -871,6 +872,7 @@
     navigator.serviceWorker.register("sw.js").catch(function () {});
   }
   if (Z.einstellungen.weckwort) Stimme.weckwort(true);
+  if (typeof Akhi !== "undefined") Akhi.verbinden();
   var start = "heute";
   try { start = sessionStorage.getItem("aundt-tab") || "heute"; } catch (e) {}
   zeigeTab(start);

@@ -476,6 +476,67 @@
     </div>
   </div>
 
+
+  <!-- AKHI: Sprach-Assistent im Jarvis-Stil -->
+  <button class="akhi-start akhi-oeffnen" type="button" title="Akhi öffnen (oder „Hey Akhi“ sagen)"><span class="akhi-start-ring"></span><span>AKHI</span></button>
+
+  <div id="akhi" class="akhi versteckt" role="dialog" aria-label="Akhi">
+    <div class="akhi-gitter"></div>
+    <header class="akhi-kopf">
+      <div class="akhi-logo">A&amp;T <span>· AKHI</span></div>
+      <div id="akhi-uhr" class="akhi-uhr"></div>
+      <button id="akhi-zu" class="akhi-zu" type="button" title="Schliessen">✕</button>
+    </header>
+
+    <div class="akhi-raster">
+      <aside class="akhi-panel akhi-links">
+        <h3>System</h3>
+        <div id="akhi-werte"></div>
+        <h3>Stimme</h3>
+        <label class="haken"><input type="checkbox" id="akhi-weck"> <span>„Hey Akhi“ hören (solange A&amp;T offen ist)</span></label>
+        <label class="haken"><input type="checkbox" id="akhi-gespraech"> <span>Gesprächsmodus: nach der Antwort wieder zuhören</span></label>
+        <label>Akhis Stimme <select id="akhi-stimme-wahl"></select></label>
+        <button class="knopf klein zart" id="akhi-stimme-test" type="button">Stimme testen</button>
+        <p id="akhi-stimme-info" class="klein-text leise"></p>
+      </aside>
+
+      <main class="akhi-mitte">
+        <button id="akhi-kern" class="akhi-kern bereit" type="button" aria-label="Mit Akhi sprechen">
+          <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span><span class="akhi-kern-innen">AKHI</span>
+        </button>
+        <p id="akhi-status" class="akhi-status"></p>
+        <p id="akhi-du" class="akhi-du"></p>
+        <div id="akhi-aktionen" class="aktionen"></div>
+        <div id="akhi-antwort" class="akhi-antwort md"></div>
+        <form id="akhi-form" class="akhi-form">
+          <button type="button" id="akhi-mikro" class="rund" title="Sprechen">🎙</button>
+          <input id="akhi-eingabe" placeholder="Frag Akhi … oder sag „Hey Akhi“" autocomplete="off">
+          <button class="rund senden" title="Senden">➤</button>
+        </form>
+        <div class="akhi-schnell">
+          <button type="button" class="chip" data-akhi-frage="Erstelle mir einen vollständigen Businessplan für meine Idee. Frag mich zuerst kurz nach der Idee, wenn du sie nicht kennst.">Businessplan</button>
+          <button type="button" class="chip" data-akhi-frage="Erstelle mir einen Marketingplan für die nächsten 30 Tage mit Inhalten pro Woche und speichere ihn als Dokument.">Marketingplan 30 Tage</button>
+          <button type="button" class="chip" data-akhi-frage="Wie verdiene ich mit Digistore24 Geld, halal und Schritt für Schritt?">Digistore24</button>
+          <button type="button" class="chip" data-akhi-frage="Wie starte ich mit Reselling in der Schweiz mit 200 CHF? Erstelle mir auch eine Checkliste.">Reselling starten</button>
+          <button type="button" class="chip" data-akhi-frage="Welche KI-Werkzeuge und Konnektoren brauche ich für ein kleines Online-Business und wie verbinde ich sie?">KI-Systeme</button>
+          <button type="button" class="chip" data-akhi-frage="Plane meine Woche: Teile meine Aufgaben in Bereiche und lege die 5 wichtigsten nächsten Schritte an.">Woche planen</button>
+        </div>
+        <section id="akhi-arbeit" class="akhi-panel akhi-arbeit versteckt"></section>
+      </main>
+
+      <aside class="akhi-panel akhi-rechts">
+        <h3>Module</h3>
+        <div id="akhi-module" class="akhi-module"></div>
+        <h3>Dokumente</h3>
+        <ul id="akhi-dokumente" class="liste akhi-liste"></ul>
+        <h3>Checklisten</h3>
+        <ul id="akhi-checklisten" class="liste akhi-liste"></ul>
+        <h3>Aufgaben nach Bereichen</h3>
+        <ul id="akhi-aufgaben" class="liste akhi-liste"></ul>
+      </aside>
+    </div>
+  </div>
+
   <script src="js/daten.js"></script>
   <script src="js/speicher.js"></script>
   <script src="js/halal-welt.js"></script>
@@ -487,6 +548,8 @@
   <script src="js/stimme.js"></script>
   <script src="js/einrichtung.js"></script>
   <script src="js/neuigkeiten.js"></script>
+  <script src="js/wissen.js"></script>
+  <script src="js/akhi.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

@@ -278,3 +278,113 @@ a.knopf { text-decoration: none; display: inline-block; }
 .vorschlag { border-left: 4px solid var(--gold); padding-left: 10px; flex-wrap: wrap; gap: 6px; }
 .vorschlag.verkauf { border-left-color: #c0392b; }
 .vorschlag .knoepfe { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+
+/* ---------- AKHI (Jarvis-Stil): immer dunkel, Cyan und Gold ---------- */
+.akhi-start { position: fixed; right: 16px; bottom: 16px; z-index: 40; width: 64px; height: 64px; border-radius: 50%;
+  border: 2px solid #3ad6ff; background: radial-gradient(circle, #0b2a3a 0%, #050b14 70%); color: #bff3ff; font-weight: 800;
+  letter-spacing: .12em; font-size: .7rem; cursor: pointer; box-shadow: 0 0 18px rgba(58, 214, 255, .55); }
+.akhi-start-ring { position: absolute; inset: -6px; border-radius: 50%; border: 1px solid rgba(58, 214, 255, .5); animation: akhi-puls 2.4s ease-out infinite; }
+body.akhi-offen .akhi-start, body.akhi-offen #tab-chat .chat-form { display: none; }
+body.akhi-offen { overflow: hidden; }
+
+.akhi { position: fixed; inset: 0; z-index: 60; overflow-y: auto; color: #d7f6ff; font-family: inherit;
+  background: radial-gradient(ellipse at 50% 30%, #0b2236 0%, #04070d 60%, #020306 100%); }
+.akhi-gitter { position: fixed; inset: 0; pointer-events: none; opacity: .18;
+  background-image: linear-gradient(rgba(58, 214, 255, .25) 1px, transparent 1px), linear-gradient(90deg, rgba(58, 214, 255, .25) 1px, transparent 1px);
+  background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%); }
+.akhi-kopf { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: rgba(4, 7, 13, .94); backdrop-filter: blur(6px); border-bottom: 1px solid rgba(58, 214, 255, .18); margin-bottom: 12px; }
+.akhi-logo { font-weight: 800; letter-spacing: .25em; color: #e8b84a; }
+.akhi-logo span { color: #3ad6ff; }
+.akhi-uhr { margin-left: auto; text-align: right; font-size: .75rem; color: #8fdcf0; display: flex; flex-direction: column; }
+.akhi-zeit { font-size: 1.3rem; font-weight: 700; color: #bff3ff; letter-spacing: .08em; }
+.akhi-zu { background: none; border: 1px solid #3ad6ff66; color: #bff3ff; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; font-size: 1rem; }
+
+.akhi-raster { position: relative; display: grid; grid-template-columns: 260px minmax(0, 1fr) 300px; gap: 16px; padding: 0 16px 40px; max-width: 1400px; margin: 0 auto; }
+.akhi-panel { background: rgba(8, 24, 38, .72); border: 1px solid rgba(58, 214, 255, .28); border-radius: 14px; padding: 14px;
+  box-shadow: inset 0 0 24px rgba(58, 214, 255, .06), 0 0 18px rgba(0, 0, 0, .4); backdrop-filter: blur(4px); align-self: start; min-width: 0; }
+.akhi-panel h3 { color: #3ad6ff; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; margin: 14px 0 8px; }
+.akhi-panel h3:first-child { margin-top: 0; }
+.akhi-panel label { color: #b8dbe6; }
+.akhi-panel .leise, .akhi .leise { color: #7fa9b8; }
+.akhi-wert { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px dashed rgba(58, 214, 255, .18); font-size: .85rem; }
+.akhi-wert strong { color: #e8b84a; text-align: right; }
+
+.akhi-mitte { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.akhi-kern { position: relative; width: min(56vw, 230px); height: min(56vw, 230px); margin: 8px 0 6px; border: none; background: none; cursor: pointer; border-radius: 50%; }
+.akhi-kern .ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(58, 214, 255, .7); }
+.akhi-kern .r1 { animation: akhi-dreh 12s linear infinite; border-style: dashed; }
+.akhi-kern .r2 { inset: 14%; border-color: rgba(232, 184, 74, .75); border-width: 3px; border-left-color: transparent; border-right-color: transparent; animation: akhi-dreh 6s linear infinite reverse; }
+.akhi-kern .r3 { inset: 28%; border-color: rgba(58, 214, 255, .45); animation: akhi-puls-ring 3s ease-in-out infinite; }
+.akhi-kern-innen { position: absolute; inset: 36%; border-radius: 50%; display: grid; place-items: center; font-weight: 800; letter-spacing: .2em; font-size: .8rem; color: #04070d;
+  background: radial-gradient(circle, #e9fbff 0%, #3ad6ff 55%, #0b6f8f 100%); box-shadow: 0 0 40px #3ad6ff, 0 0 90px rgba(58, 214, 255, .45); transition: transform .2s; }
+.akhi-kern.hoert .akhi-kern-innen { background: radial-gradient(circle, #fff7e0 0%, #e8b84a 55%, #8a6400 100%); box-shadow: 0 0 46px #e8b84a, 0 0 110px rgba(232, 184, 74, .5); animation: akhi-atmen .9s ease-in-out infinite; }
+.akhi-kern.denkt .r1 { animation-duration: 2.5s; } .akhi-kern.denkt .r2 { animation-duration: 1.2s; }
+.akhi-kern.spricht .akhi-kern-innen { animation: akhi-atmen .45s ease-in-out infinite; }
+.akhi-status { color: #8fdcf0; letter-spacing: .06em; text-align: center; margin: 4px 0; min-height: 1.4em; }
+.akhi-du { color: #e8b84a; font-style: italic; text-align: center; margin: 0; max-width: 680px; }
+.akhi-antwort { width: 100%; max-width: 760px; margin: 10px 0; color: #e3f7ff; line-height: 1.55; max-height: 45vh; overflow-y: auto; }
+.akhi-antwort:empty { display: none; }
+.akhi-antwort h1, .akhi-antwort h2, .akhi-antwort h3 { color: #3ad6ff; text-transform: none; letter-spacing: 0; }
+.akhi .aktionen span { display: inline-block; margin: 2px 4px; padding: 4px 10px; border-radius: 999px; font-size: .78rem; background: rgba(232, 184, 74, .15); color: #e8b84a; border: 1px solid rgba(232, 184, 74, .4); }
+.akhi-form { display: flex; gap: 8px; width: 100%; max-width: 760px; margin-top: 6px; }
+.akhi-form input { flex: 1; min-width: 0; background: rgba(4, 12, 20, .8); border: 1px solid rgba(58, 214, 255, .45); color: #e3f7ff; border-radius: 999px; padding: 12px 16px; font-size: 1rem; }
+.akhi-form .rund { width: 46px; height: 46px; border-radius: 50%; border: 1px solid #3ad6ff; background: rgba(58, 214, 255, .12); color: #bff3ff; cursor: pointer; flex: none; font-size: 1.05rem; }
+.akhi-form .senden { background: #3ad6ff; color: #04070d; }
+.akhi-schnell { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0; max-width: 760px; }
+.akhi .chip { background: rgba(58, 214, 255, .08); border: 1px solid rgba(58, 214, 255, .4); color: #bff3ff; }
+.akhi-arbeit { width: 100%; max-width: 900px; margin-top: 8px; }
+.akhi-arbeit .md, .akhi-arbeit li, .akhi-arbeit p { color: #e3f7ff; }
+.akhi-ansicht-kopf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.akhi-ansicht-kopf h2 { color: #e8b84a; margin: 0; }
+.akhi-arbeit textarea, .akhi-arbeit input { background: rgba(4, 12, 20, .8); color: #e3f7ff; border: 1px solid rgba(58, 214, 255, .35); }
+.akhi-rechnung { margin-top: 10px; padding: 10px; border-radius: 10px; border: 1px solid rgba(232, 184, 74, .45); background: rgba(232, 184, 74, .08); display: grid; gap: 4px; }
+.akhi-rechnung strong { color: #e8b84a; }
+
+.akhi-module { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.akhi-modul { display: flex; gap: 8px; align-items: center; text-align: left; padding: 8px; border-radius: 10px; cursor: pointer; color: #d7f6ff;
+  background: rgba(58, 214, 255, .06); border: 1px solid rgba(58, 214, 255, .25); min-width: 0; }
+.akhi-modul:hover { border-color: #3ad6ff; box-shadow: 0 0 12px rgba(58, 214, 255, .3); }
+.akhi-modul strong { display: block; font-size: .82rem; overflow-wrap: break-word; hyphens: auto; }
+.akhi-modul small { color: #7fa9b8; font-size: .68rem; }
+.akhi-symbol { font-size: 1.2rem; flex: none; }
+.akhi-liste li { border-color: rgba(58, 214, 255, .15) !important; color: #d7f6ff; flex-wrap: wrap; }
+.akhi-link { background: none; border: none; color: #bff3ff; text-align: left; cursor: pointer; padding: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.akhi-link small { color: #7fa9b8; }
+.akhi-checkliste { display: block !important; }
+.akhi-checkliste .zeile-oben { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+.akhi-checkliste .zeile-oben strong { flex: 1; color: #e8b84a; }
+.akhi .haken { font-size: .85rem; color: #d7f6ff; align-items: flex-start; }
+.akhi-bereich { display: block; color: #3ad6ff; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; margin: 4px 0; }
+.akhi select { background: rgba(4, 12, 20, .8); color: #e3f7ff; border: 1px solid rgba(58, 214, 255, .35); }
+.akhi .knopf.zart { background: rgba(58, 214, 255, .1); color: #bff3ff; border-color: rgba(58, 214, 255, .4); }
+.akhi .mini { color: #8fdcf0; }
+
+@keyframes akhi-dreh { to { transform: rotate(360deg); } }
+@keyframes akhi-puls { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
+@keyframes akhi-puls-ring { 0%, 100% { transform: scale(1); opacity: .6; } 50% { transform: scale(1.06); opacity: 1; } }
+@keyframes akhi-atmen { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .akhi-kern .ring, .akhi-start-ring, .akhi-kern-innen { animation: none !important; } }
+
+@media (max-width: 1050px) {
+  .akhi-raster { grid-template-columns: minmax(0, 1fr); }
+  .akhi-mitte { order: 1; } .akhi-rechts { order: 2; } .akhi-links { order: 3; }
+  .akhi-module { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
+
+/* Drucken / PDF: nur das Dokument */
+#druck { display: none; }
+@media print {
+  body.druckt > *:not(#druck) { display: none !important; }
+  body.druckt #druck { display: block !important; color: #000; background: #fff; font: 11pt/1.5 Georgia, "Times New Roman", serif; padding: 0; }
+  body.druckt { background: #fff !important; }
+  #druck h1 { font-size: 20pt; color: #7a5a00; border-bottom: 2px solid #b7860f; padding-bottom: 6pt; }
+  #druck h2 { font-size: 13pt; color: #7a5a00; text-transform: none; letter-spacing: 0; margin-top: 14pt; }
+  #druck h3 { font-size: 11.5pt; }
+  #druck table { border-collapse: collapse; width: 100%; } #druck td, #druck th { border: 1px solid #999; padding: 4pt 6pt; text-align: left; }
+  #druck .druck-kopf { font-size: 8.5pt; color: #666; text-align: right; }
+  #druck li { margin: 2pt 0; } #druck h2, #druck h3 { page-break-after: avoid; } #druck tr { page-break-inside: avoid; }
+}
+
+/* Im Mentor liegt unten das Eingabefeld: AKHI-Knopf darüber, damit er „Senden“ nicht verdeckt */
+body[data-tab="chat"] .akhi-start { top: 12px; bottom: auto; right: 16px; width: 50px; height: 50px; font-size: .58rem; }

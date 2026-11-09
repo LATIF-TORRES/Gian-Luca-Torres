@@ -191,3 +191,14 @@ Packstart ist eine Desktop-App für Mac, Windows und Linux. Der Assistent heisst
 Gewählt: **A&T = Amanah & Tijara**, Vertrauen und Handel. Der frühere Arbeitstitel war TORRES.
 
 Keine Anlage-, Steuer- oder Rechtsberatung. Entscheidungen triffst du selbst.
+
+## AKHI: Sprach-Assistent im Jarvis-Stil (ab 5.0)
+
+Leuchtender Knopf „AKHI“ unten rechts (im Mentor oben rechts) oder Weckwort „Hey Akhi“ (wenn „Hey Akhi hören“ an ist). Eigenes Vollbild-Dashboard (`js/akhi.js`, Stile am Ende von `css/style.css`):
+
+- **Stimme**: Männerstimme (automatisch gewählt, z. B. „Microsoft Conrad“ in Edge, sonst tiefer gestellt; wählbar), Gesprächsmodus (hört nach der Antwort wieder zu, „danke“ beendet). Gesprochen wird nur der kurze Anfang der Antwort, Details stehen im Text.
+- **Wissen** (`js/wissen.js`): Businessplan, Marketing, Digistore24, Reselling, Social Media, KI-Systeme und Konnektoren, Gründen in der Schweiz, Halal-Business, Verkauf, Aufgabenbereiche, je mit Checkliste. Gebühren und Grenzen sind als Richtwerte markiert.
+- **Werkzeuge der KI** (für alle, nicht nur Besitzer): `wissen_nachschlagen`, `dokument_erstellen` (Markdown, als PDF speicherbar), `checkliste_erstellen`; `aufgabe_anlegen` hat jetzt einen Bereich.
+- **Businessplan-Formular** mit Finanzrechnung (Deckungsbeitrag, Gewinnschwelle, Verkäufe fürs Umsatzziel, Rückzahlung der Startkosten).
+- **PDF**: Drucken nur des Dokuments (`#druck`, Druck-CSS) → im Druckdialog „Als PDF speichern“, auch auf dem Handy.
+

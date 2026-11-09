@@ -29,7 +29,8 @@ var EIGENE_WERKZEUGE = [
       type: "object",
       properties: {
         text: { type: "string", description: "Aufgabe mit Verb am Anfang, z. B. 'Schreibe 5 Cafés im Quartier an.'" },
-        wichtig: { type: "boolean", description: "true, wenn es die eine wichtigste Aufgabe für heute ist." }
+        wichtig: { type: "boolean", description: "true, wenn es die eine wichtigste Aufgabe für heute ist." },
+        bereich: { type: "string", enum: ["Produkt", "Marketing", "Verkauf", "Finanzen", "Recht und Admin", "Systeme", "Persönlich"], description: "Aufgabenbereich" }
       },
       required: ["text", "wichtig"],
       additionalProperties: false
@@ -57,7 +58,8 @@ var EIGENE_WERKZEUGE = [
 
 // Depot- und Überweisungs-Werkzeuge (depot.js) gibt es nur im Besitzer-Modus.
 function eigeneWerkzeuge() {
-  return istBesitzer() && typeof DEPOT_WERKZEUGE !== "undefined" ? EIGENE_WERKZEUGE.concat(DEPOT_WERKZEUGE) : EIGENE_WERKZEUGE;
+  var liste = EIGENE_WERKZEUGE.concat(typeof AKHI_WERKZEUGE !== "undefined" ? AKHI_WERKZEUGE : []);
+  return istBesitzer() && typeof DEPOT_WERKZEUGE !== "undefined" ? liste.concat(DEPOT_WERKZEUGE) : liste;
 }
 
 function werkzeugeFuer(modell) {
@@ -76,11 +78,15 @@ async function werkzeugAusfuehren(name, input) {
   }
   if (name === "aufgabe_anlegen") {
     if (typeof input.text !== "string" || !input.text.trim()) return { fehler: true, text: "Feld 'text' fehlt." };
-    return { text: aufgabeAnlegen(input.text, input.wichtig === true) };
+    return { text: aufgabeAnlegen(input.text, input.wichtig === true, input.bereich) };
   }
   if (name === "buchung_eintragen") {
     var antwort = buchungEintragen(input.art, input.betrag, input.quelle, input.datum, input.halal);
     return { text: antwort, fehler: /fehlt|ungültig|muss/.test(antwort) };
+  }
+  if (typeof akhiWerkzeug === "function") {
+    var ak = akhiWerkzeug(name, input);
+    if (ak) return ak;
   }
   if (typeof depotWerkzeug === "function") {
     var d = await depotWerkzeug(name, input);

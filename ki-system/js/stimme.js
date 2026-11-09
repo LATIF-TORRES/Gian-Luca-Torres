@@ -46,6 +46,12 @@ var Stimme = (function () {
         var i = klein.indexOf(w);
         if (i !== -1 && (stelle === -1 || i < stelle)) { stelle = i; laenge = w.length; }
       });
+      // „Hey Akhi“ öffnet das Akhi-Dashboard
+      var akhi = klein.match(/\b(?:hey|hei|hi|ey|he)[\s,]+(?:akhi|achi|aki|akki|akhie|ahi|acki)\b/);
+      if (akhi && typeof Akhi !== "undefined" && (stelle === -1 || akhi.index <= stelle)) {
+        Akhi.weck(t.slice(akhi.index + akhi[0].length).replace(/^[\s,.:!?]+/, "").trim());
+        return;
+      }
       if (stelle === -1) return;
       var rest = t.slice(stelle + laenge).replace(/^[\s,.:!?]+/, "").trim();
       if (beiText) beiText(rest, true);
@@ -98,7 +104,7 @@ var Stimme = (function () {
   function stumm() { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); }
 
   return {
-    verfuegbar: verfuegbar, einmal: einmal, weckwort: weckwort, stoppen: stoppen,
+    verfuegbar: verfuegbar, einmal: einmal, weckwort: weckwort, stoppen: stoppen, hoert: function () { return hoertZu; },
     vorlesen: vorlesen, stumm: stumm,
     beiText: function (f) { beiText = f; }, beiZustand: function (f) { beiZustand = f; }
   };
