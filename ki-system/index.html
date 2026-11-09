@@ -195,6 +195,20 @@
 
       <div class="raster drei" id="depot-kacheln"></div>
 
+      <div class="karte" id="yuh-karte">
+        <h2>Echtgeld mit Yuh (halbautomatisch)</h2>
+        <p class="leise klein-text">A&amp;T schlägt Käufe und Verkäufe vor. Du gibst sie selbst in der Yuh-App auf und tippst hier auf „Gekauft“ oder „Verkauft“. A&amp;T handelt nie selbst mit deinem Geld. Danach überwacht A&amp;T jede Position (Stop, Gewinnziel) und meldet sich, wenn du verkaufen solltest, solange A&amp;T offen ist.</p>
+        <label class="haken"><input type="checkbox" id="yuh-an"> <span>Echtgeld-Vorschläge für Yuh an (Mentor und selbstständiger Handel schlagen dann vor, statt im Übungs-Depot zu kaufen)</span></label>
+        <label>Verfügbar bei Yuh für A&amp;T (USD) <input id="yuh-geld" type="number" min="0" step="any" placeholder="z. B. 100"></label>
+        <button class="knopf klein zart" id="yuh-melden" type="button">Benachrichtigungen erlauben</button>
+        <p id="yuh-info" class="klein-text leise"></p>
+        <h3 class="klein-titel">Vorschläge</h3>
+        <ul id="yuh-vorschlaege" class="liste"></ul>
+        <h3 class="klein-titel">Deine echten Positionen bei Yuh</h3>
+        <ul id="yuh-positionen" class="liste"></ul>
+        <p id="yuh-ergebnis" class="klein-text"></p>
+      </div>
+
       <div class="karte versteckt" id="depot-offen-karte">
         <h2>Wartet auf deine Freigabe</h2>
         <p class="leise klein-text">Diese Orders des Mentors liegen über deinem Tageslimit.</p>
@@ -466,6 +480,7 @@
   <script src="js/speicher.js"></script>
   <script src="js/halal-welt.js"></script>
   <script src="js/depot.js"></script>
+  <script src="js/yuh.js"></script>
   <script src="js/ki.js"></script>
   <script src="js/gemini.js"></script>
   <script src="js/lokal.js"></script>

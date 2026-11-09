@@ -468,7 +468,8 @@ function depotKurzFuerKi() {
     ". Halal-Liste: " + halalListeKurz() +
     ". Tageslimit automatisch: " + usd(d.tageslimit) + ", heute schon: " + usd(heuteAutomatisch()) + "." +
     (d.offen.length ? " Wartet auf Freigabe: " + d.offen.length + " Order(s)." : "") +
-    (d.finnhubSchluessel ? "" : " Für echte Kurse fehlt noch der Finnhub-Schlüssel.");
+    (d.finnhubSchluessel ? "" : " Für echte Kurse fehlt noch der Finnhub-Schlüssel.") +
+    (typeof yuhKurzFuerKi === "function" ? yuhKurzFuerKi() : "");
 }
 
 /* ---------- Überweisungen (Revolut privat: keine Schnittstelle, darum vorbereiten) ---------- */
@@ -609,6 +610,19 @@ async function depotWerkzeug(name, input) {
     }
     if (name === "depot_anzeigen") return { text: input.mit_kursen === false ? depotKurzFuerKi() : await depotText() };
     if (name === "order_aufgeben") {
+      // Echtgeld-Modus (Yuh): nie selbst ausführen, sondern der Person vorschlagen
+      if (typeof yuhAn === "function" && yuhAn()) {
+        var zvY = parseInt(input.zuversicht, 10);
+        if (AUTO.laeuft) {
+          var aY = autoEinstellungen();
+          if (AUTO.orders >= 1) return { fehler: true, text: "Pro selbstständiger Runde ist nur ein Vorschlag erlaubt." };
+          if (input.seite === "kauf" && yuhVorschlaegeHeute("auto") >= aY.maxTrades) return { fehler: true, text: "Höchstzahl Kaufvorschläge für heute (" + aY.maxTrades + ") erreicht." };
+          if (input.seite === "kauf" && zvY > 0 && zvY < aY.zuversicht) return { fehler: true, text: "Zuversicht " + zvY + "/10 liegt unter der eingestellten Mindest-Zuversicht von " + aY.zuversicht + "/10. Kein Vorschlag." };
+        }
+        var rY = await yuhVorschlag(input.symbol, input.seite, Number(input.anzahl), input.begruendung, zvY || null, AUTO.laeuft ? "auto" : "ki");
+        if (!rY.fehler && AUTO.laeuft) AUTO.orders++;
+        return rY;
+      }
       if (!AUTO.laeuft) return await orderAufgeben(input.symbol, input.seite, Number(input.anzahl), "ki", input.begruendung);
       // Selbstständige Runde: feste Grenzen im Programm
       var a = autoEinstellungen();
@@ -773,6 +787,7 @@ function autoFrage() {
     "Darunter: keine Order. Höchstens eine Order, höchstens 20 % des Bargelds (prüft auch das Programm). Gib im Feld zuversicht deine ehrliche Einschätzung an. " +
     "Das Programm schützt jede Position selbst: individueller Stop nach Schwankung (höchstens " + a.stop + " % Verlust), nachziehender Stop, ab " + a.ziel + " % Gewinn wird die Hälfte gesichert. " +
     "Willst du handeln, rufst du ZUERST order_aufgeben auf (konkretes Kürzel, Anzahl). Nur Hinschreiben führt keine Order aus. " +
+    (typeof yuhAn === "function" && yuhAn() ? "ECHTGELD-MODUS (Yuh): Deine Order wird der Person als Vorschlag geschickt, sie kauft selbst in Yuh. Rechne mit dem Yuh-Geld (" + usd(yuh().bargeld) + "), höchstens 20 % davon. " : "") +
     "Schreib zum Schluss genau eine Zeile: „Entscheidung: Kauf KÜRZEL für x $ | Zuversicht: x/10 | Grund: …“ oder „Entscheidung: Keine Order | Zuversicht: x/10 | Grund: …“.";
 }
 
@@ -789,7 +804,7 @@ async function autoRunde(test) {
     // Erst prüfen, ob Finnhub Kurse liefert. Sonst die Runde sparen (die KI würde nur „keine Daten“ melden).
     try { await finnhubTesten(); } catch (fx) { autoNotiz("Übersprungen, keine Kurse: " + fx.message); return; }
     await regelnPruefen();
-    if (autoTradesHeute() >= a.maxTrades) { autoNotiz("Höchstzahl Trades für heute erreicht. Nur Stop-Loss und Gewinnziel geprüft."); return; }
+    if ((typeof yuhAn === "function" && yuhAn() ? yuhVorschlaegeHeute("auto") : autoTradesHeute()) >= a.maxTrades) { autoNotiz("Höchstzahl Trades für heute erreicht. Nur Stop-Loss und Gewinnziel geprüft."); return; }
     if (!hatSchluessel()) { autoNotiz("Übersprungen: keine KI verbunden."); return; }
     var e = Z.einstellungen;
     var chat = { id: "auto", anbieter: e.anbieter, modus: "trader", system: grundauftrag(e.kiName || STANDARD_NAME), nachrichten: [], kosten: 0 };
@@ -846,6 +861,11 @@ function autoTakt() {
   // Scanner läuft, wenn selbstständig gehandelt wird oder das Depot offen ist
   if (a.an || document.querySelector("#tab-depot.aktiv")) scannerSchritt(35);
   if (a.an && Date.now() - a.letzte >= a.intervall * 60000) { autoRunde(false); return; }
+  // Echte Positionen bei Yuh: Stop und Gewinnziel alle 2 Minuten prüfen, Verkauf vorschlagen
+  if (typeof yuhAn === "function" && yuhAn() && Object.keys(yuh().positionen).length && Date.now() - YUH.letzte >= 120000) {
+    YUH.letzte = Date.now();
+    yuhPruefen().catch(function () {});
+  }
   // Schutz (Stop, nachziehender Stop, Gewinnziel) für alle Positionen alle 2 Minuten
   if (!AUTO.laeuft && Object.keys(depot().positionen).length && Date.now() - AUTO.letzteRegel >= 120000) {
     AUTO.letzteRegel = Date.now();
@@ -926,6 +946,7 @@ var Depot = (function () {
 
     halalListeZeigen();
     fondsZeigen();
+    yuhZeigen();
 
     var a = autoEinstellungen();
     $("#auto-an").checked = !!a.an;
@@ -1037,6 +1058,15 @@ var Depot = (function () {
     var suchTimer = null;
     $("#h-suche").oninput = function () { clearTimeout(suchTimer); suchTimer = setTimeout(halalListeZeigen, 200); };
     $("#fonds-anzahl").onchange = fondsZeigen;
+    $("#yuh-an").onchange = function () {
+      var y = yuh();
+      if (this.checked && !(y.bargeld > 0)) { meldung("Trag zuerst ein, wie viel Geld bei Yuh für A&T verfügbar ist."); this.checked = false; $("#yuh-geld").focus(); return; }
+      if (this.checked && !confirm("Echtgeld-Vorschläge für Yuh einschalten?\n\nDer Mentor und der selbstständige Handel kaufen dann nicht mehr im Übungs-Depot, sondern schlagen dir echte Käufe vor. Du entscheidest jedes Mal selbst in der Yuh-App. Echtes Geld kann verloren gehen.")) { this.checked = false; return; }
+      y.an = this.checked; speichern(); zeigen();
+      meldung(y.an ? "Echtgeld-Vorschläge für Yuh sind an." : "Echtgeld-Vorschläge aus. Der Mentor handelt wieder im Übungs-Depot.");
+    };
+    $("#yuh-geld").onchange = function () { yuh().bargeld = Math.max(0, Math.round((parseFloat(String(this.value).replace(",", ".")) || 0) * 100) / 100); speichern(); zeigen(); };
+    $("#yuh-melden").onclick = async function () { $("#yuh-info").textContent = await yuhBenachrichtigungenErlauben(); };
     $("#fonds-form").onsubmit = async function (ev) {
       ev.preventDefault();
       var betrag = Number($("#fonds-betrag").value), anzahl = Number($("#fonds-anzahl").value);
@@ -1103,6 +1133,58 @@ var Depot = (function () {
     };
   }
   async function aktualisieren() { await kurseLaden(); zeigen(); }
+
+  /* Echtgeld mit Yuh: Vorschläge, echte Positionen, Ergebnis */
+  function yuhZeigen() {
+    if (typeof yuh !== "function") return;
+    var y = yuh(), offen = yuhOffen();
+    $("#yuh-an").checked = !!y.an;
+    if (document.activeElement !== $("#yuh-geld")) $("#yuh-geld").value = y.bargeld || "";
+    var vl = $("#yuh-vorschlaege"); vl.innerHTML = offen.length ? "" : "<li class='leise klein-text'>" + (y.an ? "Kein offener Vorschlag. A&T meldet sich, sobald es etwas gibt." : "Schalte oben die Echtgeld-Vorschläge ein.") + "</li>";
+    offen.slice().reverse().forEach(function (v) {
+      var li = document.createElement("li"); li.className = "vorschlag " + v.seite;
+      var rest = v.seite === "kauf" ? Math.max(0, Math.ceil((Date.parse(v.zeit) + YUH_GUELTIG_MIN * 60000 - Date.now()) / 60000)) : null;
+      li.innerHTML = "<span class='wachsen'><strong>" + (v.seite === "kauf" ? "KAUFEN" : "VERKAUFEN") + " in Yuh: " + esc(v.symbol) + "</strong> " + esc(v.name) +
+        "<br>" + anzahlText(v.anzahl) + " Stück ≈ " + usd(v.betrag) + " (Kurs " + usd(v.kurs) + ")" +
+        (v.stop ? "<br><span class='klein-text'>Stop " + usd(v.stop) + " · Ziel " + usd(v.ziel) + "</span>" : "") +
+        "<br><span class='leise klein-text'>" + esc(v.grund) + (v.zuversicht ? " · Zuversicht " + v.zuversicht + "/10" : "") + (rest !== null ? " · gültig noch " + rest + " Min." : "") + "</span></span>" +
+        "<div class='knoepfe'><button class='chip' data-a='kopieren'>" + esc(v.symbol) + " 📋</button><button class='knopf klein' data-a='ja'>" + (v.seite === "kauf" ? "Gekauft" : "Verkauft") + "</button>" +
+        "<button class='knopf klein zart' data-a='nein'>Ablehnen</button>" + (v.seite === "kauf" ? "<button class='knopf klein zart' data-a='fehlt'>Gibt es bei Yuh nicht</button>" : "") + "</div>";
+      li.querySelector("[data-a=kopieren]").onclick = function () { kopieren(v.symbol); };
+      li.querySelector("[data-a=ja]").onclick = function () {
+        var n = prompt("Wie viele Stück hast du in Yuh " + (v.seite === "kauf" ? "gekauft" : "verkauft") + "? (Bruchteile mit Punkt, z. B. 0.25)", anzahlText(v.anzahl).replace(/[’']/g, ""));
+        if (n === null) return;
+        var k = prompt("Zu welchem Kurs pro Aktie in USD (steht in Yuh bei der Ausführung)?", String(v.kurs));
+        if (k === null) return;
+        meldung(yuhBestaetigen(v.id, parseFloat(String(n).replace(",", ".")), parseFloat(String(k).replace(",", "."))));
+        zeigen();
+      };
+      li.querySelector("[data-a=nein]").onclick = function () { yuhAblehnen(v.id, false); meldung("Vorschlag abgelehnt."); zeigen(); };
+      var f = li.querySelector("[data-a=fehlt]");
+      if (f) f.onclick = function () { yuhAblehnen(v.id, true); meldung(v.symbol + " wird nicht mehr vorgeschlagen."); zeigen(); };
+      vl.appendChild(li);
+    });
+    var pl = $("#yuh-positionen"), syms = Object.keys(y.positionen);
+    pl.innerHTML = syms.length ? "" : "<li class='leise klein-text'>Noch keine. Sie erscheinen hier, wenn du einen Kauf bestätigst.</li>";
+    syms.forEach(function (s) {
+      var p = y.positionen[s], k = p.letzterKurs || p.einstand, w = k * p.anzahl, e = w - p.einstand * p.anzahl, sb = stopBerechnen(s, p);
+      var li = document.createElement("li"); li.className = "buchung";
+      li.innerHTML = "<span class='datum'><strong>" + esc(s) + "</strong></span><span class='wachsen'>" + anzahlText(p.anzahl) + " × " + usd(k) +
+        "<br><span class='leise klein-text'>Einstand " + usd(p.einstand) + " · Stop " + usd(p.stopKurs || sb.stop) + (p.signal ? " · Verkauf vorgeschlagen" : "") + "</span></span>" +
+        "<strong class='" + (e >= 0 ? "plus" : "minus") + "'>" + usd(w) + "<br><span class='klein-text'>" + (e >= 0 ? "+" : "") + usd(e) + "</span></strong><button class='mini' title='Verkaufen'>Verkaufen</button>";
+      li.querySelector("button").onclick = async function () {
+        var r = await yuhVorschlag(s, "verkauf", p.anzahl, "Von dir gewünscht", null, "ich");
+        meldung(r.fehler ? r.text : "Verkaufsvorschlag erstellt. Verkauf in Yuh und tipp dann auf „Verkauft“."); zeigen();
+      };
+      pl.appendChild(li);
+    });
+    var summe = y.verlauf.reduce(function (a, x) { return a + x.ergebnis; }, 0);
+    $("#yuh-ergebnis").textContent = y.verlauf.length ? "Abgeschlossene Trades: " + y.verlauf.length + " · Ergebnis " + (summe >= 0 ? "+" : "") + usd(summe) + " · Verfügbar bei Yuh: " + usd(y.bargeld) : (y.an ? "Verfügbar bei Yuh: " + usd(y.bargeld) : "");
+  }
+  function kopieren(t) {
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(function () { meldung("Kopiert: " + t); });
+    else { var x = document.createElement("textarea"); x.value = t; document.body.appendChild(x); x.select(); try { document.execCommand("copy"); meldung("Kopiert: " + t); } catch (e) {} x.remove(); }
+  }
 
   /* Halal-Liste: Überblick nach Regionen, Filter und höchstens 50 Zeilen */
   function halalListeZeigen() {

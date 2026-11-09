@@ -272,3 +272,9 @@ a.knopf { text-decoration: none; display: inline-block; }
 }
 .tab.versteckt-immer, .tab.versteckt-immer.aktiv { display: none; }
 .versionszeile { cursor: default; user-select: none; }
+
+/* Echtgeld mit Yuh */
+.klein-titel { font-size: .95rem; margin: 16px 0 4px; }
+.vorschlag { border-left: 4px solid var(--gold); padding-left: 10px; flex-wrap: wrap; gap: 6px; }
+.vorschlag.verkauf { border-left-color: #c0392b; }
+.vorschlag .knoepfe { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
