@@ -273,8 +273,7 @@ var Akhi = (function () {
     $("#akhi-rat").checked = !!Z.einstellungen.akhiRat;
     var teil = typeof ratTeilnehmer === "function" ? ratTeilnehmer() : [];
     $("#akhi-rat-info").textContent = teil.length >= 2 ? "Fragt: " + teil.map(function (t) { return t.name; }).join(", ") + "." :
-      "Dafür braucht es mindestens 2 KIs: z. B. Gemini-Schlüssel (unter „Ich“) und ChatGPT-Schlüssel (hier) oder die lokale KI.";
-    if (document.activeElement !== $("#akhi-openai")) $("#akhi-openai").value = Z.einstellungen.openaiSchluessel || "";
+      "Dafür braucht es mindestens 2 KIs, z. B. Gemini und die lokale KI auf dem Laptop.";
   }
 
   /* Ansichten im Arbeitsbereich */
@@ -430,7 +429,6 @@ var Akhi = (function () {
       antwortZeigen("Verbunden. Ich bin bereit, Akhi hier. Wobei kann ich dir helfen?", false);
     };
     $("#akhi-rat").onchange = function () { Z.einstellungen.akhiRat = this.checked; speichern(); zeichnen(); };
-    $("#akhi-openai").onchange = function () { Z.einstellungen.openaiSchluessel = this.value.replace(/\s/g, ""); speichern(); zeichnen(); toastAkhi(this.value ? "ChatGPT-Schlüssel gespeichert." : "ChatGPT-Schlüssel entfernt."); };
     $("#akhi-datei").onchange = async function () {
       var dateien = Array.prototype.slice.call(this.files || []); this.value = "";
       for (var i = 0; i < dateien.length; i++) {

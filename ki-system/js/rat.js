@@ -1,12 +1,11 @@
 /*
- * Rat der KIs: Akhi fragt Claude, Gemini, ChatGPT und die lokale KI gleichzeitig (ohne Werkzeuge),
+ * Rat der KIs: Akhi fragt Claude, Gemini und die lokale KI gleichzeitig (ohne Werkzeuge),
  * prüft die Antworten kritisch gegeneinander und macht daraus die eine beste Antwort.
  * So nutzt A&T das Wissen aller Modelle und filtert ihre typischen Fehler (Erfindungen, Veraltetes,
  * nicht Halales, Widersprüche) heraus. Es werden nur KIs gefragt, für die ein Zugang eingerichtet ist.
  */
 
 var RAT_ZEIT_MS = 90000;
-var OPENAI_URL = "https://api.openai.com/v1/";
 
 function ratSystem() {
   return "Du bist ein Spitzen-Experte für Unternehmertum, Finanzen, Marketing, Verkauf, E-Commerce, KI-Automatisierung, Schweizer Recht und Steuern sowie islamisches Wirtschaftsrecht. " +
@@ -19,7 +18,6 @@ function ratTeilnehmer() {
   var e = Z.einstellungen, t = [];
   if (e.schluessel) t.push({ id: "claude", name: "Claude", frage: ratClaude });
   if (e.geminiSchluessel) t.push({ id: "gemini", name: "Gemini", frage: ratGemini });
-  if (e.openaiSchluessel) t.push({ id: "chatgpt", name: "ChatGPT", frage: ratChatGPT });
   if (e.anbieter === "lokal" || e.lokalModell) t.push({ id: "lokal", name: "Lokale KI", frage: ratLokal });
   return t;
 }
@@ -77,39 +75,6 @@ async function ratGemini(text) {
   if (!r.ok) throw new Error(r.status === 429 ? "Gemini-Tageslimit erreicht" : "Gemini antwortet nicht (" + r.status + ")");
   var d = await r.json(), teile = (((d.candidates || [])[0] || {}).content || {}).parts || [];
   return teile.map(function (x) { return x.text || ""; }).join("");
-}
-
-var _openaiModell = null;
-async function openaiModellWahl(schluessel) {
-  var e = Z.einstellungen;
-  if (e.openaiModell) return e.openaiModell;
-  if (_openaiModell) return _openaiModell;
-  try {
-    var r = await fetch(OPENAI_URL + "models", { headers: { Authorization: "Bearer " + schluessel } });
-    if (r.status === 401) throw new Error("schluessel");
-    var ids = ((await r.json()).data || []).map(function (m) { return m.id; });
-    // Neuestes allgemeines GPT-Modell (ohne mini, nano, audio, Bilder, Suche, Vorschau-Kennungen mit Datum)
-    var passend = ids.filter(function (id) { return /^gpt-\d+(\.\d+)?o?$/.test(id); }).sort(function (a, b) {
-      return parseFloat(b.replace(/[^\d.]/g, "")) - parseFloat(a.replace(/[^\d.]/g, ""));
-    });
-    _openaiModell = passend[0] || (ids.indexOf("gpt-4o") !== -1 ? "gpt-4o" : ids.filter(function (id) { return /^gpt-/.test(id); })[0]) || "gpt-4o";
-  } catch (f) {
-    if (f.message === "schluessel") throw new Error("Der OpenAI-Schlüssel stimmt nicht.");
-    _openaiModell = "gpt-4o";
-  }
-  return _openaiModell;
-}
-async function ratChatGPT(text) {
-  var e = Z.einstellungen, modell = await openaiModellWahl(e.openaiSchluessel);
-  var r = await fetch(OPENAI_URL + "chat/completions", {
-    method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + e.openaiSchluessel },
-    body: JSON.stringify({ model: modell, messages: [{ role: "system", content: ratSystem() }, { role: "user", content: text }] })
-  });
-  if (r.status === 401) throw new Error("Der OpenAI-Schlüssel stimmt nicht.");
-  if (r.status === 429) throw new Error("OpenAI-Limit oder kein Guthaben");
-  if (!r.ok) throw new Error("ChatGPT antwortet nicht (" + r.status + ")");
-  var d = await r.json();
-  return ((d.choices || [])[0] || {}).message ? d.choices[0].message.content : "";
 }
 
 async function ratLokal(text) {
