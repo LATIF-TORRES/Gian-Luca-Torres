@@ -215,9 +215,9 @@ const unlockAll = backend.demo && new URLSearchParams(location.search).has('unlo
 
 function lessonState(ui, li) {
   const u = data.course.units[ui];
-  const paid = data.premium || (ui === 0 && li === 0);
-  // Ohne Code bleibt alles ausser Lektion 1 zu, auch Lektionen, die früher schon erledigt wurden
-  if (!paid) return 'pay';
+  // Ohne Code: in jeder Einheit ist die erste Lektion gratis, in beliebiger Reihenfolge.
+  // Alles andere bleibt zu, auch Lektionen, die früher schon erledigt wurden.
+  if (!data.premium) return li === 0 ? (store.isDone(u.id, 0) ? 'done' : 'open') : 'pay';
   if (store.isDone(u.id, li)) return 'done';
   // Vorherige Lektion fertig?
   let prevDone = true;
@@ -431,25 +431,29 @@ function gamePool() {
   const units = data.course.units;
   let maxU = 0;
   units.forEach((u, ui) => { if (LESSONS.some((_, li) => store.isDone(u.id, li))) maxU = Math.max(maxU, ui); });
-  if (CONFIG.openAll) maxU = units.length - 1; // Offener Link: alle Wörter
+  if (CONFIG.openAll || !data.premium) maxU = units.length - 1; // ohne Code: Gratis-Wörter aller Einheiten
   const words = [], sentences = [];
-  units.slice(0, maxU + 1).forEach((u) => { const it = unitItems(u); words.push(...it.words); sentences.push(...it.sentences); });
+  units.forEach((u, ui) => {
+    const it = unitItems(u);
+    // Begonnene Einheiten ganz, alle anderen mit den Wörtern ihrer ersten Lektion (wie ohne Code)
+    if (ui <= maxU) { words.push(...it.words); sentences.push(...it.sentences); }
+    else { words.push(...it.words.slice(0, 6)); sentences.push(...it.sentences.slice(0, 3)); }
+  });
   return makePool(words, sentences);
 }
 
-// Ohne Code: genau ein Spiel einmal ausprobieren, danach sind alle Spiele gesperrt.
-const freeGameUsed = () => !data.premium && !!store.get().freeGameUsed;
+// Ohne Code: jedes Spiel einmal pro Stufe (leicht, mittel, schwer), danach Schloss.
+const levelLocked = (id, lv) => !data.premium && store.freeGamePlayed(id, lv);
 
 function gamesScreen() {
   const pool = gamePool();
   const trial = !data.premium;
-  const used = freeGameUsed();
   app.innerHTML = '';
   const el = h(`
     <div class="games-page">
       <header class="topbar"><div class="brand">${logoMark(34)} <span>${t('gamesTitle')}</span></div>
         <div class="chips"><span class="chip xp">⭐ ${store.get().xp}</span></div></header>
-      <section class="cat-card">${catSays(used ? 'comfort' : 'cheer', trial ? t(used ? 'gameTrialUsed' : 'gameTrialHint') : t('gamesSub'), 84)}</section>
+      <section class="cat-card">${catSays('cheer', trial ? t('gameTrialHint') : t('gamesSub'), 84)}</section>
       <main class="games-grid"></main>
       ${tabbar('games')}
     </div>`);
@@ -457,27 +461,28 @@ function gamesScreen() {
   wireTabs(el);
   const grid = $('.games-grid', el);
   GAMES.forEach((g) => {
-    const ok = gameAvailable(g, pool) && !used;
+    const ok = gameAvailable(g, pool);
     const card = h(`
       <article class="game-card${ok ? '' : ' locked'}" style="--gc:${g.color}">
         <div class="gc-head"><span class="gc-icon">${g.icon}</span><div><h3>${t('g_' + g.id)}</h3><p>${t('g_' + g.id + '_d')}</p></div></div>
         ${ok ? `<div class="gc-levels">${LEVELS.map((lv) => `
-          <button class="lv" data-lv="${lv}"><b>${t({ easy: 'levelEasy', medium: 'levelMedium', hard: 'levelHard' }[lv])}</b><small>${store.bestGame(g.id, lv) ? `🏆 ${store.bestGame(g.id, lv)}` : '–'}</small></button>`).join('')}</div>`
-        : `<button class="gc-lock">${data.premium ? '🔒' : '🔒💎'} ${t(data.premium ? 'gameNeedWords' : used ? 'gameTrialLocked' : 'gameLocked')}</button>`}
+          <button class="lv${levelLocked(g.id, lv) ? ' lv-locked' : ''}" data-lv="${lv}"><b>${t({ easy: 'levelEasy', medium: 'levelMedium', hard: 'levelHard' }[lv])}</b><small>${levelLocked(g.id, lv) ? `🔒 ${t('gameCode')}` : store.bestGame(g.id, lv) ? `🏆 ${store.bestGame(g.id, lv)}` : trial ? `🎁 ${t('gameFree')}` : '–'}</small></button>`).join('')}</div>`
+        : `<button class="gc-lock">🔒 ${t('gameNeedWords')}</button>`}
       </article>`);
     card.querySelectorAll('[data-lv]').forEach((b) => (b.onclick = () => {
       sfx.tap();
-      if (freeGameUsed()) return paywall();
+      const lv = b.dataset.lv;
+      if (levelLocked(g.id, lv)) return paywall();
       warnNoVoice();
-      if (trial) store.setFlag('freeGameUsed', true); // das eine Gratis-Spiel ist damit verbraucht
-      startGame(app, g.id, b.dataset.lv, {
+      if (trial) store.markFreeGame(g.id, lv); // diese Stufe ist damit als Gratis-Spiel verbraucht
+      startGame(app, g.id, lv, {
         pool, lang: getLang(),
         onDone: ({ xp }) => store.addXp(xp),
         onExit: gamesScreen,
-        beforeAgain: () => (freeGameUsed() ? (paywall(), false) : true),
+        beforeAgain: () => (levelLocked(g.id, lv) ? (paywall(), false) : true),
       });
     }));
-    card.querySelector('.gc-lock')?.addEventListener('click', () => (data.premium ? toast(t('gameNeedWords')) : paywall()));
+    card.querySelector('.gc-lock')?.addEventListener('click', () => toast(t('gameNeedWords')));
     grid.append(card);
   });
 }

@@ -533,3 +533,45 @@ body.in-game .cat-pop .cat-bubble { margin-bottom: 6px; padding: 8px 12px; font-
 
 /* Drei Sprachen: auf sehr kleinen Handys schmalere Knöpfe */
 @media (max-width: 380px) { .lang-switch button { padding: 7px 8px; font-size: 13px; } }
+
+/* Gratis-Stufen und gesperrte Stufen */
+.lv.lv-locked { opacity: .6; box-shadow: inset 0 0 0 2px var(--line); }
+.lv.lv-locked b { color: var(--muted); }
+
+/* Artikel-Blöcke */
+.bl-board { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); height: min(46vh, 400px); border-radius: var(--radius); overflow: hidden; background: var(--card); box-shadow: var(--shadow); }
+.bl-col { position: relative; display: flex; flex-direction: column; justify-content: flex-end; border-left: 2px dashed var(--line); }
+.bl-col:first-child { border-left: 0; }
+.bl-col.der { background: color-mix(in srgb, #3B82F6 8%, transparent); }
+.bl-col.die { background: color-mix(in srgb, #EF4444 8%, transparent); }
+.bl-col.das { background: color-mix(in srgb, #22C55E 8%, transparent); }
+.bl-label { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-weight: 900; color: var(--muted); opacity: .6; }
+.bl-stack { display: flex; flex-direction: column-reverse; gap: 2px; padding: 2px 4px 4px; }
+.bl-slab { height: 32px; border-radius: 8px; background: var(--bad-bg); color: var(--bad-text); font-weight: 800; font-size: 12px; display: grid; place-items: center; text-align: center; line-height: 1.1; overflow: hidden; }
+.bl-block { position: absolute; top: 0; width: calc(100% / 3 - 12px); background: var(--card); border-radius: 12px; padding: 6px 4px; box-shadow: 0 6px 16px rgba(30, 27, 75, .18), inset 0 0 0 2px #F59E0B; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 15px; transition: left .12s; z-index: 2; overflow-wrap: anywhere; }
+.bl-block .d-pic { font-size: 24px; }
+.bl-block small { color: var(--muted); font-weight: 700; font-size: 11px; }
+.bl-block.bl-ok { transition: opacity .4s, transform .4s; opacity: 0; transform: scale(1.25); }
+
+/* Wort-Schlange */
+.sn-word { display: flex; justify-content: center; gap: 6px; font-weight: 900; font-size: 22px; letter-spacing: 1px; }
+.sn-word span { min-width: 18px; text-align: center; color: var(--muted); }
+.sn-word span.got { color: var(--good); }
+.sn-grid { display: grid; grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr); gap: 2px; width: min(100%, 360px); aspect-ratio: 1; margin: 0 auto; background: var(--line); border-radius: 14px; padding: 4px; touch-action: none; }
+.sn-cell { background: var(--card); border-radius: 5px; display: grid; place-items: center; font-weight: 900; font-size: clamp(12px, 3.6vw, 18px); }
+.sn-letter { background: #FEF3C7; color: #92400E; }
+.sn-head { background: #65A30D; }
+.sn-body { background: #A3E635; }
+.sn-pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-areas: ". u ." "l d r"; gap: 6px; justify-content: center; }
+.sn-pad .key { height: 50px; font-size: 20px; }
+.sn-pad [data-d="0,-1"] { grid-area: u; } .sn-pad [data-d="-1,0"] { grid-area: l; } .sn-pad [data-d="0,1"] { grid-area: d; } .sn-pad [data-d="1,0"] { grid-area: r; }
+
+/* Mäusejagd */
+.mi-field { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.mi-hole { position: relative; height: 92px; border-radius: 50% 50% 18px 18px / 30% 30% 18px 18px; background: radial-gradient(ellipse at 50% 85%, #3F2D1E 0 38%, #6B4F33 39% 48%, transparent 49%); overflow: hidden; }
+.mi-mouse { position: absolute; left: 4px; right: 4px; bottom: 6px; border: 0; background: var(--card); border-radius: 14px; padding: 4px 2px; display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow); animation: mi-up .2s ease-out; font-size: 13px; overflow-wrap: anywhere; }
+.mi-face { font-size: 26px; line-height: 1; }
+.mi-mouse.mi-hit { background: var(--good-bg); color: var(--good-text); }
+.mi-mouse.mi-miss { background: var(--bad-bg); color: var(--bad-text); animation: shake .3s; }
+.mi-mouse.mi-down { transition: transform .25s; transform: translateY(110%); }
+@keyframes mi-up { from { transform: translateY(110%); } }

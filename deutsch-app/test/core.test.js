@@ -93,7 +93,9 @@ test('Gratis-Lektion funktioniert mit dem Probe-Kurs', () => {
   const list = buildLesson(trial, 0, 0, { lang: 'fr', speakOn: true });
   assert.ok(list.length >= 10);
   list.forEach((e) => checkExercise(e, 'fr'));
-  assert.equal(trial.units[1].words.length, 0);
+  // In jeder Einheit: nur die 6 Wörter der ersten Lektion, wenige Sätze
+  trial.units.forEach((u) => { assert.equal(u.words.length, 6); assert.ok(u.sentences.length <= 3); });
+  trial.units.forEach((u, ui) => buildLesson(trial, ui, 0, { lang: 'tr', speakOn: false }).forEach((e) => checkExercise(e, 'tr')));
   // Gratis-Lektion lehrt dieselben 6 Wörter wie Lektion 1 im vollen Kurs
   const keys = (l) => [...new Set(l.filter((e) => e.type === 'intro').map((e) => e.item.key))].sort();
   assert.deepEqual(keys(list), keys(buildLesson(COURSE, 0, 0, { lang: 'fr', speakOn: true })));

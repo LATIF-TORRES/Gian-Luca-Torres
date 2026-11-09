@@ -4,6 +4,7 @@
 import { today } from './util.js';
 
 const KEY = 'hd-progress';
+const FREE_KEY = 'hd-free-games';
 
 const empty = () => ({
   xp: 0,
@@ -130,6 +131,20 @@ export const store = {
   },
 
   bestGame: (id, level) => (state.games?.[id]?.[level] || 0),
+
+  // Gratis-Spiele ohne Code: jedes Spiel einmal pro Stufe.
+  // Eigener Speicher, damit „Neu beginnen“ die Gratis-Spiele nicht wieder freigibt.
+  freeGamePlayed(id, level) {
+    try { return !!JSON.parse(localStorage.getItem(FREE_KEY) || '{}')[`${id}:${level}`]; } catch { return false; }
+  },
+
+  markFreeGame(id, level) {
+    try {
+      const o = JSON.parse(localStorage.getItem(FREE_KEY) || '{}');
+      o[`${id}:${level}`] = Date.now();
+      localStorage.setItem(FREE_KEY, JSON.stringify(o));
+    } catch {}
+  },
 
   setFlag(k, v) {
     state[k] = v;

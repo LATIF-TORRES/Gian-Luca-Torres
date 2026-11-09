@@ -1,4 +1,4 @@
-// Spiele-Bereich: neun verschiedene Spiele, jedes in drei Stufen (leicht, mittel, schwer).
+// Spiele-Bereich: zwölf verschiedene Spiele, jedes in drei Stufen (leicht, mittel, schwer).
 // Alle Spiele nutzen nur Wörter und Sätze aus den Einheiten, die die Person schon begonnen hat.
 
 import { t } from './i18n.js';
@@ -25,6 +25,9 @@ export const GAMES = [
   { id: 'truefalse', icon: '✅', need: 'words', min: 4, color: '#22C55E' },
   { id: 'sentence', icon: '🏁', need: 'sentences', min: 4, color: '#EC4899' },
   { id: 'typing', icon: '⌨️', need: 'words', min: 4, color: '#14B8A6' },
+  { id: 'blocks', icon: '🧱', need: 'nouns', min: 5, color: '#F59E0B' },
+  { id: 'snake', icon: '🐍', need: 'single', min: 3, color: '#65A30D' },
+  { id: 'mice', icon: '🐭', need: 'words', min: 4, color: '#8B5CF6' },
 ];
 
 const ART = /^(der|die|das) (.+)$/;
@@ -674,7 +677,258 @@ function typing(api, P, level, lang) {
   }, 100);
 }
 
-const RUN = { memory, pretzel, sprint, anagram, rain, listen, truefalse, sentence, typing };
+// ---------- 10. Artikel-Blöcke (Blöcke fallen und stapeln sich)
+// Ein Wort-Block fällt. Man schiebt ihn in die Spalte mit dem richtigen Artikel.
+// Richtig: Der Block verschwindet. Falsch: Er bleibt liegen und der Stapel wächst.
+// Erreicht ein Stapel den Rand, ist das Spiel vorbei.
+
+function blocks(api, P, level, lang) {
+  const ARTS = ['der', 'die', 'das'];
+  const fall = { easy: 8000, medium: 5500, hard: 3800 }[level];
+  const maxH = { easy: 5, medium: 4, hard: 3 }[level];
+  const total = 20;
+  const queue = Array.from({ length: total }, () => pick(P.nouns));
+  const stacks = { der: 0, die: 0, das: 0 };
+  let n = 0, score = 0, cur = null;
+  api.setLives(maxH, maxH, '🧱');
+  api.area.innerHTML = `
+    <p class="g-help">${t('blocksHelp')}</p>
+    <div class="bl-board">
+      ${ARTS.map((a) => `<div class="bl-col ${a}"><span class="bl-label">${a}</span><div class="bl-stack" data-stack="${a}"></div></div>`).join('')}
+    </div>
+    <div class="art-btns">${ARTS.map((a) => `<button class="art-btn ${a}" data-a="${a}">${a}</button>`).join('')}</div>`;
+  const board = $('.bl-board', api.area);
+  const label = (w) => `${level !== 'hard' && hasPic(w) ? `<span class="d-pic">${esc(w.e)}</span>` : ''}<b>${esc(bare(w))}</b>${level === 'easy' ? `<small>${esc(w[lang])}</small>` : ''}`;
+  function spawn() {
+    if (api.over) return;
+    if (n >= total) return api.end(score, starsFor(score / total));
+    const w = queue[n++];
+    const el = h(`<div class="bl-block">${label(w)}</div>`);
+    board.append(el);
+    cur = { w, el, col: 1, t0: performance.now() };
+    place();
+  }
+  function place() { if (cur) cur.el.style.left = `calc(${cur.col} * (100% / 3) + 6px)`; }
+  function land() {
+    if (!cur || api.over) return;
+    const { w, el, col } = cur;
+    cur = null;
+    const a = ARTS[col];
+    if (article(w) === a) {
+      score++; api.setScore(score); api.hit(true); sfx.correct(); speak(w.de);
+      el.classList.add('bl-ok'); setTimeout(() => el.remove(), 400);
+    } else {
+      api.hit(false); sfx.wrong(); el.remove();
+      stacks[a]++;
+      $(`[data-stack="${a}"]`, api.area).append(h(`<div class="bl-slab">${esc(w.de)}</div>`));
+      const worst = Math.max(...Object.values(stacks));
+      api.setLives(maxH - worst, maxH, '🧱');
+      if (stacks[a] >= maxH) return api.end(score, starsFor(score / total));
+    }
+    api.timeout(spawn, 380);
+  }
+  const move = (d) => { if (cur) { cur.col = Math.max(0, Math.min(2, cur.col + d)); place(); sfx.tap(); } };
+  const drop = (a) => { if (cur) { cur.col = ARTS.indexOf(a); place(); land(); } };
+  api.area.querySelectorAll('[data-a]').forEach((b) => (b.onclick = () => drop(b.dataset.a)));
+  const onKey = (e) => {
+    const m = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
+    if (m) { e.preventDefault(); move(m); }
+    if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); if (cur) land(); }
+    const a = { 1: 'der', 2: 'die', 3: 'das' }[e.key];
+    if (a) drop(a);
+  };
+  document.addEventListener('keydown', onKey);
+  api.later(() => document.removeEventListener('keydown', onKey));
+  let raf;
+  const tick = (now) => {
+    if (api.over) return;
+    if (cur) {
+      const slab = 34;
+      const H = board.clientHeight - 40 - stacks[ARTS[cur.col]] * slab - cur.el.offsetHeight;
+      const p = (now - cur.t0) / fall;
+      cur.el.style.top = `${Math.min(1, p) * Math.max(0, H)}px`;
+      if (p >= 1) land();
+    }
+    raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+  api.later(() => cancelAnimationFrame(raf));
+  spawn();
+}
+
+// ---------- 11. Wort-Schlange (Buchstaben in der richtigen Reihenfolge fressen)
+
+function snake(api, P, level, lang) {
+  const N = 9;
+  const stepMs = { easy: 330, medium: 250, hard: 180 }[level];
+  const decoyCount = { easy: 1, medium: 3, hard: 5 }[level];
+  let src = P.single.filter((w) => /^[A-Za-zÄÖÜäöü]{3,7}$/.test(bare(w)));
+  if (src.length < 3) src = P.single;
+  const words = sample(src, Math.min(5, src.length));
+  let wi = 0, score = 0, lives = 3, k = 0, word = '', w = null;
+  let body = [], dir = { x: 1, y: 0 }, nextDir = dir, items = [];
+  api.setLives(lives, 3);
+  api.area.innerHTML = `
+    <p class="g-help">${t('snakeHelp')}</p>
+    <div class="hint-box sn-prompt"></div>
+    <div class="sn-word" aria-live="polite"></div>
+    <div class="sn-grid" style="--n:${N}"></div>
+    <div class="sn-pad">
+      <button class="key" data-d="0,-1" aria-label="↑">▲</button>
+      <button class="key" data-d="-1,0" aria-label="←">◀</button>
+      <button class="key" data-d="0,1" aria-label="↓">▼</button>
+      <button class="key" data-d="1,0" aria-label="→">▶</button>
+    </div>`;
+  const grid = $('.sn-grid', api.area);
+  const cells = Array.from({ length: N * N }, () => { const c = document.createElement('div'); c.className = 'sn-cell'; grid.append(c); return c; });
+  const at = (x, y) => cells[y * N + x];
+  const free = () => {
+    const taken = new Set([...body, ...items].map((p) => `${p.x},${p.y}`));
+    const head = body[0];
+    const opts = [];
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      if (taken.has(`${x},${y}`)) continue;
+      if (head && Math.abs(head.x - x) + Math.abs(head.y - y) < 3) continue;
+      opts.push({ x, y });
+    }
+    return pick(opts);
+  };
+  function newWord() {
+    if (wi >= words.length) return api.end(score, starsFor(score / (words.length * 13)));
+    w = words[wi++];
+    word = bare(w).toUpperCase();
+    k = 0;
+    grid.dataset.word = word;
+    body = [{ x: 1, y: 4 }];
+    dir = nextDir = { x: 1, y: 0 };
+    items = [];
+    const letters = new Set(word);
+    for (const ch of word) items.push({ ...free(), ch });
+    const ABC = 'ABCDEFGHIJKLMNOPRSTUVWZ'.split('').filter((c) => !letters.has(c));
+    for (let i = 0; i < decoyCount; i++) items.push({ ...free(), ch: pick(ABC), decoy: true });
+    $('.sn-prompt', api.area).innerHTML = `
+      ${level === 'easy' && hasPic(w) ? `<div class="pic small">${esc(w.e)}</div>` : ''}
+      ${level !== 'hard' ? `<div class="native-big">${esc(w[lang])}</div>` : ''}
+      <button class="speaker" data-say aria-label="${t('tapToListen')}">🔊</button>`;
+    $('[data-say]', api.area).onclick = () => say(w);
+    if (level === 'hard') say(w);
+    draw();
+  }
+  function draw() {
+    cells.forEach((c) => { c.className = 'sn-cell'; c.textContent = ''; });
+    items.forEach((it) => { const c = at(it.x, it.y); c.className = 'sn-cell sn-letter'; c.textContent = it.ch; });
+    body.forEach((p, i) => { at(p.x, p.y).className = `sn-cell ${i === 0 ? 'sn-head' : 'sn-body'}`; });
+    grid.dataset.k = k;
+    $('.sn-word', api.area).innerHTML = [...word].map((ch, i) => `<span class="${i < k ? 'got' : ''}">${i < k ? ch : '_'}</span>`).join('');
+  }
+  function loseLife() {
+    lives--; api.setLives(lives, 3); api.hit(false); sfx.wrong(); shake(grid);
+    if (lives <= 0) { api.end(score, starsFor(score / (words.length * 13))); return true; }
+    return false;
+  }
+  function step() {
+    if (api.over || !w) return;
+    if (!(nextDir.x === -dir.x && nextDir.y === -dir.y)) dir = nextDir;
+    const head = { x: (body[0].x + dir.x + N) % N, y: (body[0].y + dir.y + N) % N };
+    if (body.some((p) => p.x === head.x && p.y === head.y)) { if (loseLife()) return; body = [body[0]]; draw(); return; }
+    body.unshift(head);
+    const hit = items.findIndex((it) => it.x === head.x && it.y === head.y);
+    if (hit >= 0) {
+      const it = items[hit];
+      items.splice(hit, 1);
+      if (!it.decoy && it.ch === word[k]) {
+        k++; sfx.tap();
+        if (k === word.length) {
+          score += 10 + lives; api.setScore(score); api.hit(true); sfx.correct(); say(w);
+          draw(); api.timeout(newWord, 700); w = null; return;
+        }
+      } else {
+        body.pop();
+        if (!it.decoy) items.push({ ...free(), ch: it.ch }); // richtiger Buchstabe, aber zu früh: kommt woanders wieder
+        if (loseLife()) return;
+      }
+    } else body.pop();
+    draw();
+  }
+  const turn = (x, y) => { nextDir = { x, y }; };
+  api.area.querySelectorAll('[data-d]').forEach((b) => (b.onclick = () => { const [x, y] = b.dataset.d.split(',').map(Number); turn(x, y); }));
+  const onKey = (e) => {
+    const d = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+    if (d) { e.preventDefault(); turn(...d); }
+  };
+  document.addEventListener('keydown', onKey);
+  api.later(() => document.removeEventListener('keydown', onKey));
+  // Wischen auf dem Spielfeld
+  let sx = 0, sy = 0;
+  grid.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  grid.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+    if (Math.abs(dx) > Math.abs(dy)) turn(Math.sign(dx), 0); else turn(0, Math.sign(dy));
+  });
+  newWord();
+  api.interval(step, stepMs);
+}
+
+// ---------- 12. Mäusejagd (Mäuse schauen aus Löchern, man tippt die richtige an)
+
+function mice(api, P, level, lang) {
+  const dur = 45000;
+  const up = { easy: 2400, medium: 1750, hard: 1250 }[level];
+  const target = { easy: 10, medium: 12, hard: 12 }[level];
+  let score = 0, w = null;
+  api.area.innerHTML = `
+    <p class="g-help">${t('miceHelp')}</p>
+    <div class="hint-box mi-prompt"></div>
+    <div class="mi-field">${Array.from({ length: 9 }, (_, i) => `<div class="mi-hole" data-i="${i}"></div>`).join('')}</div>`;
+  const holes = [...api.area.querySelectorAll('.mi-hole')];
+  function newTarget() {
+    const prev = w;
+    do { w = pick(P.words); } while (P.words.length > 1 && prev && w.key === prev.key);
+    $('.mi-prompt', api.area).innerHTML = `
+      ${level === 'easy' && hasPic(w) ? `<div class="pic small">${esc(w.e)}</div>` : ''}
+      ${level !== 'hard' ? `<div class="native-big">${esc(w[lang])}</div>` : ''}
+      <button class="speaker" data-say aria-label="${t('tapToListen')}">🔊</button>`;
+    $('[data-say]', api.area).onclick = () => say(w);
+    if (level === 'hard') say(w);
+  }
+  function popMouse() {
+    if (api.over) return;
+    const emptyHoles = holes.filter((x) => !x.firstChild);
+    if (!emptyHoles.length) return;
+    const hole = pick(emptyHoles);
+    // Höchstens eine richtige Maus gleichzeitig, und auch dann nicht immer: man muss genau lesen
+    const rightVisible = holes.some((x) => x.firstChild?._key === w.key);
+    const right = !rightVisible && Math.random() < 0.45;
+    const word = right ? w : pick(P.words.filter((x) => x.key !== w.key));
+    const m = h(`<button class="mi-mouse"><span class="mi-face">🐭</span><b>${esc(word.de)}</b></button>`);
+    m._key = word.key;
+    m.onclick = () => {
+      if (api.over || m.disabled) return;
+      m.disabled = true;
+      if (word.key === w.key) {
+        score++; api.setScore(score); api.hit(true); sfx.correct(); speak(word.de);
+        m.classList.add('mi-hit'); setTimeout(() => m.remove(), 300); newTarget();
+      } else {
+        score = Math.max(0, score - 1); api.setScore(score);
+        api.hit(false); sfx.wrong(); m.classList.add('mi-miss'); setTimeout(() => m.remove(), 400);
+      }
+    };
+    hole.append(m);
+    setTimeout(() => { if (m.isConnected && !m.disabled) { m.classList.add('mi-down'); setTimeout(() => m.remove(), 250); } }, up);
+  }
+  newTarget();
+  popMouse(); popMouse();
+  api.interval(popMouse, Math.round(up * 0.4));
+  const start = Date.now();
+  api.interval(() => {
+    const left = dur - (Date.now() - start);
+    api.setTimer(left / dur);
+    if (left <= 0) api.end(score, starsFor(score / target));
+  }, 100);
+}
+
+const RUN = { memory, pretzel, sprint, anagram, rain, listen, truefalse, sentence, typing, blocks, snake, mice };
 
 // beforeAgain: wird vor „Nochmal spielen“ aufgerufen. Gibt sie false zurück, startet kein neues Spiel
 // (z. B. Gratis-Spiel schon verbraucht → Bezahlseite).

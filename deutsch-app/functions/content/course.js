@@ -418,11 +418,12 @@ for (const u of COURSE.units) {
   u.sentences.forEach((x, i) => (x.tr = t.sentences[i]));
 }
 
-// Die erste Lektion (die ersten 6 Wörter von Einheit 1) ist gratis.
+// Ohne Code ist in JEDER Einheit die erste Lektion gratis (die ersten 6 Wörter).
+// Dazu ein paar Sätze pro Einheit, damit das Satz-Rennen als Gratis-Spiel geht.
 export const TRIAL_WORDS = 6;
+export const TRIAL_SENTENCES = 3;
 
-// Version für Nicht-Zahlende: alle Titel (damit man sieht, was kommt),
-// aber Inhalte nur für die Gratis-Lektion.
+// Version für Nicht-Zahlende: alle Titel und Tipps, pro Einheit nur die Inhalte der Gratis-Lektion.
 export function trialCourse() {
   return {
     ...COURSE,
@@ -431,9 +432,9 @@ export function trialCourse() {
       emoji: u.emoji,
       color: u.color,
       title: u.title,
-      tip: i === 0 ? u.tip : null,
-      words: i === 0 ? u.words.slice(0, TRIAL_WORDS) : [],
-      sentences: [],
+      tip: u.tip,
+      words: u.words.slice(0, TRIAL_WORDS),
+      sentences: u.sentences.slice(0, TRIAL_SENTENCES),
       locked: true,
     })),
   };
