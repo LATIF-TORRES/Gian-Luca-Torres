@@ -7,6 +7,7 @@
 
 var AKHI_AUFTRAG = [
   "Rolle: Du bist AKHI, der persönliche Business-Assistent von A&T, wie Jarvis: ein erfahrener, ruhiger, loyaler Bruder mit tiefem Wissen in Strategie, Finanzen, Marketing, Verkauf, Social Media, E-Commerce, Reselling, Digistore24, Affiliate, KI-Werkzeugen, Automatisierung (Zapier, Make, n8n, Schnittstellen, Webhooks, MCP-Konnektoren), Gründung und Steuern in der Schweiz und islamischem Wirtschaftsrecht.",
+  "MISSION: Führe die Person zu einem regelmässigen, automatisierten Cashflow. Beantworte genau die gestellte Frage zuerst und konkret; danach zeig in einem Satz, wie es auf den Cashflow einzahlt. Fehlt dir ihr Stand (Angebot, Kanal, Einnahmen, Zeit), frag einmal gezielt nach oder triff eine genannte Annahme. Im Zweifel: Modul „cashflow“ nachschlagen.",
   "Du wirst oft per Stimme benutzt: Beginne jede Antwort mit 1 bis 3 kurzen, gesprochenen Sätzen ohne Aufzählungszeichen und ohne Markdown, die direkt antworten. Danach, durch eine Leerzeile getrennt, bei Bedarf Details als klare Schritte.",
   "Sei konkret wie ein Unternehmensberater: Zahlen, Werkzeuge mit Namen, Kosten, Zeitplan, nächster Schritt. Keine Floskeln. Wenn Wissen veraltet sein könnte (Gebühren, Gesetze), sag es in einem Halbsatz.",
   "Werkzeuge: wissen_nachschlagen für Grundlagen aus der Bibliothek (Themen: " + (typeof wissenThemen === "function" ? wissenThemen() : "") + "). " +
@@ -18,7 +19,7 @@ var AKHI_AUFTRAG = [
 var AKHI_WERKZEUGE = [
   {
     name: "wissen_nachschlagen",
-    description: "Liest eine Anleitung aus der A&T-Bibliothek (mit Checkliste). Themen: businessplan, marketing, digistore24, reselling, socialmedia, ki-systeme, gruenden-ch, halal-business, verkauf, produktivitaet.",
+    description: "Liest eine Anleitung aus der A&T-Bibliothek (mit Checkliste). Themen: " + (typeof WISSEN !== "undefined" ? WISSEN.map(function (w) { return w.id; }).join(", ") : "") + ".",
     input_schema: { type: "object", properties: { thema: { type: "string", description: "Thema oder Stichwort, z. B. digistore24" } }, required: ["thema"], additionalProperties: false },
     eager_input_streaming: true
   },
@@ -231,11 +232,11 @@ var Akhi = (function () {
     dl.innerHTML = Z.dokumente.length ? "" : "<li class='leise klein-text'>Noch keine. Sag z. B. „Hey Akhi, erstelle mir einen Businessplan für Reselling.“</li>";
     Z.dokumente.slice().reverse().forEach(function (d) {
       var li = document.createElement("li");
-      li.innerHTML = "<button class='akhi-link'>📄 " + esc(d.titel) + "<small> · " + esc(d.art) + " · " + esc(d.datum) + "</small></button><button class='mini' title='PDF'>PDF</button><button class='mini' title='Löschen'>✕</button>";
+      li.innerHTML = "<button class='akhi-link'>" + (d.art === "Hochgeladen" ? "📎 " : "📄 ") + esc(d.titel) + "<small> · " + esc(d.art) + " · " + esc(d.datum) + "</small></button>" + exportAuswahlHtml("klein") + "<button class='mini' title='Löschen'>✕</button>";
       var k = li.querySelectorAll("button");
       k[0].onclick = function () { dokumentZeigen(d); };
-      k[1].onclick = function () { alsPdf(d.titel, d.inhalt); };
-      k[2].onclick = function () { if (confirm("„" + d.titel + "“ löschen?")) { Z.dokumente = Z.dokumente.filter(function (x) { return x !== d; }); speichern(); zeichnen(); } };
+      exportVerbinden(li.querySelector(".export-wahl"), function () { return d; });
+      k[1].onclick = function () { if (confirm("„" + d.titel + "“ löschen?")) { Z.dokumente = Z.dokumente.filter(function (x) { return x !== d; }); speichern(); zeichnen(); } };
       dl.appendChild(li);
     });
     // Checklisten
@@ -243,12 +244,12 @@ var Akhi = (function () {
     Z.checklisten.slice().reverse().forEach(function (c) {
       var fertig = c.punkte.filter(function (p) { return p.erledigt; }).length;
       var li = document.createElement("li"); li.className = "akhi-checkliste";
-      li.innerHTML = "<div class='zeile-oben'><strong>" + esc(c.titel) + "</strong><small>" + fertig + "/" + c.punkte.length + "</small><button class='mini' title='PDF'>PDF</button><button class='mini' title='Löschen'>✕</button></div>" +
+      li.innerHTML = "<div class='zeile-oben'><strong>" + esc(c.titel) + "</strong><small>" + fertig + "/" + c.punkte.length + "</small>" + exportAuswahlHtml("klein") + "<button class='mini' title='Löschen'>✕</button></div>" +
         c.punkte.map(function (p, i) { return "<label class='haken'><input type='checkbox' data-i='" + i + "'" + (p.erledigt ? " checked" : "") + "> <span>" + esc(p.text) + "</span></label>"; }).join("");
       li.querySelectorAll("input").forEach(function (cb) { cb.onchange = function () { c.punkte[cb.dataset.i].erledigt = cb.checked; speichern(); zeichnen(); }; });
       var kn = li.querySelectorAll(".zeile-oben button");
-      kn[0].onclick = function () { alsPdf(c.titel, c.punkte.map(function (p) { return "- " + (p.erledigt ? "☑ " : "☐ ") + p.text; }).join("\n")); };
-      kn[1].onclick = function () { if (confirm("Checkliste löschen?")) { Z.checklisten = Z.checklisten.filter(function (x) { return x !== c; }); speichern(); zeichnen(); } };
+      exportVerbinden(li.querySelector(".export-wahl"), function () { return { titel: c.titel, inhalt: c.punkte.map(function (p) { return "- [" + (p.erledigt ? "x" : " ") + "] " + p.text; }).join("\n") }; });
+      kn[0].onclick = function () { if (confirm("Checkliste löschen?")) { Z.checklisten = Z.checklisten.filter(function (x) { return x !== c; }); speichern(); zeichnen(); } };
       cl.appendChild(li);
     });
     // Aufgaben nach Bereichen
@@ -268,28 +269,38 @@ var Akhi = (function () {
     $("#akhi-stimme-info").textContent = aktuell.stimme ? "Stimme: " + aktuell.stimme.name + (aktuell.tiefer ? " (keine Männerstimme gefunden, spricht tiefer)" : "") : "Dieser Browser hat keine deutsche Stimme.";
     $("#akhi-weck").checked = !!Z.einstellungen.weckwort;
     $("#akhi-gespraech").checked = Z.einstellungen.akhiGespraech !== false;
+    $("#akhi-rat").checked = !!Z.einstellungen.akhiRat;
+    var teil = typeof ratTeilnehmer === "function" ? ratTeilnehmer() : [];
+    $("#akhi-rat-info").textContent = teil.length >= 2 ? "Fragt: " + teil.map(function (t) { return t.name; }).join(", ") + "." :
+      "Dafür braucht es mindestens 2 KIs: z. B. Gemini-Schlüssel (unter „Ich“) und ChatGPT-Schlüssel (hier) oder die lokale KI.";
+    if (document.activeElement !== $("#akhi-openai")) $("#akhi-openai").value = Z.einstellungen.openaiSchluessel || "";
   }
 
   /* Ansichten im Arbeitsbereich */
   function arbeit(html) { var a = $("#akhi-arbeit"); a.innerHTML = html; a.classList.remove("versteckt"); a.scrollIntoView({ behavior: "smooth", block: "start" }); return a; }
   function wissenZeigen(id) {
     var w = wissenFinden(id); if (!w) return;
-    var a = arbeit("<div class='akhi-ansicht-kopf'><h2>" + w.symbol + " " + esc(w.titel) + "</h2><div><button class='knopf klein' data-a='pdf'>Als PDF</button> <button class='knopf klein zart' data-a='cl'>Checkliste übernehmen</button> <button class='knopf klein zart' data-a='frag'>Mit Akhi besprechen</button> <button class='mini' data-a='zu'>✕</button></div></div>" +
+    var a = arbeit("<div class='akhi-ansicht-kopf'><h2>" + w.symbol + " " + esc(w.titel) + "</h2><div>" + exportAuswahlHtml() + " <button class='knopf klein zart' data-a='cl'>Checkliste übernehmen</button> <button class='knopf klein zart' data-a='frag'>Mit Akhi besprechen</button> <button class='mini' data-a='zu'>✕</button></div></div>" +
       "<div class='md'>" + md(w.text.join("\n")) + "</div><h3>Checkliste</h3><ul>" + w.checkliste.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + "</ul>");
-    a.querySelector("[data-a=pdf]").onclick = function () { alsPdf(w.titel, wissenAlsText(w).replace(/^# .*\n/, "")); };
+    exportVerbinden(a.querySelector(".export-wahl"), function () { return { titel: w.titel, inhalt: wissenAlsText(w).replace(/^# .*\n/, "") }; });
     a.querySelector("[data-a=cl]").onclick = function () { akhiWerkzeug("checkliste_erstellen", { titel: w.titel, punkte: w.checkliste }); toastAkhi("Checkliste „" + w.titel + "“ angelegt."); };
     a.querySelector("[data-a=frag]").onclick = function () { fragen("Erkläre mir " + w.titel + " Schritt für Schritt für meine Situation und sag mir den ersten konkreten Schritt."); };
     a.querySelector("[data-a=zu]").onclick = function () { a.classList.add("versteckt"); };
   }
   function dokumentZeigen(d) {
-    var a = arbeit("<div class='akhi-ansicht-kopf'><h2>📄 " + esc(d.titel) + "</h2><div><button class='knopf klein' data-a='pdf'>Als PDF</button> <button class='knopf klein zart' data-a='kopie'>Text kopieren</button> <button class='mini' data-a='zu'>✕</button></div></div><div class='md'>" + md(d.inhalt) + "</div>");
-    a.querySelector("[data-a=pdf]").onclick = function () { alsPdf(d.titel, d.inhalt); };
+    var a = arbeit("<div class='akhi-ansicht-kopf'><h2>📄 " + esc(d.titel) + "</h2><div>" + exportAuswahlHtml() + " <button class='knopf klein zart' data-a='kopie'>Text kopieren</button>" +
+      (d.art === "Hochgeladen" ? " <button class='knopf klein' data-a='analyse'>Akhi analysieren lassen</button>" : "") + " <button class='mini' data-a='zu'>✕</button></div></div>" +
+      (d.gekuerzt ? "<p class='leise klein-text'>Sehr langes Dokument: Die ersten " + d.inhalt.length.toLocaleString("de-CH") + " Zeichen wurden übernommen.</p>" : "") +
+      "<div class='md'>" + (d.art === "Hochgeladen" ? "<pre class='akhi-text'>" + esc(d.inhalt) + "</pre>" : md(d.inhalt)) + "</div>");
+    exportVerbinden(a.querySelector(".export-wahl"), function () { return d; });
+    var an = a.querySelector("[data-a=analyse]");
+    if (an) an.onclick = function () { gespraech = false; fragen("Analysiere dieses Dokument für mein Business: Fasse es in 5 Punkten zusammen, nenne Chancen für Einnahmen, Risiken (auch halal), Fehler oder Lücken und die 3 nächsten Schritte. Wenn sinnvoll, speichere eine verbesserte Fassung mit dokument_erstellen.\n\nDokument „" + d.titel + "“:\n" + d.inhalt.slice(0, 30000)); };
     a.querySelector("[data-a=kopie]").onclick = function () { if (navigator.clipboard) navigator.clipboard.writeText(d.inhalt).then(function () { toastAkhi("Kopiert."); }); };
     a.querySelector("[data-a=zu]").onclick = function () { a.classList.add("versteckt"); };
   }
   function formularZeigen() {
     var bp = akhiDaten().businessplan;
-    var a = arbeit("<div class='akhi-ansicht-kopf'><h2>📝 Businessplan-Formular</h2><div><button class='knopf klein' data-a='pdf'>Als PDF</button> <button class='knopf klein zart' data-a='akhi'>Akhi ausarbeiten lassen</button> <button class='mini' data-a='zu'>✕</button></div></div>" +
+    var a = arbeit("<div class='akhi-ansicht-kopf'><h2>📝 Businessplan-Formular</h2><div>" + exportAuswahlHtml() + " <button class='knopf klein zart' data-a='akhi'>Akhi ausarbeiten lassen</button> <button class='mini' data-a='zu'>✕</button></div></div>" +
       "<p class='leise klein-text'>Wird automatisch gespeichert. Die Zahlen rechnet A&amp;T sofort durch.</p><form class='formular' id='bp-form'>" +
       BP_FELDER.map(function (f) { return "<label>" + esc(f[1]) + "<textarea rows='3' data-k='" + f[0] + "'>" + esc(bp[f[0]] || "") + "</textarea></label>"; }).join("") +
       "<h3>Finanzplan</h3><div class='raster zwei'>" + BP_ZAHLEN.map(function (z) { return "<label>" + esc(z[1]) + "<input inputmode='decimal' data-k='" + z[0] + "' value='" + esc(bp[z[0]] || "") + "'></label>"; }).join("") + "</div>" +
@@ -303,7 +314,7 @@ var Akhi = (function () {
     }
     a.querySelectorAll("[data-k]").forEach(function (f) { f.oninput = function () { bp[f.dataset.k] = f.value; speichern(); rechnen(); }; });
     rechnen();
-    a.querySelector("[data-a=pdf]").onclick = function () { alsPdf("Businessplan" + (bp.idee ? ": " + String(bp.idee).split(/[.\n]/)[0].slice(0, 60) : ""), bpMarkdown(bp)); };
+    exportVerbinden(a.querySelector(".export-wahl"), function () { return { titel: "Businessplan" + (bp.idee ? " " + String(bp.idee).split(/[.\n]/)[0].slice(0, 60) : ""), inhalt: bpMarkdown(bp) }; });
     a.querySelector("[data-a=akhi]").onclick = function () {
       fragen("Hier ist mein Businessplan-Entwurf. Prüfe ihn kritisch wie ein Investor, ergänze fehlende Teile, korrigiere die Zahlen wenn nötig und speichere eine vollständige, saubere Fassung mit dokument_erstellen (Art Businessplan). Sag mir dann die 3 wichtigsten Verbesserungen.\n\n" + bpMarkdown(bp));
     };
@@ -318,9 +329,25 @@ var Akhi = (function () {
     }
     return c;
   }
-  function fragen(text) {
+  async function fragen(text) {
     text = String(text || "").trim();
     if (!text || laeuft) return;
+    // Rat der KIs: zuerst alle verfügbaren KIs fragen, dann die beste Antwort zusammenführen
+    if (Z.einstellungen.akhiRat && typeof ratFragen === "function" && ratTeilnehmer().length >= 2 && text.length > 12 && hatSchluessel()) {
+      laeuft = { stoppen: function () {} };
+      $("#akhi-du").textContent = "„" + text.slice(0, 200) + (text.length > 200 ? " …" : "") + "“";
+      $("#akhi-aktionen").innerHTML = ""; $("#akhi-antwort").innerHTML = "";
+      setZustand("denkt", "Frage den Rat der KIs: " + ratTeilnehmer().map(function (t) { return t.name; }).join(", ") + " …");
+      var antworten = await ratFragen(text, function (n, gesamt, name) { setZustand("denkt", "Rat der KIs: " + n + " von " + gesamt + " fertig (" + name + ") …"); });
+      laeuft = null;
+      var sp = document.createElement("span");
+      sp.textContent = "Rat der KIs: " + antworten.map(function (a) { return a.name + (a.text ? " ✓" : " ✗ (" + a.fehler + ")"); }).join(" · ");
+      text = ratAuftrag(text, antworten);
+      return senden(text, sp);
+    }
+    return senden(text);
+  }
+  function senden(text, vorAktion) {
     if (!hatSchluessel()) { antwortZeigen("Ich brauche zuerst eine KI-Verbindung. Unter „Ich“ trägst du den kostenlosen Gemini-Schlüssel ein, oder auf dem Laptop die lokale KI.", true); return; }
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     var c = akhiChat();
@@ -331,8 +358,9 @@ var Akhi = (function () {
     if (c.anbieter === "gemini") c.nachrichten.push({ role: "user", parts: [{ text: kontext }, { text: text }] });
     else if (c.anbieter === "lokal") c.nachrichten.push({ role: "user", content: kontext + "\n\n" + text, _anzeige: text });
     else c.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: text }] });
-    $("#akhi-du").textContent = "„" + text.slice(0, 200) + (text.length > 200 ? " …" : "") + "“";
+    if (!vorAktion) $("#akhi-du").textContent = "„" + text.slice(0, 200) + (text.length > 200 ? " …" : "") + "“";
     $("#akhi-aktionen").innerHTML = "";
+    if (vorAktion) $("#akhi-aktionen").appendChild(vorAktion);
     setZustand("denkt");
     var gesamt = "";
     laeuft = antwortHolen(c, {
@@ -388,6 +416,21 @@ var Akhi = (function () {
       toastAkhi(this.checked ? "Sag „Hey Akhi“, solange A&T offen ist." : "„Hey Akhi“ aus.");
     };
     $("#akhi-gespraech").onchange = function () { Z.einstellungen.akhiGespraech = this.checked; speichern(); };
+    $("#akhi-rat").onchange = function () { Z.einstellungen.akhiRat = this.checked; speichern(); zeichnen(); };
+    $("#akhi-openai").onchange = function () { Z.einstellungen.openaiSchluessel = this.value.replace(/\s/g, ""); speichern(); zeichnen(); toastAkhi(this.value ? "ChatGPT-Schlüssel gespeichert." : "ChatGPT-Schlüssel entfernt."); };
+    $("#akhi-datei").onchange = async function () {
+      var dateien = Array.prototype.slice.call(this.files || []); this.value = "";
+      for (var i = 0; i < dateien.length; i++) {
+        try {
+          toastAkhi("Lese " + dateien[i].name + " …");
+          var r = await dateiLesen(dateien[i]);
+          var d = { id: neueId(), titel: r.titel.slice(0, 120), art: "Hochgeladen", inhalt: r.text, gekuerzt: r.gekuerzt, datum: heuteISO() };
+          Z.dokumente.push(d); if (Z.dokumente.length > 60) Z.dokumente.shift();
+          speichern(); zeichnen(); dokumentZeigen(d);
+          toastAkhi(r.titel + " gelesen (" + r.zeichen.toLocaleString("de-CH") + " Zeichen).");
+        } catch (f) { toastAkhi(f.message); }
+      }
+    };
     $("#akhi-stimme-wahl").onchange = function () { Z.einstellungen.akhiStimme = this.value; speichern(); zeichnen(); akhiSprechen("Salam, ich bin Akhi."); };
     $("#akhi-stimme-test").onclick = function () { akhiSprechen("Salam aleikum. Ich bin Akhi, dein Business-Assistent. Was bauen wir heute?"); };
     document.querySelectorAll("[data-akhi-frage]").forEach(function (b) { b.onclick = function () { gespraech = false; fragen(b.dataset.akhiFrage); }; });

@@ -498,6 +498,11 @@
         <label>Akhis Stimme <select id="akhi-stimme-wahl"></select></label>
         <button class="knopf klein zart" id="akhi-stimme-test" type="button">Stimme testen</button>
         <p id="akhi-stimme-info" class="klein-text leise"></p>
+        <h3>Rat der KIs</h3>
+        <label class="haken"><input type="checkbox" id="akhi-rat"> <span>Claude, Gemini, ChatGPT und lokale KI gemeinsam fragen; Akhi prüft alle Antworten und gibt die beste (gründlicher, dauert länger)</span></label>
+        <p id="akhi-rat-info" class="klein-text leise"></p>
+        <label>ChatGPT-Schlüssel (optional, von platform.openai.com) <input id="akhi-openai" type="password" autocomplete="off" placeholder="sk-…"></label>
+        <p class="klein-text leise">Schlüssel bleiben nur in diesem Browser. Mit dem Rat geht deine Frage an jede verbundene KI.</p>
       </aside>
 
       <main class="akhi-mitte">
@@ -514,6 +519,7 @@
           <button class="rund senden" title="Senden">➤</button>
         </form>
         <div class="akhi-schnell">
+          <button type="button" class="chip" data-akhi-frage="Baue mit mir mein automatisiertes Cashflow-System: Frag kurz nach meinem Stand, rechne mein Ziel rückwärts und lege die nächsten 5 Schritte als Aufgaben an.">Mein Cashflow-System</button>
           <button type="button" class="chip" data-akhi-frage="Erstelle mir einen vollständigen Businessplan für meine Idee. Frag mich zuerst kurz nach der Idee, wenn du sie nicht kennst.">Businessplan</button>
           <button type="button" class="chip" data-akhi-frage="Erstelle mir einen Marketingplan für die nächsten 30 Tage mit Inhalten pro Woche und speichere ihn als Dokument.">Marketingplan 30 Tage</button>
           <button type="button" class="chip" data-akhi-frage="Wie verdiene ich mit Digistore24 Geld, halal und Schritt für Schritt?">Digistore24</button>
@@ -528,6 +534,7 @@
         <h3>Module</h3>
         <div id="akhi-module" class="akhi-module"></div>
         <h3>Dokumente</h3>
+        <label class="knopf klein zart akhi-hochladen">📎 Datei hochladen (PDF, Word, Text)<input id="akhi-datei" type="file" multiple accept=".pdf,.docx,.odt,.txt,.md,.csv,.json,.html,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"></label>
         <ul id="akhi-dokumente" class="liste akhi-liste"></ul>
         <h3>Checklisten</h3>
         <ul id="akhi-checklisten" class="liste akhi-liste"></ul>
@@ -549,6 +556,9 @@
   <script src="js/einrichtung.js"></script>
   <script src="js/neuigkeiten.js"></script>
   <script src="js/wissen.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/import.js"></script>
+  <script src="js/rat.js"></script>
   <script src="js/akhi.js"></script>
   <script src="js/app.js"></script>
 </body>

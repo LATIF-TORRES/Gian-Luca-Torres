@@ -744,6 +744,7 @@
     var kopie = JSON.parse(JSON.stringify(Z));
     kopie.einstellungen.schluessel = ""; // Schlüssel nie in die Datei
     kopie.einstellungen.geminiSchluessel = "";
+    kopie.einstellungen.openaiSchluessel = "";
     if (kopie.depot) kopie.depot.finnhubSchluessel = "";
     var blob = new Blob([JSON.stringify(kopie, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
@@ -758,10 +759,11 @@
     f.text().then(function (t) {
       var d = JSON.parse(t);
       if (!d || !d.einstellungen) throw new Error("keine Sicherung");
-      var schluessel = Z.einstellungen.schluessel, gSchluessel = Z.einstellungen.geminiSchluessel;
+      var schluessel = Z.einstellungen.schluessel, gSchluessel = Z.einstellungen.geminiSchluessel, oSchluessel = Z.einstellungen.openaiSchluessel;
       Object.keys(d).forEach(function (k) { Z[k] = d[k]; });
       if (!Z.einstellungen.schluessel) Z.einstellungen.schluessel = schluessel;
       if (!Z.einstellungen.geminiSchluessel) Z.einstellungen.geminiSchluessel = gSchluessel;
+      if (!Z.einstellungen.openaiSchluessel) Z.einstellungen.openaiSchluessel = oSchluessel;
       speichern();
       alles();
       toast("Sicherung geladen.");

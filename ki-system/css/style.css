@@ -388,3 +388,11 @@ body.akhi-offen { overflow: hidden; }
 
 /* Im Mentor liegt unten das Eingabefeld: AKHI-Knopf darüber, damit er „Senden“ nicht verdeckt */
 body[data-tab="chat"] .akhi-start { top: 12px; bottom: auto; right: 16px; width: 50px; height: 50px; font-size: .58rem; }
+
+/* Speichern als … / Hochladen */
+.export-wahl { width: auto; max-width: 100%; padding: 6px 10px; border-radius: 999px; font-size: .82rem; }
+.export-wahl.klein { padding: 3px 6px; font-size: .72rem; max-width: 9.5rem; }
+.akhi-hochladen { position: relative; display: inline-block; margin-bottom: 8px; cursor: pointer; white-space: normal; }
+.akhi-hochladen input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.akhi-text { white-space: pre-wrap; font: inherit; font-size: .9rem; color: #d7f6ff; max-height: 55vh; overflow: auto; background: rgba(4, 12, 20, .6); padding: 10px; border-radius: 8px; }
+.akhi input[type="password"], .akhi input[type="text"], .akhi input[type="number"], .akhi input:not([type]) { background: rgba(4, 12, 20, .8); color: #e3f7ff; border: 1px solid rgba(58, 214, 255, .35); }

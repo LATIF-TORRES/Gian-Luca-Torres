@@ -17,7 +17,7 @@ SCHRIFT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 APP_DATEIEN = ["index.html", "manifest.webmanifest", "css/style.css",
                "js/lib/marked.min.js", "js/lib/purify.min.js",
                "js/daten.js", "js/speicher.js", "js/halal-welt.js", "js/depot.js", "js/yuh.js", "js/ki.js", "js/gemini.js", "js/lokal.js",
-               "js/stimme.js", "js/einrichtung.js", "js/wissen.js", "js/akhi.js", "js/neuigkeiten.js", "js/app.js",
+               "js/stimme.js", "js/einrichtung.js", "js/wissen.js", "js/export.js", "js/import.js", "js/rat.js", "js/akhi.js", "js/neuigkeiten.js", "js/app.js",
                "a-und-t-192.png", "a-und-t-512.png"]
 
 

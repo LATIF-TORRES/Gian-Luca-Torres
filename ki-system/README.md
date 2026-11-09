@@ -202,3 +202,11 @@ Leuchtender Knopf „AKHI“ unten rechts (im Mentor oben rechts) oder Weckwort 
 - **Businessplan-Formular** mit Finanzrechnung (Deckungsbeitrag, Gewinnschwelle, Verkäufe fürs Umsatzziel, Rückzahlung der Startkosten).
 - **PDF**: Drucken nur des Dokuments (`#druck`, Druck-CSS) → im Druckdialog „Als PDF speichern“, auch auf dem Handy.
 
+### Ab 5.1
+- **Speichern als** PDF, Word (.docx, selbst erzeugt in `js/export.js`, ohne Bibliothek), Word 97 (.doc), Text, Markdown: bei Dokumenten, Checklisten, Modulen und Businessplan-Formular.
+- **Hochladen** (`js/import.js`): PDF (pdf.js 4.10.38 von jsDelivr, braucht Internet), Word (.docx), OpenDocument (.odt), Text, Markdown, CSV; bis 60'000 Zeichen; „Akhi analysieren lassen“. Alte .doc-Dateien: als .docx oder PDF speichern.
+- **Rat der KIs** (`js/rat.js`): fragt alle eingerichteten KIs parallel ohne Werkzeuge (Claude über das SDK mit `effort: medium` und `fallbacks: "default"`, Gemini, ChatGPT über die OpenAI-Schnittstelle mit eigenem Schlüssel, lokale KI), Akhi prüft die Antworten und gibt eine zusammengeführte beste Antwort. Mindestens 2 KIs nötig.
+- **Bibliothek**: 22 Module, neu u. a. Automatisierter Cashflow, Digitale Produkte, E-Mail-Funnel, Online-Shop und Print-on-Demand, Dienstleistung und Agentur, YouTube, Amazon KDP, Halal investieren, Immobilien halal, Preise und Kennzahlen, Online-Recht Schweiz, KI-Praxis.
+- **Auftrag**: Mission „regelmässiger, automatisierter Cashflow“, gezielt zuerst die Frage beantworten, typische KI-Fehler vermeiden, Nasheed statt Musik.
+- **Fehler behoben**: Akhis Dokumente, Checklisten, Formular und Verlauf gingen beim Neuladen verloren (fehlten in `leererZustand`).
+

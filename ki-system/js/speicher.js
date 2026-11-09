@@ -20,6 +20,10 @@ function leererZustand() {
     chats: [],         // {id, titel, modus, nachrichten: [API-Nachrichten], kosten}
     depot: null,       // Übungs-Depot, siehe depot.js
     ueberweisungen: [],// vorbereitete Überweisungen (Revolut)
+    dokumente: [],     // Akhi: {id, titel, art, inhalt (Markdown oder Text), datum}
+    checklisten: [],   // Akhi: {id, titel, punkte: [{text, erledigt}], datum}
+    businessplan: {},  // Akhi: Businessplan-Formular
+    akhiChat: null,    // Akhi: eigenes Gespräch
     aktiverChat: null
   };
 }
