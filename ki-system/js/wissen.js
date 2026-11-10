@@ -589,3 +589,48 @@ function wissenAlsText(w) {
   return "# " + w.titel + "\n\n" + w.text.join("\n") + "\n\n## Checkliste\n" + w.checkliste.map(function (c) { return "- [ ] " + c; }).join("\n");
 }
 function wissenThemen() { return WISSEN.map(function (w) { return w.id + " (" + w.titel + ")"; }).join(", "); }
+
+/* ---------- Automatisches Fachwissen: passende Module zu einer Frage finden ---------- */
+// Stichwörter → Modul. So bekommt auch eine einfache KI das geprüfte Wissen mit, ohne selbst nachschlagen zu müssen.
+var WISSEN_STICHWORTE = {
+  "cashflow": /cashflow|passiv|wiederkehr|abo\b|abonnement|mitgliedschaft|automatisiert|monatlich verdienen|nebeneinkommen|einkommen aufbauen/,
+  "digitale-produkte": /online.?kurs|\bkurs\b|e.?book|vorlage|template|digitales produkt|membership|gumroad|kajabi/,
+  "email-funnel": /e.?mail|newsletter|funnel|trichter|lead.?magnet|brevo|mailerlite/,
+  "ecommerce": /shop|shopify|woocommerce|print.?on.?demand|printful|printify|dropship|onlineshop|e.?commerce/,
+  "dienstleistung": /freelanc|fiverr|upwork|agentur|dienstleistung|kunden gewinnen|akquise|retainer/,
+  "youtube-content": /youtube|kanal|video|shorts|content|faceless/,
+  "amazon-kdp": /\bkdp\b|amazon|buch|bücher|notizbuch|selfpublish/,
+  "investieren-halal": /aktie|etf|invest|anlegen|sparen|gold|silber|sukuk|säule 3a|3a|fonds|vermögen/,
+  "immobilien-halal": /immobil|miete|vermiet|wohnung|haus kaufen|airbnb|hypothek|eigenheim/,
+  "preise-kennzahlen": /preis|kennzahl|marge|kalkul|gewinnschwelle|break.?even|ltv|cac|mrr|kündigungsrate/,
+  "recht-online-ch": /impressum|datenschutz|dsgvo|revdsg|agb|qr.?rechnung|rechnung|mahnung|betreibung/,
+  "ki-praxis": /automatisier|prompt|ki.?agentur|chatbot|ki einsetzen|ki nutzen/,
+  "ki-systeme": /zapier|make\.com|\bmake\b|n8n|webhook|schnittstelle|\bapi\b|mcp|konnektor|claude|gemini|welche ki/,
+  "businessplan": /businessplan|geschäftsplan|business.?plan|geschäftsidee|idee prüfen|finanzplan/,
+  "marketing": /marketing|werbung|ads|positionierung|zielgruppe|kunden finden|reichweite/,
+  "digistore24": /digistore|affiliate|provision|vermittl/,
+  "reselling": /resell|wiederverkauf|flohmarkt|brockenhaus|ricardo|tutti|vinted|sneaker|arbitrage/,
+  "socialmedia": /tiktok|instagram|reels|social media|linkedin|pinterest|follower/,
+  "gruenden-ch": /gründ|firma|einzelfirma|gmbh|handelsregister|ahv|mwst|mehrwertsteuer|selbständig|selbstständig|steuer|buchhaltung/,
+  "halal-business": /halal|haram|zins|riba|islam|scharia|sharia|zakat|gharar|maysir/,
+  "verkauf": /verkauf|verkaufen|einwand|abschluss|kundengespräch|akquise|offerte/,
+  "produktivitaet": /woche planen|wochenplan|aufgaben|priorit|zeitmanagement|routine|fokus/
+};
+function wissenPassend(frage, anzahl) {
+  var f = String(frage || "").toLowerCase();
+  if (f.length < 12) return [];
+  var treffer = WISSEN.map(function (w) {
+    var punkte = 0, re = WISSEN_STICHWORTE[w.id];
+    if (re) { var m = f.match(new RegExp(re.source, "g")); if (m) punkte += 3 * m.length; }
+    if (f.indexOf(w.titel.toLowerCase()) !== -1) punkte += 5;
+    return { w: w, punkte: punkte };
+  }).filter(function (t) { return t.punkte >= 3; }).sort(function (a, b) { return b.punkte - a.punkte; });
+  return treffer.slice(0, anzahl || 2).map(function (t) { return t.w; });
+}
+// Kontext-Block für die KI (gekürzt, damit es schnell und günstig bleibt)
+function wissenKontext(frage) {
+  var liste = wissenPassend(frage, 2);
+  if (!liste.length) return "";
+  return "\n<wissen>\nGeprüftes Fachwissen aus der A&T-Bibliothek zur Frage (nutze es, wenn es passt; Zahlen sind Richtwerte, nenne Abweichungen, wenn du Aktuelleres weisst):\n" +
+    liste.map(function (w) { return wissenAlsText(w).slice(0, 3500); }).join("\n\n") + "\n</wissen>";
+}

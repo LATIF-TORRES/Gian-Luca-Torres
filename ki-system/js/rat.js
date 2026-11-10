@@ -29,7 +29,7 @@ function mitZeitlimit(promise, ms) {
 // Fragt alle verfügbaren KIs gleichzeitig. Ergebnis: [{name, text} | {name, fehler}]
 async function ratFragen(frage, beiFortschritt) {
   var teil = ratTeilnehmer(), kontext = typeof kontextFuerKi === "function" ? kontextFuerKi() : "";
-  var voll = (kontext ? "Über die Person:\n" + kontext + "\n\n" : "") + "Frage:\n" + frage;
+  var voll = (kontext ? "Über die Person:\n" + kontext + "\n\n" : "") + (typeof wissenKontext === "function" ? wissenKontext(frage) + "\n\n" : "") + "Frage:\n" + frage;
   var fertig = 0;
   return Promise.all(teil.map(function (k) {
     return mitZeitlimit(k.frage(voll), RAT_ZEIT_MS).then(function (text) {

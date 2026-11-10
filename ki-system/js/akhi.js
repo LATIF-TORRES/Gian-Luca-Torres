@@ -351,7 +351,7 @@ var Akhi = (function () {
     if (!hatSchluessel()) { zeichnen(); $("#akhi-ki-hinweis").scrollIntoView({ behavior: "smooth", block: "center" }); antwortZeigen("Ich brauche zuerst eine KI-Verbindung. Verbinde sie einmal oben, das dauert etwa 2 Minuten und ist kostenlos.", true); return; }
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     var c = akhiChat();
-    var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + AKHI_AUFTRAG + "\n" + kontextFuerKi() + "\n</kontext>";
+    var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + AKHI_AUFTRAG + "\n" + kontextFuerKi() + wissenKontext(String(text).split("<rat_der_kis>")[0]) + "\n</kontext>";
     // Abgebrochene Frage am Ende entfernen (Anbieter erwarten abwechselnd Person und KI)
     var letzte = c.nachrichten[c.nachrichten.length - 1];
     if (letzte && letzte.role === "user") c.nachrichten.pop();

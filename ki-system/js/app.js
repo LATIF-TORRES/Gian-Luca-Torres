@@ -375,7 +375,7 @@
     if (!c.nachrichten.length) c.anbieter = e.anbieter;
     if (!c.nachrichten.length) { c.titel = text.length > 40 ? text.slice(0, 40) + "…" : text; chatWahlFuellen(); }
     var modus = MODI[$("#modus").value] || MODI.stratege;
-    var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + modus.auftrag + "\n" + kontextFuerKi() +
+    var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + modus.auftrag + "\n" + kontextFuerKi() + (typeof wissenKontext === "function" ? wissenKontext(text) : "") +
       (e.websuche ? "" : "\nNutze diesmal keine Web-Suche.") + "\n</kontext>";
     // Endet der Verlauf schon mit einer Nutzer-Nachricht (z. B. nach einem Abbruch), dort anhängen:
     // Beide Anbieter erwarten abwechselnd Nutzer und KI.
