@@ -337,9 +337,9 @@
           <div class="formular">
             <label>KI-Anbieter
               <select id="e-anbieter">
+                <option value="claude">Claude · empfohlen, am klügsten (wenige Rappen pro Antwort)</option>
                 <option value="lokal">Lokal auf deinem PC · kostenlos, ohne Limit</option>
                 <option value="gemini">Google Gemini · kostenlos mit Limit</option>
-                <option value="claude">Claude · bezahlt, am klügsten</option>
               </select>
             </label>
           </div>
@@ -455,18 +455,15 @@
       <div class="schritt" data-schritt="3">
         <h2>KI verbinden</h2>
         <p id="ein-lokal" class="klein-text leise">Suche lokale KI auf deinem PC …</p>
-        <p class="klein-text"><strong>Für unterwegs oder ohne lokale KI:</strong> Google Gemini (kostenlos, aber mit Limit).</p>
-        <ol class="anleitung">
-          <li>Öffne <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> und melde dich mit deinem Google-Konto an.</li>
-          <li>Tippe auf „Create API key“ und kopiere den Schlüssel.</li>
-          <li>Füge ihn hier ein und tippe auf „Testen“.</li>
-        </ol>
+        <p class="klein-text"><strong>Empfohlen: Claude</strong> (beste Qualität, wenige Rappen pro Antwort): Auf <a href="https://platform.claude.com/" target="_blank" rel="noopener">platform.claude.com</a> anmelden, Guthaben aufladen, unter „API Keys“ einen Schlüssel erstellen.</p>
+        <p class="klein-text"><strong>Gratis:</strong> Google Gemini mit Tageslimit: Auf <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> anmelden und „Create API key“ tippen.</p>
+        <p class="klein-text">Den Schlüssel hier einfügen und „Testen“ tippen. A&amp;T erkennt selbst, ob es Claude oder Gemini ist.</p>
         <div class="zeile">
-          <input id="ein-schluessel" type="password" placeholder="AIza…" autocomplete="off">
+          <input id="ein-schluessel" type="password" placeholder="sk-ant-… oder AIza…" autocomplete="off">
           <button type="button" class="knopf" id="ein-testen">Testen</button>
         </div>
         <p id="ein-test-ergebnis" class="leise klein-text"></p>
-        <p class="leise klein-text">Kostenlos, keine Kreditkarte. Es gibt ein Tageslimit. Bei der Gratis-Stufe darf Google deine Eingaben zur Verbesserung nutzen, darum keine geheimen Daten eingeben. Du kannst das auch später unter „Ich“ machen.</p>
+        <p class="leise klein-text">Gemini: keine Kreditkarte, aber Tageslimit, und Google darf Eingaben der Gratis-Stufe zur Verbesserung nutzen (keine geheimen Daten eingeben). Du kannst das auch später unter „Ich“ oder bei Akhi machen.</p>
       </div>
 
       <div class="ein-knoepfe">
@@ -513,10 +510,16 @@
         </button>
         <p id="akhi-status" class="akhi-status"></p>
         <div id="akhi-ki-hinweis" class="akhi-ki-hinweis versteckt">
-          <p><strong>Damit Akhi antworten kann: einmal eine KI verbinden.</strong> Kostenlos, etwa 2 Minuten: Auf der Google-Seite anmelden, „API-Schlüssel erstellen“ tippen, kopieren, hier einfügen.</p>
-          <div class="zeile"><a class="knopf klein" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">1. Gratis-Schlüssel holen</a></div>
-          <form id="akhi-ki-form" class="zeile"><input id="akhi-ki-schluessel" type="password" autocomplete="off" placeholder="2. Einfügen"><button class="knopf klein">Verbinden</button></form>
+          <p><strong>Damit Akhi antworten kann: einmal eine KI verbinden.</strong></p>
+          <p class="klein-text"><strong>Empfohlen: Claude</strong> · beste Qualität, kostet wenige Rappen pro Antwort. Auf platform.claude.com anmelden, Guthaben aufladen, unter „API Keys“ einen Schlüssel erstellen, hier einfügen.</p>
+          <div class="zeile"><a class="knopf klein" href="https://platform.claude.com/" target="_blank" rel="noopener">1. Claude-Schlüssel holen</a></div>
+          <form id="akhi-claude-form" class="zeile"><input id="akhi-claude-schluessel" type="password" autocomplete="off" placeholder="2. Einfügen (sk-ant-…)"><button class="knopf klein">Verbinden</button></form>
+          <details class="akhi-alternative"><summary>Gratis-Alternative: Gemini</summary>
+          <p class="klein-text">Kostenlos mit Tageslimit: Auf der Google-Seite anmelden, „API-Schlüssel erstellen“, kopieren, hier einfügen.</p>
+          <div class="zeile"><a class="knopf klein zart" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Gemini-Schlüssel holen</a></div>
+          <form id="akhi-ki-form" class="zeile"><input id="akhi-ki-schluessel" type="password" autocomplete="off" placeholder="Einfügen"><button class="knopf klein zart">Verbinden</button></form>
           <p class="klein-text leise">Auf dem Laptop geht es auch ganz ohne Schlüssel mit der lokalen KI („Lokale KI installieren“ im A&amp;T-Ordner).</p>
+          </details>
         </div>
         <p id="akhi-du" class="akhi-du"></p>
         <div id="akhi-aktionen" class="aktionen"></div>

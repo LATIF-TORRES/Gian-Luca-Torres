@@ -746,7 +746,6 @@
     if (!mitSchluesseln) { // Standard: Schlüssel nie in die Datei
       kopie.einstellungen.schluessel = "";
       kopie.einstellungen.geminiSchluessel = "";
-      kopie.einstellungen.openaiSchluessel = "";
       kopie.einstellungen.besitzer = false;
       if (kopie.depot) kopie.depot.finnhubSchluessel = "";
     } else if (!confirm("Die Datei enthält dann deine Schlüssel und die Besitzer-Freischaltung. Bewahre sie nur für dich auf (z. B. in deinem eigenen Google Drive) und schick sie niemandem. Weiter?")) return;
@@ -763,11 +762,10 @@
     f.text().then(function (t) {
       var d = JSON.parse(t);
       if (!d || !d.einstellungen) throw new Error("keine Sicherung");
-      var schluessel = Z.einstellungen.schluessel, gSchluessel = Z.einstellungen.geminiSchluessel, oSchluessel = Z.einstellungen.openaiSchluessel, besitzerVorher = Z.einstellungen.besitzer;
+      var schluessel = Z.einstellungen.schluessel, gSchluessel = Z.einstellungen.geminiSchluessel, besitzerVorher = Z.einstellungen.besitzer;
       Object.keys(d).forEach(function (k) { Z[k] = d[k]; });
       if (!Z.einstellungen.schluessel) Z.einstellungen.schluessel = schluessel;
       if (!Z.einstellungen.geminiSchluessel) Z.einstellungen.geminiSchluessel = gSchluessel;
-      if (!Z.einstellungen.openaiSchluessel) Z.einstellungen.openaiSchluessel = oSchluessel;
       if (!Z.einstellungen.besitzer && besitzerVorher) Z.einstellungen.besitzer = true;
       speichern();
       alles();

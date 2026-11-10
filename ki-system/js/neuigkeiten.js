@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "5.4"; // muss mit version.json übereinstimmen
+var APP_VERSION = "5.5"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "Claude als Haupt-KI", text: "A&T ist jetzt auf Claude ausgerichtet, die KI mit der besten Qualität für Strategie, Texte und Analysen. Du kannst den Claude-Schlüssel direkt bei Akhi oder in der Einrichtung einfügen; A&T prüft ihn sofort. Gemini bleibt als Gratis-Alternative, die lokale KI auf dem Laptop ebenso. ChatGPT ist ganz entfernt." },
   { titel: "Einstellungen bleiben erhalten", text: "A&T bittet den Browser jetzt, deine Daten dauerhaft zu behalten. Neu: Unter Ich → Daten kannst du eine Sicherung „mit Schlüsseln und Freischaltung“ herunterladen. Musst du A&T einmal neu einrichten (anderer Browser, neues Gerät), lädst du nur diese Datei und alles ist wieder da, ohne neue Schlüssel." },
   { titel: "Einfacher: Google Docs und KI direkt bei Akhi verbinden", text: "Unter „⬇ Speichern als …“ steht jetzt zuerst „Google Docs“: Das Dokument wird mit Formatierung kopiert und ein neues Google-Dokument geöffnet, du fügst nur noch ein. Daneben gibt es PDF, Word-Datei und Text. Ist noch keine KI verbunden, kannst du den kostenlosen Schlüssel direkt bei Akhi einfügen. Profi-Einstellungen (Rat der KIs, Stimmenwahl) liegen eingeklappt unter „Erweitert“." },
   { titel: "Akhi: Word, PDF, Upload und Rat der KIs", text: "Dokumente, Checklisten und Module speicherst du jetzt als PDF, Word (.docx und .doc), Text oder Markdown („⬇ Speichern als …“). Du kannst PDFs, Word- und Textdateien hochladen und von Akhi analysieren lassen. Neu ist der „Rat der KIs“: Akhi fragt Claude, Gemini und die lokale KI gleichzeitig, prüft ihre Antworten gegeneinander, wirft Fehler raus und gibt dir die beste Antwort. Die Bibliothek hat jetzt 22 Module, angeführt von „Automatisierter Cashflow“. Akhi antwortet gezielter, ist ganz auf regelmässigen, automatisierten Cashflow ausgerichtet und schlägt Nasheed statt Musik vor." },

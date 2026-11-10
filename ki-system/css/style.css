@@ -404,3 +404,4 @@ body[data-tab="chat"] .akhi-start { top: 12px; bottom: auto; right: 16px; width:
 .akhi-ki-hinweis p { margin: 0 0 8px; }
 .akhi-ki-hinweis .zeile { margin-bottom: 8px; }
 .akhi-ki-hinweis input { flex: 1; min-width: 0; }
+.akhi-alternative { margin-top: 6px; } .akhi-alternative summary { cursor: pointer; color: #8fdcf0; font-size: .85rem; margin-bottom: 6px; }

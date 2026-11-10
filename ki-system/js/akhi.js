@@ -416,6 +416,24 @@ var Akhi = (function () {
       toastAkhi(this.checked ? "Sag „Hey Akhi“, solange A&T offen ist." : "„Hey Akhi“ aus.");
     };
     $("#akhi-gespraech").onchange = function () { Z.einstellungen.akhiGespraech = this.checked; speichern(); };
+    $("#akhi-claude-form").onsubmit = async function (ev) {
+      ev.preventDefault();
+      var k = $("#akhi-claude-schluessel").value.replace(/\s/g, "");
+      if (!/^sk-ant-/.test(k)) return toastAkhi("Ein Claude-Schlüssel beginnt mit sk-ant-. Kopiere ihn nochmal ganz.");
+      toastAkhi("Prüfe den Schlüssel …");
+      try {
+        var sdk = await sdkLaden(), Anthropic = sdk.default;
+        await new Anthropic({ apiKey: k, dangerouslyAllowBrowser: true, maxRetries: 1 }).models.retrieve(Z.einstellungen.modell || "claude-opus-5-5");
+      } catch (f) {
+        var A = (await sdkLaden()).default || {};
+        return toastAkhi(A.AuthenticationError && f instanceof A.AuthenticationError ? "Dieser Schlüssel funktioniert nicht. Kopiere ihn nochmal ganz." :
+          A.APIConnectionError && f instanceof A.APIConnectionError ? "Keine Verbindung zu Anthropic. Prüfe dein Internet." : "Prüfung fehlgeschlagen: " + (f && f.message ? f.message : f));
+      }
+      Z.einstellungen.schluessel = k; Z.einstellungen.anbieter = "claude"; Z.einstellungen.anbieterManuell = true;
+      if (!Z.einstellungen.modell) Z.einstellungen.modell = "claude-opus-5-5";
+      speichern(); $("#akhi-claude-schluessel").value = ""; zeichnen();
+      antwortZeigen("Verbunden mit Claude. Akhi hier, bereit. Woran arbeiten wir?", false);
+    };
     $("#akhi-ki-form").onsubmit = async function (ev) {
       ev.preventDefault();
       var k = $("#akhi-ki-schluessel").value.replace(/\s/g, "");

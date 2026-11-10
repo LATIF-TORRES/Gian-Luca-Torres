@@ -63,13 +63,15 @@ var Einrichtung = (function () {
       profilSetzen(PROFIL.kapital, isFinite(kap) && $("#ein-kapital").value !== "" ? geld(kap) : "");
       profilSetzen(PROFIL.ort, $("#ein-ort").value.trim());
     } else if (schritt === 3) {
-      var k = $("#ein-schluessel").value.trim();
-      if (k && k !== e.geminiSchluessel) {
+      var k = $("#ein-schluessel").value.replace(/\s/g, "");
+      if (/^sk-ant-/.test(k)) { // Claude-Schlüssel
+        e.schluessel = k; e.anbieter = "claude"; e.anbieterManuell = true;
+      } else if (k && k !== e.geminiSchluessel) {
         e.geminiSchluessel = k;
         e.geminiModell = "";
         _geminiListe = null;
       }
-      if (k && e.anbieter !== "lokal") e.anbieter = "gemini";
+      if (k && !/^sk-ant-/.test(k) && e.anbieter !== "lokal" && e.anbieter !== "claude") e.anbieter = "gemini";
     }
     speichern();
   }
@@ -95,7 +97,7 @@ var Einrichtung = (function () {
     $("#ein-zeit").value = profilLesen(PROFIL.zeit);
     $("#ein-kapital").value = "";
     $("#ein-ort").value = profilLesen(PROFIL.ort);
-    $("#ein-schluessel").value = e.geminiSchluessel || "";
+    $("#ein-schluessel").value = e.schluessel || e.geminiSchluessel || "";
     $("#ein-test-ergebnis").textContent = "";
     $("#einrichtung").classList.remove("versteckt");
     document.body.classList.add("gesperrt");
@@ -120,6 +122,22 @@ var Einrichtung = (function () {
     knopf.disabled = true;
     aus.className = "leise klein-text";
     aus.textContent = "Teste …";
+    k = k.replace(/\s/g, "");
+    if (/^sk-ant-/.test(k)) { // Claude
+      sdkLaden().then(function (sdk) {
+        return new sdk.default({ apiKey: k, dangerouslyAllowBrowser: true, maxRetries: 1 }).models.retrieve(Z.einstellungen.modell || "claude-opus-5-5");
+      }).then(function () {
+        Z.einstellungen.schluessel = k; Z.einstellungen.anbieter = "claude"; Z.einstellungen.anbieterManuell = true;
+        if (!Z.einstellungen.modell) Z.einstellungen.modell = "claude-opus-5-5";
+        speichern();
+        aus.className = "klein-text plus";
+        aus.textContent = "✓ Mit Claude verbunden. Tippe auf „Fertig“.";
+      }).catch(function (f) {
+        aus.className = "klein-text minus";
+        aus.textContent = f && f.status === 401 ? "Dieser Schlüssel funktioniert nicht. Kopiere ihn nochmal ganz." : "Prüfung fehlgeschlagen: " + (f && f.message ? f.message : "keine Verbindung");
+      }).then(function () { knopf.disabled = false; });
+      return;
+    }
     geminiSchluesselTesten(k).then(function (liste) {
       if (!liste.length) throw new Error("leer");
       Z.einstellungen.geminiSchluessel = k;
