@@ -31,8 +31,9 @@ function leererZustand() {
 
 var Z = (function laden() {
   var z = leererZustand();
+  var roh = null;
   try {
-    var roh = localStorage.getItem(SPEICHER_SCHLUESSEL);
+    roh = localStorage.getItem(SPEICHER_SCHLUESSEL);
     if (roh) {
       var gespeichert = JSON.parse(roh);
       Object.keys(z).forEach(function (k) {
@@ -48,7 +49,10 @@ var Z = (function laden() {
       z.buchungen.forEach(function (b) { if (b.art === "reinigung") b.art = "aus"; });
       if (z.einstellungen.kiName === "TORRES") z.einstellungen.kiName = STANDARD_NAME; // alter Arbeitstitel
     }
-  } catch (e) { /* privates Fenster o. ä.: dann ohne Speicher */ }
+  } catch (e) {
+    // Gespeicherte Daten nicht lesbar: Kopie aufheben, damit nichts endgültig verloren geht.
+    try { if (roh) localStorage.setItem(SPEICHER_SCHLUESSEL + "-kopie-" + Date.now(), roh); } catch (e2) {}
+  }
   return z;
 })();
 

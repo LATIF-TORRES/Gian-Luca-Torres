@@ -20,7 +20,7 @@
     el.textContent = t;
     el.classList.add("sichtbar");
     clearTimeout(toast._t);
-    toast._t = setTimeout(function () { el.classList.remove("sichtbar"); }, 2600);
+    toast._t = setTimeout(function () { el.classList.remove("sichtbar"); }, Math.max(2600, String(t).length * 55));
   }
   function kern(zustand, text) {
     $("#kern").className = "kern " + (zustand || "");
@@ -787,23 +787,35 @@
     a.href = URL.createObjectURL(blob);
     a.download = "aundt-sicherung-" + heuteISO() + ".json";
     a.click();
+    Z.einstellungen.letzteSicherung = heuteISO(); speichern();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   };
-  $("#import").onchange = function () {
-    var f = this.files[0];
+  function sicherungLaden(f, danach) {
     if (!f) return;
     f.text().then(function (t) {
       var d = JSON.parse(t);
       if (!d || !d.einstellungen) throw new Error("keine Sicherung");
       var schluessel = Z.einstellungen.schluessel, gSchluessel = Z.einstellungen.geminiSchluessel, besitzerVorher = Z.einstellungen.besitzer;
-      Object.keys(d).forEach(function (k) { Z[k] = d[k]; });
+      var leer = leererZustand();
+      Object.keys(leer).forEach(function (k) { if (d[k] !== undefined) Z[k] = d[k]; });
+      Z.einstellungen = Object.assign(leer.einstellungen, d.einstellungen);
       if (!Z.einstellungen.schluessel) Z.einstellungen.schluessel = schluessel;
       if (!Z.einstellungen.geminiSchluessel) Z.einstellungen.geminiSchluessel = gSchluessel;
       if (!Z.einstellungen.besitzer && besitzerVorher) Z.einstellungen.besitzer = true;
+      Z.einstellungen.eingerichtet = true;
       speichern();
+      if (danach) danach();
       alles();
-      toast("Sicherung geladen.");
+      toast("Sicherung geladen. Willkommen zurück!");
     }).catch(function () { toast("Diese Datei ist keine gültige Sicherung."); });
+  }
+  $("#import").onchange = function () { sicherungLaden(this.files[0]); this.value = ""; };
+  $("#ein-import").onchange = function () {
+    sicherungLaden(this.files[0], function () {
+      $("#einrichtung").classList.add("versteckt");
+      document.body.classList.remove("gesperrt");
+      zeigeTab("heute");
+    });
     this.value = "";
   };
   $("#loeschen").onclick = function () {
@@ -889,6 +901,14 @@
   Neuigkeiten.beimStart();
   startlisteAutomatisch(function (r) { toast("Halal-Liste ergänzt: " + r.neu.length.toLocaleString("de-CH") + " Aktien aus der weltweiten Halal-Liste übernommen."); });
   if (!Z.einstellungen.eingerichtet) Einrichtung.start(function () { alles(); zeigeTab("heute"); });
+  // Erinnerung an eine Sicherung: höchstens einmal pro Tag, wenn die letzte älter als 14 Tage ist.
+  else (function () {
+    var e = Z.einstellungen, heute = heuteISO();
+    var alt = !e.letzteSicherung || (new Date(heute) - new Date(e.letzteSicherung)) > 14 * 86400000;
+    if (!alt || e.sicherungErinnert === heute) return;
+    e.sicherungErinnert = heute; speichern();
+    setTimeout(function () { toast("Tipp: Mach unter „Ich“ eine Sicherung mit Schlüsseln. Dann bist du nach einem Datenverlust in 10 Sekunden zurück."); }, 2500);
+  })();
   $("#neu-zeigen").onclick = Neuigkeiten.zeigen;
   $("#update-link").href = DOWNLOAD_URL;
   Neuigkeiten.updatePruefen(false).then(function (v) {

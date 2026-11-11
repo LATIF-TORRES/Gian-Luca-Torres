@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "5.7"; // muss mit version.json übereinstimmen
+var APP_VERSION = "5.8"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "Schneller zurück nach einem Datenverlust", text: "Musst du A&T neu einrichten, tippst du jetzt schon auf der ersten Seite auf „Sicherung laden“ und alles ist wieder da: Schlüssel, Gespräche, Gedächtnis. Alle 14 Tage erinnert dich A&T an eine neue Sicherung. Mach sie unter Ich → Daten mit „Mit Schlüsseln“ und leg die Datei in dein Google Drive." },
   { titel: "A&T lernt jeden Tag dazu", text: "Neu hat A&T ein Gedächtnis wie Claude: Einmal am Tag liest es deine neuen Gespräche und merkt sich selbst neue Fakten über dich, Regeln, wie du unterstützt werden willst, und einen kurzen Rückblick. So weiss es morgen noch, woran ihr heute gearbeitet habt. Mit 👍 und 👎 unter jeder Antwort bringst du ihm bei, was gut ist; bei 👎 schreibst du kurz, was besser sein soll, und das gilt ab sofort. Alles siehst und löschst du unter Ich → „Was A&T über dich weiss“." },
   { titel: "Schlauer bei jeder Frage", text: "A&T sucht jetzt bei jeder Frage selbst das passende Fachwissen aus der Bibliothek (z. B. Gründen in der Schweiz, Reselling, Halal investieren) und gibt es der KI direkt mit. So antworten Claude, Gemini und die lokale KI mit geprüftem Wissen, mit Halal-Regeln und Schweizer Bezug, statt nur aus dem Gedächtnis." },
   { titel: "Claude als Haupt-KI", text: "A&T ist jetzt auf Claude ausgerichtet, die KI mit der besten Qualität für Strategie, Texte und Analysen. Du kannst den Claude-Schlüssel direkt bei Akhi oder in der Einrichtung einfügen; A&T prüft ihn sofort. Gemini bleibt als Gratis-Alternative, die lokale KI auf dem Laptop ebenso. ChatGPT ist ganz entfernt." },
