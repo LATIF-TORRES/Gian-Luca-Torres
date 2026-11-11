@@ -53,20 +53,89 @@ var Z = (function laden() {
     // Gespeicherte Daten nicht lesbar: Kopie aufheben, damit nichts endgültig verloren geht.
     try { if (roh) localStorage.setItem(SPEICHER_SCHLUESSEL + "-kopie-" + Date.now(), roh); } catch (e2) {}
   }
+  // Hauptdaten fehlen oder sind kaputt, aber die kleine Basis-Sicherung ist da: Einstellungen und Schlüssel zurückholen.
+  if (!z.einstellungen.eingerichtet) {
+    try {
+      var basis = JSON.parse(localStorage.getItem(SPEICHER_SCHLUESSEL + "-basis") || "null");
+      if (basis && basis.einstellungen && basis.einstellungen.eingerichtet) {
+        z.einstellungen = Object.assign(leererZustand().einstellungen, basis.einstellungen);
+        if (basis.finnhubSchluessel) { z.depot = z.depot || {}; if (!z.depot.finnhubSchluessel) z.depot.finnhubSchluessel = basis.finnhubSchluessel; }
+      }
+    } catch (e) {}
+  }
   return z;
 })();
 
-function speichern() {
+// Kompakt speichern: Der Hintergrund-Kontext (Depot, Wissen, Regeln) wird bei jeder Frage neu gebaut
+// und muss nicht in jeder alten Nachricht mitgespeichert werden. Die Halal-Liste steckt schon in der App
+// (halal-welt.js), gespeichert wird nur, was die Person selbst ergänzt oder geändert hat.
+var KONTEXT_KURZ = "<kontext>(gekürzt)</kontext>";
+function halalKompakt(liste) {
+  var w = typeof welt === "function" ? welt() : {}, quellen = [], e = [];
+  liste.forEach(function (h) {
+    var qi = quellen.indexOf(h.quelle || ""); if (qi < 0) { qi = quellen.length; quellen.push(h.quelle || ""); }
+    var ww = w[h.symbol], extra = null;
+    Object.keys(h).forEach(function (k) {
+      if (k === "symbol" || k === "datum" || k === "quelle") return;
+      if (ww && ((k === "name" && h[k] === ww[1]) || (k === "land" && h[k] === ww[2]) || (k === "q" && h[k] === ww[3]))) return;
+      if (k === "branche" && !h[k]) return;
+      (extra = extra || {})[k] = h[k];
+    });
+    e.push(extra ? [h.symbol, h.datum || "", qi, extra] : [h.symbol, h.datum || "", qi]);
+  });
+  return { q: quellen, e: e };
+}
+function speicherText() {
+  return JSON.stringify(Z, function (k, v) {
+    if (typeof v === "string" && v.indexOf("<kontext>") !== -1) {
+      if (k === "text" && v.indexOf("<kontext>") === 0 && v.indexOf("</kontext>") === v.length - 10) return KONTEXT_KURZ;
+      if (k === "content" || k === "text") return v.replace(/<kontext>[\s\S]*?<\/kontext>/g, KONTEXT_KURZ);
+    }
+    if (k === "depot" && v && Array.isArray(v.halalListe) && v.halalListe.length > 50) {
+      var kopie = {}; Object.keys(v).forEach(function (x) { if (x !== "halalListe") kopie[x] = v[x]; });
+      kopie.halalListe = []; kopie.halalKompakt = halalKompakt(v.halalListe);
+      return kopie;
+    }
+    return v;
+  });
+}
+// Das Wichtigste (Einstellungen, Schlüssel, Freischaltung) zusätzlich klein und getrennt sichern.
+function basisSichern() {
   try {
-    localStorage.setItem(SPEICHER_SCHLUESSEL, JSON.stringify(Z));
-  } catch (e) {
-    // Speicher voll: älteste Gespräche entfernen und nochmal versuchen.
-    if (Z.chats.length > 1) {
-      Z.chats.shift();
-      speichern();
+    var d = Z.depot || {};
+    localStorage.setItem(SPEICHER_SCHLUESSEL + "-basis", JSON.stringify({ einstellungen: Z.einstellungen, finnhubSchluessel: d.finnhubSchluessel || "", zeit: Date.now() }));
+  } catch (e) {}
+}
+var SPEICHER_PROBLEM = null;
+function speichern() {
+  basisSichern();
+  for (var versuch = 0; versuch < 12; versuch++) {
+    try {
+      localStorage.setItem(SPEICHER_SCHLUESSEL, speicherText());
+      SPEICHER_PROBLEM = null;
+      return true;
+    } catch (e) {
+      // Speicher voll: zuerst alte Nachrichten kürzen, dann älteste Gespräche entfernen. Einstellungen bleiben immer.
+      if (!platzSchaffen()) break;
     }
   }
+  SPEICHER_PROBLEM = "voll";
+  if (typeof toast === "function") toast("Achtung: Der Speicher im Browser ist voll. Lösche unter Ich ein paar Dokumente oder Gespräche.");
+  return false;
 }
+function platzSchaffen() {
+  var ak = Z.akhiChat;
+  if (ak && ak.nachrichten && ak.nachrichten.length > 20) { ak.nachrichten = ak.nachrichten.slice(-20); kopfSauber(ak); return true; }
+  if (Z.chats.length > 3) { Z.chats.shift(); return true; }
+  var lang = Z.chats.filter(function (c) { return c.nachrichten && c.nachrichten.length > 10; })[0];
+  if (lang) { lang.nachrichten = lang.nachrichten.slice(-10); kopfSauber(lang); return true; }
+  if (Z.chats.length > 1) { Z.chats.shift(); return true; }
+  if (ak && ak.nachrichten && ak.nachrichten.length > 4) { ak.nachrichten = ak.nachrichten.slice(-4); kopfSauber(ak); return true; }
+  if (Z.dokumente && Z.dokumente.length > 5) { Z.dokumente.shift(); return true; }
+  return false;
+}
+// Ein Verlauf muss mit einer Nachricht der Person beginnen.
+function kopfSauber(c) { while (c.nachrichten.length && c.nachrichten[0].role !== "user") c.nachrichten.shift(); }
 
 function neueId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);

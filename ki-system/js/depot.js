@@ -244,6 +244,20 @@ var HALAL_STARTLISTE = {
   symbole: typeof HALAL_WELT !== "undefined" ? HALAL_WELT.daten.map(function (d) { return d[0]; }) : []
 };
 
+// Kompakt gespeicherte Halal-Liste wieder aufbauen (siehe speicherText in speicher.js).
+(function () {
+  var d = Z.depot;
+  if (!d || !d.halalKompakt) return;
+  var w = welt(), k = d.halalKompakt;
+  d.halalListe = (k.e || []).map(function (x) {
+    var e = { symbol: x[0], name: "", branche: "", datum: x[1], quelle: (k.q || [])[x[2]] || "" }, ww = w[x[0]];
+    if (ww) { e.name = ww[1]; e.land = ww[2]; e.q = ww[3]; }
+    if (x[3]) Object.keys(x[3]).forEach(function (f) { e[f] = x[3][f]; });
+    return e;
+  });
+  delete d.halalKompakt;
+})();
+
 // Ergänzt Name und Land bei Einträgen, die schon auf der Liste stehen (z. B. aus älteren Versionen).
 function halalListeErgaenzen() {
   var w = welt(), geaendert = false;
