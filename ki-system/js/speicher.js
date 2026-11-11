@@ -24,6 +24,7 @@ function leererZustand() {
     checklisten: [],   // Akhi: {id, titel, punkte: [{text, erledigt}], datum}
     businessplan: {},  // Akhi: Businessplan-Formular
     akhiChat: null,    // Akhi: eigenes Gespräch
+    lernen: null,      // Lernen: Regeln, Rückblicke, Rückmeldungen (lernen.js)
     aktiverChat: null
   };
 }
@@ -169,8 +170,9 @@ function kontextFuerKi() {
   var q = Object.keys(m.quellen);
   if (q.length) teile.push("Einnahmequellen diesen Monat: " + q.map(function (k) { return k + " " + geld(m.quellen[k]); }).join(", ") + ".");
   if (Z.gedaechtnis.length) {
-    teile.push("Was du über die Person weisst:\n" + Z.gedaechtnis.map(function (g) { return "- " + g.text; }).join("\n"));
+    teile.push("Was du über die Person weisst:\n" + Z.gedaechtnis.slice(-40).map(function (g) { return "- " + g.text; }).join("\n"));
   }
+  if (typeof lernKontext === "function") { var lk = lernKontext(); if (lk) teile.push(lk); }
   if (istBesitzer() && typeof depotKurzFuerKi === "function") teile.push(depotKurzFuerKi());
   var offen = Z.aufgaben.filter(function (a) { return !a.erledigt; });
   if (offen.length) {

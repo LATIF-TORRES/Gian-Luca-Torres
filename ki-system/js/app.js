@@ -193,7 +193,7 @@
     liste.forEach(function (c) {
       var o = document.createElement("option");
       o.value = c.id;
-      o.textContent = c.titel + " · " + c.datum.slice(5).split("-").reverse().join(".");
+      o.textContent = (c.titel || "Gespräch") + (c.datum ? " · " + String(c.datum).slice(5).split("-").reverse().join(".") : "");
       if (c.id === Z.aktiverChat) o.selected = true;
       sel.appendChild(o);
     });
@@ -306,7 +306,7 @@
       html += "<details class='quellen'><summary>Quellen (" + b.quellen.length + ")</summary><ol>" +
         b.quellen.slice(0, 12).map(function (q) { return "<li><a href='" + esc(q.url) + "' target='_blank' rel='noopener'>" + esc(q.title) + "</a></li>"; }).join("") + "</ol></details>";
     }
-    if (b.text) html += "<div class='blasen-knoepfe'><button class='mini kopieren' title='Kopieren'>📋</button><button class='mini vorlesen' title='Vorlesen'>🔊</button></div>";
+    if (b.text) html += "<div class='blasen-knoepfe'><button class='mini kopieren' title='Kopieren'>📋</button><button class='mini vorlesen' title='Vorlesen'>🔊</button><button class='mini gut' title='Hilfreich'>👍</button><button class='mini schlecht' title='Nicht hilfreich'>👎</button></div>";
     return html + "</div>";
   }
 
@@ -334,6 +334,16 @@
     }
     v.querySelectorAll(".vorlesen").forEach(function (btn) {
       btn.onclick = function () { Stimme.vorlesen(btn.closest(".blase").querySelector(".md").innerText); };
+    });
+    v.querySelectorAll(".blasen-knoepfe .gut, .blasen-knoepfe .schlecht").forEach(function (btn) {
+      btn.onclick = function () {
+        var blase = btn.closest(".blase"), gut = btn.classList.contains("gut"), notiz = "", vor = blase.previousElementSibling;
+        while (vor && !vor.classList.contains("ich")) vor = vor.previousElementSibling;
+        if (!gut) { notiz = prompt("Was soll " + (Z.einstellungen.kiName || STANDARD_NAME) + " besser machen? (z. B. kürzer, mehr Zahlen, konkreter) – optional"); if (notiz === null) return; }
+        toast(rueckmeldung(gut, vor ? vor.innerText : "", blase.querySelector(".md").innerText, notiz));
+        btn.parentNode.querySelectorAll(".gut, .schlecht").forEach(function (x) { x.disabled = true; });
+        btn.classList.add("gewaehlt");
+      };
     });
     v.querySelectorAll(".kopieren").forEach(function (btn) {
       btn.onclick = function () { kopieren(btn.closest(".blase").querySelector(".md").innerText); };
@@ -722,7 +732,30 @@
     toast(this.checked ? "Sag „Hey " + Z.einstellungen.kiName + "“ und dann deine Frage." : "Freihändig aus.");
   };
 
+  function lernenZeigen() {
+    if (typeof lernDaten !== "function") return;
+    var l = lernDaten(), ul = $("#lernregeln"), rb = $("#rueckblicke");
+    ul.innerHTML = l.regeln.length ? "" : "<li class='leise'>Noch keine. Tipp bei Antworten auf 👍 oder 👎.</li>";
+    l.regeln.slice().reverse().forEach(function (r) {
+      var li = document.createElement("li");
+      li.innerHTML = "<span>" + esc(r.text) + "</span><span class='leise klein-text'>" + esc(r.quelle || "") + "</span><button class='mini' title='Löschen'>✕</button>";
+      li.querySelector("button").onclick = function () { l.regeln = l.regeln.filter(function (x) { return x !== r; }); speichern(); lernenZeigen(); };
+      ul.appendChild(li);
+    });
+    rb.innerHTML = l.rueckblicke.length ? "" : "<li class='leise'>Noch keiner. A&T macht einmal am Tag automatisch einen Rückblick.</li>";
+    l.rueckblicke.slice(-7).reverse().forEach(function (r) {
+      var li = document.createElement("li");
+      li.innerHTML = "<span class='wachsen'><strong>" + esc(r.datum.split("-").reverse().join(".")) + "</strong> " + esc(r.text) + "</span><button class='mini' title='Löschen'>✕</button>";
+      li.querySelector("button").onclick = function () { l.rueckblicke = l.rueckblicke.filter(function (x) { return x !== r; }); speichern(); lernenZeigen(); };
+      rb.appendChild(li);
+    });
+  }
+  $("#jetzt-lernen").onclick = async function () {
+    this.disabled = true; toast("Lerne aus den Gesprächen …");
+    var r = await rueckblickMachen(true); this.disabled = false; toast(r.text); gedaechtnisZeigen();
+  };
   function gedaechtnisZeigen() {
+    lernenZeigen();
     var ul = $("#gedaechtnis");
     ul.innerHTML = "";
     if (!Z.gedaechtnis.length) ul.innerHTML = "<li class='leise'>Noch nichts gespeichert.</li>";
@@ -878,6 +911,8 @@
   }
   if (Z.einstellungen.weckwort) Stimme.weckwort(true);
   if (typeof Akhi !== "undefined") Akhi.verbinden();
+  // Einmal am Tag im Hintergrund aus den Gesprächen lernen
+  setTimeout(function () { if (typeof lernenAutomatisch === "function") lernenAutomatisch(function (t) { toast(t); }); }, 6000);
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(function (ja) { if (!ja) navigator.storage.persist(); }); } catch (e) {}
   var start = "heute";
   try { start = sessionStorage.getItem("aundt-tab") || "heute"; } catch (e) {}

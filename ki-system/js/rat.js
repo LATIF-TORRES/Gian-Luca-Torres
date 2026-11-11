@@ -55,33 +55,34 @@ function ratAuftrag(frage, antworten) {
 
 /* ---------- Die einzelnen KIs (ohne Werkzeuge) ---------- */
 
-async function ratClaude(text) {
+async function ratClaude(text, system) {
   var e = Z.einstellungen, sdk = await sdkLaden(), Anthropic = sdk.default;
   var client = new Anthropic({ apiKey: e.schluessel, dangerouslyAllowBrowser: true, maxRetries: 1 });
   var modell = e.modell || "claude-opus-5-5";
   var p = { model: modell, max_tokens: 16000, output_config: { effort: "medium" }, system: ratSystem(), messages: [{ role: "user", content: text }] };
+  if (system) p.system = system;
   if (modell !== "claude-haiku-5-5") { p.betas = ["server-side-fallback-2026-07-01"]; p.fallbacks = "default"; }
   var m = await client.beta.messages.stream(p).finalMessage();
   if (m.stop_reason === "refusal") throw new Error("Claude hat die Frage abgelehnt.");
   return m.content.filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("\n");
 }
 
-async function ratGemini(text) {
+async function ratGemini(text, system) {
   var e = Z.einstellungen, modell = e.geminiModell || "gemini-2.5-flash";
   var r = await fetch(GEMINI_URL + "models/" + encodeURIComponent(modell) + ":generateContent?key=" + encodeURIComponent(e.geminiSchluessel), {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ systemInstruction: { parts: [{ text: ratSystem() }] }, contents: [{ role: "user", parts: [{ text: text }] }] })
+    body: JSON.stringify({ systemInstruction: { parts: [{ text: system || ratSystem() }] }, contents: [{ role: "user", parts: [{ text: text }] }] })
   });
   if (!r.ok) throw new Error(r.status === 429 ? "Gemini-Tageslimit erreicht" : "Gemini antwortet nicht (" + r.status + ")");
   var d = await r.json(), teile = (((d.candidates || [])[0] || {}).content || {}).parts || [];
   return teile.map(function (x) { return x.text || ""; }).join("");
 }
 
-async function ratLokal(text) {
+async function ratLokal(text, system) {
   var e = Z.einstellungen, modell = e.lokalModell;
   if (!modell) modell = lokalStandardModell(await lokalModelle());
   if (!modell) throw new Error("Lokale KI nicht gefunden");
-  var koerper = { model: modell, stream: false, think: false, messages: [{ role: "system", content: ratSystem() }, { role: "user", content: text }] };
+  var koerper = { model: modell, stream: false, think: false, messages: [{ role: "system", content: system || ratSystem() }, { role: "user", content: text }] };
   var r = await fetch(OLLAMA_URL + "/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(koerper) });
   if (!r.ok && /think/i.test(await r.clone().text())) { // ältere Modelle kennen „think“ nicht
     delete koerper.think;

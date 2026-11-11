@@ -388,6 +388,12 @@
           <button class="knopf">Merken</button>
         </form>
         <ul id="gedaechtnis" class="liste"></ul>
+        <h3 class="klein-titel">Gelernte Regeln</h3>
+        <p class="leise klein-text">Entstehen aus deinen 👍/👎 und dem täglichen Rückblick. Gelten bei jeder Antwort.</p>
+        <ul id="lernregeln" class="liste"></ul>
+        <h3 class="klein-titel">Rückblicke</h3>
+        <ul id="rueckblicke" class="liste"></ul>
+        <button class="knopf klein zart" id="jetzt-lernen" type="button">Jetzt aus den Gesprächen lernen</button>
       </div>
 
       <div class="karte">
@@ -497,6 +503,9 @@
         <label>Akhis Stimme <select id="akhi-stimme-wahl"></select></label>
         <button class="knopf klein zart" id="akhi-stimme-test" type="button">Stimme testen</button>
         <p id="akhi-stimme-info" class="klein-text leise"></p>
+        <h3>Gedächtnis</h3>
+        <p id="akhi-gedaechtnis" class="klein-text"></p>
+        <button class="knopf klein zart" id="akhi-lernen" type="button">Jetzt aus Gesprächen lernen</button>
         <h3>Rat der KIs</h3>
         <label class="haken"><input type="checkbox" id="akhi-rat"> <span>Claude, Gemini und lokale KI gemeinsam fragen; Akhi prüft alle Antworten und gibt die beste (gründlicher, dauert länger)</span></label>
         <p id="akhi-rat-info" class="klein-text leise"></p>
@@ -524,6 +533,7 @@
         <p id="akhi-du" class="akhi-du"></p>
         <div id="akhi-aktionen" class="aktionen"></div>
         <div id="akhi-antwort" class="akhi-antwort md"></div>
+        <div id="akhi-feedback" class="akhi-feedback versteckt"><span class="leise klein-text">War das hilfreich?</span> <button type="button" class="mini" data-gut="1" title="Gut">👍</button><button type="button" class="mini" data-gut="0" title="Nicht gut">👎</button></div>
         <form id="akhi-form" class="akhi-form">
           <button type="button" id="akhi-mikro" class="rund" title="Sprechen">🎙</button>
           <input id="akhi-eingabe" placeholder="Frag Akhi … oder sag „Hey Akhi“" autocomplete="off">
@@ -570,6 +580,7 @@
   <script src="js/export.js"></script>
   <script src="js/import.js"></script>
   <script src="js/rat.js"></script>
+  <script src="js/lernen.js"></script>
   <script src="js/akhi.js"></script>
   <script src="js/app.js"></script>
 </body>

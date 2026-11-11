@@ -184,6 +184,7 @@ var Akhi = (function () {
     try { sessionStorage.setItem("aundt-akhi", "1"); } catch (e) {}
     zeichnen();
     setZustand(laeuft ? "denkt" : "bereit");
+    if (typeof lernenAutomatisch === "function") lernenAutomatisch(function (t) { toastAkhi(t); zeichnen(); });
   }
   function schliessen() {
     gespraech = false;
@@ -271,6 +272,10 @@ var Akhi = (function () {
     $("#akhi-weck").checked = !!Z.einstellungen.weckwort;
     $("#akhi-gespraech").checked = Z.einstellungen.akhiGespraech !== false;
     $("#akhi-rat").checked = !!Z.einstellungen.akhiRat;
+    if (typeof lernDaten === "function") {
+      var ld = lernDaten(), rb = ld.rueckblicke[ld.rueckblicke.length - 1];
+      $("#akhi-gedaechtnis").textContent = Z.gedaechtnis.length + " Fakten · " + ld.regeln.length + " Regeln · " + (rb ? "letzter Rückblick " + rb.datum.split("-").reverse().join(".") : "noch kein Rückblick") + ". Akhi lernt einmal am Tag automatisch dazu.";
+    }
     var teil = typeof ratTeilnehmer === "function" ? ratTeilnehmer() : [];
     $("#akhi-rat-info").textContent = teil.length >= 2 ? "Fragt: " + teil.map(function (t) { return t.name; }).join(", ") + "." :
       "Dafür braucht es mindestens 2 KIs, z. B. Gemini und die lokale KI auf dem Laptop.";
@@ -358,6 +363,7 @@ var Akhi = (function () {
     if (c.anbieter === "gemini") c.nachrichten.push({ role: "user", parts: [{ text: kontext }, { text: text }] });
     else if (c.anbieter === "lokal") c.nachrichten.push({ role: "user", content: kontext + "\n\n" + text, _anzeige: text });
     else c.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: text }] });
+    letzteFrage = String(text).split("<rat_der_kis>")[0].slice(0, 300); $("#akhi-feedback").classList.add("versteckt");
     if (!vorAktion) $("#akhi-du").textContent = "„" + text.slice(0, 200) + (text.length > 200 ? " …" : "") + "“";
     $("#akhi-aktionen").innerHTML = "";
     if (vorAktion) $("#akhi-aktionen").appendChild(vorAktion);
@@ -372,8 +378,11 @@ var Akhi = (function () {
       fehler: function (t) { laeuft = null; antwortZeigen("Fehler: " + t, true); }
     });
   }
+  var letzteFrage = "", letzteAntwort = "";
   function antwortZeigen(text, fehler) {
     $("#akhi-antwort").innerHTML = md(text);
+    letzteAntwort = fehler ? "" : text;
+    $("#akhi-feedback").classList.toggle("versteckt", !letzteAntwort || !letzteFrage);
     var sprech = akhiSprechteil(text);
     if (!sprech) { setZustand("bereit"); return; }
     setZustand("spricht");
@@ -445,6 +454,18 @@ var Akhi = (function () {
       if (Z.einstellungen.anbieter !== "lokal" || !hatSchluessel()) Z.einstellungen.anbieter = "gemini";
       speichern(); $("#akhi-ki-schluessel").value = ""; zeichnen();
       antwortZeigen("Verbunden. Ich bin bereit, Akhi hier. Wobei kann ich dir helfen?", false);
+    };
+    document.querySelectorAll("#akhi-feedback button").forEach(function (b) {
+      b.onclick = function () {
+        var gut = b.dataset.gut === "1", notiz = "";
+        if (!gut) { notiz = prompt("Was soll Akhi besser machen? (z. B. kürzer antworten, mehr Zahlen, in CHF rechnen) – optional"); if (notiz === null) return; }
+        toastAkhi(rueckmeldung(gut, letzteFrage, letzteAntwort, notiz));
+        $("#akhi-feedback").classList.add("versteckt"); zeichnen();
+      };
+    });
+    $("#akhi-lernen").onclick = async function () {
+      this.disabled = true; toastAkhi("Akhi liest die Gespräche und lernt …");
+      var r = await rueckblickMachen(true); this.disabled = false; toastAkhi(r.text); zeichnen();
     };
     $("#akhi-rat").onchange = function () { Z.einstellungen.akhiRat = this.checked; speichern(); zeichnen(); };
     $("#akhi-datei").onchange = async function () {
