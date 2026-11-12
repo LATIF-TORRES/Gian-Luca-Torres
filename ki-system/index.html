@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f17">
+  <title>A&amp;T · Amanah &amp; Tijara</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="a-und-t-192.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%230b0f17' stroke='%23e8b84a' stroke-width='5'/%3E%3Ctext x='32' y='38.5' text-anchor='middle' font-size='17' font-family='Arial' font-weight='bold' fill='%23e8b84a'%3EA%26amp%3BT%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/lib/marked.min.js"></script>
+  <script src="js/lib/purify.min.js"></script>
+</head>
+<body>
+  <header class="kopf">
+    <div class="marke">
+      <div class="kern" id="kern" aria-hidden="true"><span></span></div>
+      <div>
+        <div class="marke-name" id="marke-name">A&amp;T</div>
+        <div class="marke-sub" id="marke-sub">Amanah &amp; Tijara</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Bereiche">
+      <button data-tab="heute" class="aktiv">Heute</button>
+      <button data-tab="chat">Mentor</button>
+      <button data-tab="vorbilder">Vorbilder</button>
+      <button data-tab="geld">Geld</button>
+      <button data-tab="depot">Depot</button>
+      <button data-tab="einstellungen">Ich</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HEUTE -->
+    <section id="tab-heute" class="tab aktiv">
+      <h1 id="gruss">Hallo</h1>
+      <p class="leise" id="datum"></p>
+
+      <div class="karte halal-band">
+        <div class="halal-siegel">حلال</div>
+        <div>
+          <strong>Halal-Modus ist immer an.</strong>
+          <span class="leise">Keine Zinsen (Riba), kein Glücksspiel (Maysir), keine übermässige Unsicherheit (Gharar), keine verbotenen Branchen. Nur ehrliche Arbeit, Handel und echte Beteiligung.</span>
+        </div>
+      </div>
+
+      <div id="hinweis-update" class="karte warnung versteckt">
+        <div><strong>Neue Version <span id="update-version"></span> verfügbar.</strong> Schliesse A&amp;T und öffne es wieder über die Verknüpfung, dann wird sie automatisch installiert. Deine Daten bleiben erhalten. Klappt das nicht, lade sie hier herunter und starte „Installieren.cmd“.</div>
+        <a class="knopf klein" id="update-link" href="#" target="_blank" rel="noopener">Herunterladen</a>
+      </div>
+
+      <div id="hinweis-schluessel" class="karte warnung versteckt">
+        <div><strong>Noch ein Schritt:</strong> Verbinde eine KI. Am besten die lokale KI ohne Limit: Doppelklick auf „Lokale KI installieren.cmd“ im A&amp;T-Ordner. Oder trag unter „Ich“ einen kostenlosen Gemini-Schlüssel ein (mit Limit).</div>
+        <button class="knopf klein" data-gehe="einstellungen">Jetzt eintragen</button>
+      </div>
+
+      <div class="raster">
+        <div class="karte">
+          <h2>Monatsziel</h2>
+          <div class="gross" id="ziel-text">–</div>
+          <div class="balken"><div id="ziel-balken"></div></div>
+          <p class="leise" id="ziel-detail"></p>
+        </div>
+        <div class="karte">
+          <h2>Die eine Sache heute</h2>
+          <div id="eine-sache" class="eine-sache">Noch nichts geplant.</div>
+          <button class="knopf klein" id="tag-planen">Tag planen lassen</button>
+        </div>
+      </div>
+
+      <div class="karte">
+        <h2>Aufgaben</h2>
+        <form id="aufgabe-form" class="zeile">
+          <input id="aufgabe-text" placeholder="Neue Aufgabe, z. B. 3 Kunden anschreiben" autocomplete="off">
+          <button class="knopf">Dazu</button>
+        </form>
+        <ul id="aufgaben" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Schnellstart</h2>
+        <div class="chips" id="schnellstart"></div>
+      </div>
+    </section>
+
+    <!-- CHAT -->
+    <section id="tab-chat" class="tab">
+      <div class="chat-leiste">
+        <select id="modus" aria-label="Rolle des Mentors"></select>
+        <select id="chat-wahl" aria-label="Gespräch wählen"></select>
+        <button class="knopf klein" id="chat-neu">Neu</button>
+        <button class="rund klein-rund" id="chat-loeschen" title="Gespräch löschen" aria-label="Gespräch löschen">🗑</button>
+      </div>
+      <p class="leise klein-text" id="modus-info"></p>
+      <div id="verlauf" class="verlauf" aria-live="polite"></div>
+      <form id="chat-form" class="eingabe">
+        <button type="button" class="rund" id="mikro" title="Sprechen">🎙</button>
+        <textarea id="frage" rows="1" placeholder="Frag deinen Mentor …"></textarea>
+        <button class="rund gold" id="senden" title="Senden">➤</button>
+      </form>
+      <div class="chat-fuss">
+        <label><input type="checkbox" id="websuche"> Web-Suche</label>
+        <label><input type="checkbox" id="vorlesen"> Vorlesen</label>
+        <label><select id="tiefe"><option value="low">Schnell</option><option value="medium" selected>Normal</option><option value="high">Gründlich</option></select></label>
+        <span class="leise" id="kosten"></span>
+      </div>
+    </section>
+
+    <!-- VORBILDER -->
+    <section id="tab-vorbilder" class="tab">
+      <h1>Was die Reichsten anders machen</h1>
+      <p class="leise">Jedes Prinzip mit einer Übung für dich. Tipp auf „Auf mich anwenden“, dann übersetzt der Mentor es in deine Situation, und zwar halal. Du übernimmst das Prinzip, nicht verbotene Branchen.</p>
+      <div id="vorbilder" class="raster"></div>
+    </section>
+
+    <!-- GELD -->
+    <section id="tab-geld" class="tab">
+      <h1>Dein Geld</h1>
+      <div class="raster drei" id="geld-kacheln"></div>
+
+      <div class="karte">
+        <h2>Buchung eintragen</h2>
+        <form id="buchung-form" class="formular">
+          <select id="b-art"><option value="ein">Einnahme</option><option value="aus">Ausgabe</option><option value="sadaqa">Sadaqa (selbst gegeben)</option></select>
+          <select id="b-halal" title="Halal-Status der Einnahme">
+            <option value="halal">Halal</option>
+            <option value="zweifelhaft">Zweifelhaft</option>
+            <option value="nicht_halal">Nicht halal (z. B. Zinsen)</option>
+          </select>
+          <input id="b-betrag" type="number" step="0.05" min="0" placeholder="Betrag" required>
+          <input id="b-quelle" placeholder="Quelle oder Zweck" required>
+          <input id="b-datum" type="date" required>
+          <button class="knopf">Speichern</button>
+        </form>
+        <div id="quellen"></div>
+        <ul id="buchungen" class="liste"></ul>
+      </div>
+
+      <div class="karte versteckt" id="ueberweisungen-karte">
+        <h2>Überweisungen (Revolut)</h2>
+        <p class="leise klein-text">Vom Mentor vorbereitet und geprüft. Revolut hat für Privatkonten keine Schnittstelle: Tippe die Felder an, um sie zu kopieren, und sende die Zahlung in der Revolut-App (Bezahlen → Neuer Empfänger → Bankverbindung).</p>
+        <ul id="ueberweisungen" class="liste"></ul>
+      </div>
+
+      <div class="raster">
+        <div class="karte">
+          <h2>Sparziel ohne Zinsen</h2>
+          <p class="leise">Wann erreichst du dein Ziel nur mit deinem eigenen Geld?</p>
+          <div class="formular">
+            <label>Sparziel <input id="p-ziel" type="number" value="10000" min="0"></label>
+            <label>Schon gespart <input id="p-gespart" type="number" value="1000" min="0"></label>
+            <label>Pro Monat <input id="p-rate" type="number" value="300" min="0"></label>
+          </div>
+          <div id="p-ergebnis" class="ergebnis"></div>
+        </div>
+        <div class="karte">
+          <h2>Zakat-Rechner</h2>
+          <p class="leise">2,5 % auf dein Vermögen über dem Nisab.</p>
+          <div class="formular">
+            <label>Goldpreis heute pro Gramm <input id="k-goldpreis" type="number" min="0" step="0.01" placeholder="z. B. 85"></label>
+            <label>Bargeld und Konten <input id="k-bar" type="number" min="0" value="0"></label>
+            <label>Gold und Silber (Wert) <input id="k-gold" type="number" min="0" value="0"></label>
+            <label>Waren zum Verkauf <input id="k-waren" type="number" min="0" value="0"></label>
+            <label>Anteile und Aktien (Wert) <input id="k-anteile" type="number" min="0" value="0"></label>
+            <label>Sichere Forderungen <input id="k-forderungen" type="number" min="0" value="0"></label>
+            <label>Fällige Schulden <input id="k-schulden" type="number" min="0" value="0"></label>
+          </div>
+          <div id="k-ergebnis" class="ergebnis"></div>
+        </div>
+        <div class="karte">
+          <h2>Stundensatz-Rechner</h2>
+          <p class="leise">Was musst du pro Stunde verlangen?</p>
+          <div class="formular">
+            <label>Wunsch-Einkommen pro Jahr <input id="s-ziel" type="number" value="60000" min="0"></label>
+            <label>Kosten pro Jahr <input id="s-kosten" type="number" value="6000" min="0"></label>
+            <label>Stunden pro Woche <input id="s-stunden" type="number" value="35" min="1"></label>
+            <label>Arbeitswochen pro Jahr <input id="s-wochen" type="number" value="44" min="1" max="52"></label>
+            <label>Davon bezahlt (%) <input id="s-auslastung" type="number" value="60" min="5" max="100"></label>
+          </div>
+          <div id="s-ergebnis" class="ergebnis"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEPOT -->
+    <section id="tab-depot" class="tab">
+      <h1>Übungs-Depot</h1>
+      <p class="leise">Echte Kurse, Spielgeld. Der Mentor kann hier selbst handeln: bis zu deinem Tageslimit sofort, darüber nur mit deiner Freigabe.</p>
+
+      <div id="depot-hinweis" class="karte warnung">
+        <div><strong>Halal-Regeln im Depot (fest eingebaut):</strong> nur Aktien von deiner Halal-Liste, nur eigenes Geld (kein Hebel, kein Kredit), keine Leerverkäufe, keine Optionen und keine CFDs. Banken, Versicherungen, Alkohol, Tabak und Glücksspiel werden automatisch blockiert. Viele Gelehrte sehen schnelles Day Trading kritisch (Nähe zu Spekulation, Verkauf vor der Abwicklung). Längerfristiges Halten geprüfter Aktien gilt als unbedenklicher.</div>
+        <button class="knopf klein" id="depot-hinweis-ok">Verstanden</button>
+      </div>
+
+      <div class="raster drei" id="depot-kacheln"></div>
+
+      <div class="karte" id="yuh-karte">
+        <h2>Echtgeld mit Yuh (halbautomatisch)</h2>
+        <p class="leise klein-text">A&amp;T schlägt Käufe und Verkäufe vor. Du gibst sie selbst in der Yuh-App auf und tippst hier auf „Gekauft“ oder „Verkauft“. A&amp;T handelt nie selbst mit deinem Geld. Danach überwacht A&amp;T jede Position (Stop, Gewinnziel) und meldet sich, wenn du verkaufen solltest, solange A&amp;T offen ist.</p>
+        <label class="haken"><input type="checkbox" id="yuh-an"> <span>Echtgeld-Vorschläge für Yuh an (Mentor und selbstständiger Handel schlagen dann vor, statt im Übungs-Depot zu kaufen)</span></label>
+        <label>Verfügbar bei Yuh für A&amp;T (USD) <input id="yuh-geld" type="number" min="0" step="any" placeholder="z. B. 100"></label>
+        <button class="knopf klein zart" id="yuh-melden" type="button">Benachrichtigungen erlauben</button>
+        <p id="yuh-info" class="klein-text leise"></p>
+        <h3 class="klein-titel">Vorschläge</h3>
+        <ul id="yuh-vorschlaege" class="liste"></ul>
+        <h3 class="klein-titel">Deine echten Positionen bei Yuh</h3>
+        <ul id="yuh-positionen" class="liste"></ul>
+        <p id="yuh-ergebnis" class="klein-text"></p>
+      </div>
+
+      <div class="karte versteckt" id="depot-offen-karte">
+        <h2>Wartet auf deine Freigabe</h2>
+        <p class="leise klein-text">Diese Orders des Mentors liegen über deinem Tageslimit.</p>
+        <ul id="depot-offen" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Scanner: Aktien mit Bewegung</h2>
+        <p class="klein-text leise" id="scanner-stand"></p>
+        <p class="klein-text minus" id="scanner-fehler"></p>
+        <ul id="scanner-liste" class="liste"></ul>
+        <button class="knopf klein zart" id="scanner-jetzt" type="button">Jetzt scannen</button>
+      </div>
+
+      <div class="karte">
+        <h2>Eigener Fonds: A&amp;T Welt-Halal-Fonds</h2>
+        <p class="leise klein-text">Dein Betrag wird auf Halal-Aktien aus allen Kontinenten verteilt: Asien 35 %, Amerika 30 %, Europa 20 %, Afrika 10 %, Ozeanien 5 %. Im Übungs-Depot nur Aktien mit Kurs an der US-Börse (auch ausländische Firmen wie TSMC aus Taiwan oder Gold Fields aus Südafrika). Aktien aus dem Nahen Osten (Saudi-Arabien, Emirate, Katar) gibt es dort nicht; sie kommen mit der IBKR-Verbindung dazu.</p>
+        <ul id="fonds-liste" class="liste"></ul>
+        <form id="fonds-form" class="zeile" style="flex-wrap: wrap;">
+          <label>Betrag in $ <input id="fonds-betrag" type="number" min="5" step="any" value="100"></label>
+          <label>Anzahl Aktien <select id="fonds-anzahl"><option>10</option><option selected>20</option><option>30</option></select></label>
+          <button class="knopf">Fonds kaufen</button>
+        </form>
+        <p id="fonds-info" class="klein-text leise"></p>
+      </div>
+
+      <div class="karte">
+        <h2>Positionen</h2>
+        <ul id="depot-positionen" class="liste"></ul>
+        <button class="knopf klein" id="d-aktualisieren" type="button">Kurse aktualisieren</button>
+      </div>
+
+      <div class="karte">
+        <h2>Selbstständiger Handel</h2>
+        <label class="haken"><input type="checkbox" id="auto-an"> <span>A&amp;T handelt selbstständig, solange A&amp;T offen ist</span></label>
+        <p class="klein-text leise" id="auto-status"></p>
+        <div class="formular">
+          <label>Runde alle <select id="auto-intervall"><option value="15">15 Minuten</option><option value="30">30 Minuten</option><option value="60">60 Minuten</option></select></label>
+          <label>Höchstverlust pro Trade (%) <input id="auto-stop" type="number" min="0.5" max="50" step="0.5"></label>
+          <label>Gewinnziel mindestens (%) <input id="auto-ziel" type="number" min="0.5" max="100" step="0.5"></label>
+          <label>Höchstens Trades pro Tag <input id="auto-max" type="number" min="0" max="20" step="1"></label>
+          <label>Kaufen ab Zuversicht <select id="auto-zuversicht"><option value="3">3 von 10 (sehr riskant)</option><option value="4">4 von 10</option><option value="5">5 von 10 (mutig)</option><option value="6">6 von 10</option><option value="7">7 von 10</option><option value="8">8 von 10 (vorsichtig)</option><option value="9">9 von 10 (sehr vorsichtig)</option></select></label>
+          <button class="knopf klein zart" id="auto-jetzt" type="button">Runde jetzt starten (Test)</button>
+        </div>
+        <p class="leise klein-text">A&amp;T kauft nur ab der eingestellten Zuversicht (Standard 5 von 10: mutig, mehr Trades, auch mehr Verluste), höchstens eine Order pro Runde, nur Aktien der Halal-Liste und nur bis zum Tageslimit. Jede Position schützt das Programm selbst, angepasst an die Aktie (Prüfung alle 2 Minuten, auch bei Käufen von Hand): Der Start-Stop richtet sich nach der üblichen Tagesschwankung, höchstens dein Höchstverlust. Danach zieht der Stop mit dem Höchstkurs nach oben. Sobald genug Gewinn da ist, liegt er beim Kaufkurs. Beim Gewinnziel wird die Hälfte verkauft, der Rest läuft weiter. Keine KI erkennt Gewinnchancen zuverlässig: Beobachte das Protokoll einige Wochen mit Spielgeld, bevor du echtes Geld einsetzt.</p>
+        <h3>Protokoll</h3>
+        <ul id="auto-protokoll" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Selbst handeln</h2>
+        <form id="order-form" class="formular">
+          <label>Aktie <select id="o-symbol"></select></label>
+          <label>Kauf oder Verkauf <select id="o-seite"><option value="kauf">Kauf</option><option value="verkauf">Verkauf</option></select></label>
+          <label>Anzahl (Bruchteile wie 0.25 erlaubt) <input id="o-anzahl" type="number" min="0.0001" step="any" value="1"></label>
+          <button class="knopf">Order ausführen</button>
+        </form>
+      </div>
+
+      <div class="karte">
+        <h2>Halal-Liste</h2>
+        <p class="leise klein-text">Nur diese Aktien dürfen gehandelt werden, auch vom Mentor. A&amp;T prüft die Branche, du prüfst Schulden, Zinseinnahmen und Produkte (z. B. mit Zoya oder Musaffa) und bestätigst.</p>
+        <form id="halal-form" class="zeile">
+          <input id="h-symbol" placeholder="Kürzel, z. B. AAPL (mehrere mit Komma)" autocomplete="off">
+          <button class="knopf">Prüfen</button>
+        </form>
+        <button class="knopf klein zart" id="h-startliste" type="button" style="white-space: normal; margin-top: 8px;">Weltliste übernehmen</button>
+        <p id="h-info" class="klein-text leise"></p>
+        <button class="knopf klein versteckt" id="h-bestaetigen" type="button">Ich habe sie geprüft: aufnehmen</button>
+        <p id="h-ueberblick" class="klein-text"></p>
+        <div id="h-regionen" class="chips"></div>
+        <div class="zeile" style="flex-wrap: wrap; margin-top: 8px;">
+          <label>Region <select id="h-region"><option value="">Alle</option><option>Amerika</option><option>Europa</option><option>Asien</option><option>Naher Osten</option><option>Afrika</option><option>Ozeanien</option><option>Russland</option></select></label>
+          <label>Land <select id="h-land"><option value="">Alle</option></select></label>
+          <label>Suche <input id="h-suche" placeholder="Name oder Kürzel" autocomplete="off"></label>
+          <label class="haken"><input type="checkbox" id="h-nurkurs"> <span>Nur mit Kurs (jetzt handelbar)</span></label>
+        </div>
+        <ul id="halal-liste" class="liste"></ul>
+        <p id="h-mehr" class="klein-text leise"></p>
+      </div>
+
+      <div class="karte">
+        <h2>Letzte Orders</h2>
+        <ul id="depot-orders" class="liste"></ul>
+      </div>
+
+      <div class="karte">
+        <h2>Einstellungen</h2>
+        <div class="formular">
+          <label>Finnhub-Schlüssel (für echte Kurse) <input id="d-finnhub" type="password" placeholder="kostenlos auf finnhub.io" autocomplete="off"></label>
+          <button class="knopf klein zart" id="d-finnhub-test" type="button">Schlüssel testen</button>
+          <p id="d-finnhub-info" class="klein-text leise"></p>
+          <label>Tageslimit für automatische Orders (USD) <input id="d-limit" type="number" min="0" step="50"></label>
+          <label>Startkapital (Spielgeld, USD) <input id="d-start" type="number" min="100" step="1000"></label>
+          <button class="knopf klein rot" id="d-zuruecksetzen" type="button">Depot neu starten</button>
+        </div>
+        <p class="leise klein-text">Den kostenlosen Finnhub-Schlüssel bekommst du auf finnhub.io (Registrieren, E-Mail bestätigen, „API Key“ kopieren). Er liefert Kurse für US-Aktien. Echtes Geld kommt erst dazu, wenn du einen Broker mit Schnittstelle anschliesst.</p>
+      </div>
+    </section>
+
+    <!-- EINSTELLUNGEN -->
+    <section id="tab-einstellungen" class="tab">
+      <h1>Du und dein System</h1>
+      <div class="raster">
+        <div class="karte">
+          <h2>Persönlich</h2>
+          <div class="formular">
+            <label>Dein Name <input id="e-name" placeholder="z. B. Gian-Luca"></label>
+            <label>Name deines Assistenten <input id="e-ki-name" placeholder="A&amp;T"></label>
+            <label>Währung <select id="e-waehrung"><option>CHF</option><option>EUR</option><option>USD</option></select></label>
+            <label>Monatsziel Einnahmen <input id="e-ziel" type="number" min="0" placeholder="z. B. 3000"></label>
+            <label>Sadaqa-Vorschlag (nur ein Vorschlag, es wird nichts abgezogen)
+              <select id="e-sadaqa">
+                <option value="0">Aus</option>
+                <option value="1">1 % der Einnahmen</option>
+                <option value="2.5">2,5 % der Einnahmen</option>
+                <option value="5">5 % der Einnahmen</option>
+                <option value="10">10 % der Einnahmen</option>
+              </select>
+            </label>
+            <label>Wofür willst du Geld verdienen? <textarea id="e-warum" rows="2" placeholder="z. B. eigene Wohnung, Firma gründen, Freiheit"></textarea></label>
+          </div>
+        </div>
+        <div class="karte">
+          <h2>KI-Zugang</h2>
+          <div class="formular">
+            <label>KI-Anbieter
+              <select id="e-anbieter">
+                <option value="claude">Claude · empfohlen, am klügsten (wenige Rappen pro Antwort)</option>
+                <option value="lokal">Lokal auf deinem PC · kostenlos, ohne Limit</option>
+                <option value="gemini">Google Gemini · kostenlos mit Limit</option>
+              </select>
+            </label>
+          </div>
+          <div id="zugang-lokal" class="zugang">
+            <div class="formular">
+              <label>Lokales Modell
+                <select id="e-lokal-modell"><option value="">Automatisch wählen</option></select>
+              </label>
+              <button type="button" class="knopf klein" id="lokal-pruefen">Verbindung prüfen</button>
+            </div>
+            <p id="lokal-status" class="klein-text leise"></p>
+            <p class="leise klein-text">Die lokale KI läuft mit dem kostenlosen Programm Ollama auf deinem PC: ohne Limit, ohne Konto, ohne Kosten, und deine Daten verlassen den PC nicht. Unter Windows richtest du sie mit einem Doppelklick auf „Lokale KI installieren.cmd“ im A&amp;T-Ordner ein (einmalig, etwa 3 bis 5 GB Download). Auf dem Handy geht das nicht, dort nimm Gemini.</p>
+          </div>
+          <div id="zugang-gemini" class="formular zugang">
+            <label>Gemini-Schlüssel <input id="e-gemini-schluessel" type="password" placeholder="AIza…" autocomplete="off"></label>
+            <label>Gemini-Modell
+              <select id="e-gemini-modell"><option value="">Automatisch: klügstes Modell für wichtige Aufgaben (empfohlen)</option></select>
+            </label>
+            <button type="button" class="knopf klein" id="modelle-laden">Modelle laden</button>
+          </div>
+          <p id="info-gemini" class="leise klein-text">So bekommst du den Gratis-Schlüssel: Geh auf aistudio.google.com, melde dich mit deinem Google-Konto an und tipp auf „Get API key“. Du gibst keine Kreditkarte an, es kostet nichts. Es gibt ein Tageslimit. Ist es erreicht, geht es am nächsten Tag weiter. Achtung: Bei der Gratis-Stufe darf Google deine Eingaben zur Verbesserung seiner Dienste nutzen. Gib darum keine geheimen Daten ein (Passwörter, Kontonummern).</p>
+          <div id="zugang-claude" class="formular zugang">
+            <label>Claude-API-Schlüssel <input id="e-schluessel" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
+            <label>Claude-Modell
+              <select id="e-modell">
+                <option value="claude-opus-5-5">Claude Opus 5.5 · am klügsten</option>
+                <option value="claude-sonnet-5-5">Claude Sonnet 5.5 · halber Preis</option>
+                <option value="claude-haiku-5-5">Claude Haiku 5.5 · sehr günstig</option>
+              </select>
+            </label>
+          </div>
+          <div class="formular">
+            <label>Sprache für Sprechen <select id="e-sprache"><option value="de-CH">Deutsch (Schweiz)</option><option value="de-DE">Deutsch (Deutschland)</option><option value="en-US">English</option></select></label>
+            <label class="haken"><input type="checkbox" id="e-weckwort"> <span>Freihändig: reagiert auf „Hey <span class="ki-name">A&amp;T</span>“ (auch „Amanah“ oder „Tijara“), solange die Seite offen ist</span></label>
+          </div>
+          <p id="info-claude" class="leise klein-text">Den Claude-Schlüssel bekommst du auf platform.claude.com unter „API Keys“. Du zahlst pro Antwort bei Anthropic, kein Abo.</p>
+          <p class="leise klein-text">Schlüssel bleiben nur in diesem Browser und gehen direkt an Google oder Anthropic, an niemanden sonst.</p>
+        </div>
+      </div>
+
+      <div class="karte">
+        <h2>Was <span class="ki-name">A&amp;T</span> über dich weiss</h2>
+        <p class="leise">Der Mentor merkt sich Wichtiges selbst. Hier siehst und löschst du alles.</p>
+        <form id="merken-form" class="zeile">
+          <input id="merken-text" placeholder="Selbst etwas eintragen, z. B. Ich kann gut Videos schneiden" autocomplete="off">
+          <button class="knopf">Merken</button>
+        </form>
+        <ul id="gedaechtnis" class="liste"></ul>
+        <h3 class="klein-titel">Gelernte Regeln</h3>
+        <p class="leise klein-text">Entstehen aus deinen 👍/👎 und dem täglichen Rückblick. Gelten bei jeder Antwort.</p>
+        <ul id="lernregeln" class="liste"></ul>
+        <h3 class="klein-titel">Rückblicke</h3>
+        <ul id="rueckblicke" class="liste"></ul>
+        <button class="knopf klein zart" id="jetzt-lernen" type="button">Jetzt aus den Gesprächen lernen</button>
+      </div>
+
+      <div class="karte">
+        <h2>Daten</h2>
+        <div class="chips">
+          <button class="knopf klein" id="einrichtung-neu">Einrichtung wiederholen</button>
+          <button class="knopf klein" id="neu-zeigen">Was ist neu?</button>
+          <button class="knopf klein" id="export">Sicherung herunterladen</button>
+          <label class="haken"><input type="checkbox" id="export-schluessel"> <span>Mit Schlüsseln und Freischaltung (nur für dich aufbewahren, nicht weitergeben)</span></label>
+          <label class="knopf klein">Sicherung laden <input type="file" id="import" accept="application/json,.json" hidden></label>
+          <button class="knopf klein rot" id="loeschen">Alles löschen</button>
+        </div>
+        <p class="leise klein-text"><span id="app-version" class="versionszeile">A&amp;T</span></p>
+        <form id="besitzer-form" class="zeile versteckt">
+          <input id="besitzer-code" type="text" placeholder="Besitzer-Code (AT-…), nicht Finnhub" autocomplete="off" autocapitalize="characters" spellcheck="false">
+          <button class="knopf klein">Freischalten</button>
+        </form>
+        <button type="button" class="knopf klein zart versteckt" id="besitzer-aus">Besitzer-Modus ausschalten</button>
+        <p class="leise klein-text">Alles liegt nur in diesem Browser. Mach ab und zu eine Sicherung. Keine Anlage-, Steuer- oder Rechtsberatung und keine Fatwa: Bei religiösen Zweifeln frag einen Gelehrten oder Imam deines Vertrauens. Entscheidungen triffst du selbst.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <!-- „Das ist neu“ für bestehende Kunden -->
+  <div id="neuigkeiten" class="einrichtung versteckt" role="dialog" aria-modal="true" aria-labelledby="neu-titel">
+    <div class="einrichtung-box">
+      <h2 id="neu-titel">Das ist neu bei A&amp;T</h2>
+      <p class="leise klein-text" id="neu-version"></p>
+      <ul class="neu-liste" id="neu-liste"></ul>
+      <div class="ein-knoepfe"><span></span><button type="button" class="knopf" id="neu-ok">Verstanden</button></div>
+    </div>
+  </div>
+
+  <!-- Einrichtungs-Assistent beim ersten Start -->
+  <div id="einrichtung" class="einrichtung versteckt" role="dialog" aria-modal="true" aria-labelledby="ein-titel">
+    <div class="einrichtung-box">
+      <div class="schritte" id="ein-punkte"><i></i><i></i><i></i><i></i></div>
+
+      <div class="schritt" data-schritt="0">
+        <div class="kern gross-kern"><span></span></div>
+        <h2 id="ein-titel">Assalamu alaikum! Ich bin A&amp;T.</h2>
+        <p>Amanah &amp; Tijara: Vertrauen und Handel. Ich helfe dir, gezielt und halal mehr Geld zu verdienen. Ohne Zinsen, ohne Glücksspiel, mit ehrlicher Arbeit und ehrlichem Handel.</p>
+        <p class="leise">Die Einrichtung dauert 2 Minuten. Alles bleibt auf deinem Gerät.</p>
+        <p class="leise ein-sicherung">Du hast A&amp;T schon benutzt? <label class="knopf klein zart">Sicherung laden <input type="file" id="ein-import" accept="application/json,.json" hidden></label></p>
+        <label class="ein-feld">Wie heisst du? <input id="ein-name" placeholder="Dein Vorname" autocomplete="given-name"></label>
+      </div>
+
+      <div class="schritt" data-schritt="1">
+        <h2>Dein Ziel</h2>
+        <label class="ein-feld">Wie viel willst du pro Monat zusätzlich verdienen? <input id="ein-ziel" type="number" min="0" placeholder="z. B. 1000"></label>
+        <label class="ein-feld">Währung <select id="ein-waehrung"><option>CHF</option><option>EUR</option><option>USD</option></select></label>
+        <label class="ein-feld">Wofür? <input id="ein-warum" placeholder="z. B. eigene Wohnung, Familie, Firma gründen"></label>
+      </div>
+
+      <div class="schritt" data-schritt="2">
+        <h2>Über dich</h2>
+        <p class="leise">Je mehr ich weiss, desto besser passen meine Ideen. Lass leer, was du nicht sagen willst.</p>
+        <label class="ein-feld">Was kannst du gut? <input id="ein-faehig" placeholder="z. B. Videos schneiden, Nachhilfe, Kochen, Verkaufen"></label>
+        <label class="ein-feld">Wie viele Stunden pro Woche hast du Zeit? <input id="ein-zeit" type="number" min="0" placeholder="z. B. 10"></label>
+        <label class="ein-feld">Wie viel Startkapital hast du? <input id="ein-kapital" type="number" min="0" placeholder="z. B. 200"></label>
+        <label class="ein-feld">Wo wohnst du (Stadt oder Region)? <input id="ein-ort" placeholder="z. B. Zürich"></label>
+      </div>
+
+      <div class="schritt" data-schritt="3">
+        <h2>KI verbinden</h2>
+        <p id="ein-lokal" class="klein-text leise">Suche lokale KI auf deinem PC …</p>
+        <p class="klein-text"><strong>Empfohlen: Claude</strong> (beste Qualität, wenige Rappen pro Antwort): Auf <a href="https://platform.claude.com/" target="_blank" rel="noopener">platform.claude.com</a> anmelden, Guthaben aufladen, unter „API Keys“ einen Schlüssel erstellen.</p>
+        <p class="klein-text"><strong>Gratis:</strong> Google Gemini mit Tageslimit: Auf <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> anmelden und „Create API key“ tippen.</p>
+        <p class="klein-text">Den Schlüssel hier einfügen und „Testen“ tippen. A&amp;T erkennt selbst, ob es Claude oder Gemini ist.</p>
+        <div class="zeile">
+          <input id="ein-schluessel" type="password" placeholder="sk-ant-… oder AIza…" autocomplete="off">
+          <button type="button" class="knopf" id="ein-testen">Testen</button>
+        </div>
+        <p id="ein-test-ergebnis" class="leise klein-text"></p>
+        <p class="leise klein-text">Gemini: keine Kreditkarte, aber Tageslimit, und Google darf Eingaben der Gratis-Stufe zur Verbesserung nutzen (keine geheimen Daten eingeben). Du kannst das auch später unter „Ich“ oder bei Akhi machen.</p>
+      </div>
+
+      <div class="ein-knoepfe">
+        <button type="button" class="knopf zart" id="ein-zurueck">Zurück</button>
+        <button type="button" class="link" id="ein-spaeter">Später</button>
+        <button type="button" class="knopf" id="ein-weiter">Weiter</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- AKHI: Sprach-Assistent im Jarvis-Stil -->
+  <button class="akhi-start akhi-oeffnen" type="button" title="Akhi öffnen (oder „Hey Akhi“ sagen)"><span class="akhi-start-ring"></span><span>AKHI</span></button>
+
+  <div id="akhi" class="akhi versteckt" role="dialog" aria-label="Akhi">
+    <div class="akhi-gitter"></div>
+    <header class="akhi-kopf">
+      <div class="akhi-logo">A&amp;T <span>· AKHI</span></div>
+      <div id="akhi-uhr" class="akhi-uhr"></div>
+      <button id="akhi-zu" class="akhi-zu" type="button" title="Schliessen">✕</button>
+    </header>
+
+    <div class="akhi-raster">
+      <aside class="akhi-panel akhi-links">
+        <h3>System</h3>
+        <div id="akhi-werte"></div>
+        <h3>Stimme</h3>
+        <label class="haken"><input type="checkbox" id="akhi-weck"> <span>„Hey Akhi“ hören (solange A&amp;T offen ist)</span></label>
+        <label class="haken"><input type="checkbox" id="akhi-gespraech"> <span>Gesprächsmodus: nach der Antwort wieder zuhören</span></label>
+        <details class="akhi-erweitert"><summary>Erweitert</summary>
+        <label>Akhis Stimme <select id="akhi-stimme-wahl"></select></label>
+        <button class="knopf klein zart" id="akhi-stimme-test" type="button">Stimme testen</button>
+        <p id="akhi-stimme-info" class="klein-text leise"></p>
+        <h3>Gedächtnis</h3>
+        <p id="akhi-gedaechtnis" class="klein-text"></p>
+        <button class="knopf klein zart" id="akhi-lernen" type="button">Jetzt aus Gesprächen lernen</button>
+        <h3>Rat der KIs</h3>
+        <label class="haken"><input type="checkbox" id="akhi-rat"> <span>Claude, Gemini und lokale KI gemeinsam fragen; Akhi prüft alle Antworten und gibt die beste (gründlicher, dauert länger)</span></label>
+        <p id="akhi-rat-info" class="klein-text leise"></p>
+        <p class="klein-text leise">Schlüssel bleiben nur in diesem Browser. Mit dem Rat geht deine Frage an jede verbundene KI.</p>
+        </details>
+      </aside>
+
+      <main class="akhi-mitte">
+        <button id="akhi-kern" class="akhi-kern bereit" type="button" aria-label="Mit Akhi sprechen">
+          <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span><span class="akhi-kern-innen">AKHI</span>
+        </button>
+        <p id="akhi-status" class="akhi-status"></p>
+        <div id="akhi-ki-hinweis" class="akhi-ki-hinweis versteckt">
+          <p><strong>Damit Akhi antworten kann: einmal eine KI verbinden.</strong></p>
+          <p class="klein-text"><strong>Empfohlen: Claude</strong> · beste Qualität, kostet wenige Rappen pro Antwort. Auf platform.claude.com anmelden, Guthaben aufladen, unter „API Keys“ einen Schlüssel erstellen, hier einfügen.</p>
+          <div class="zeile"><a class="knopf klein" href="https://platform.claude.com/" target="_blank" rel="noopener">1. Claude-Schlüssel holen</a></div>
+          <form id="akhi-claude-form" class="zeile"><input id="akhi-claude-schluessel" type="password" autocomplete="off" placeholder="2. Einfügen (sk-ant-…)"><button class="knopf klein">Verbinden</button></form>
+          <details class="akhi-alternative"><summary>Gratis-Alternative: Gemini</summary>
+          <p class="klein-text">Kostenlos mit Tageslimit: Auf der Google-Seite anmelden, „API-Schlüssel erstellen“, kopieren, hier einfügen.</p>
+          <div class="zeile"><a class="knopf klein zart" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Gemini-Schlüssel holen</a></div>
+          <form id="akhi-ki-form" class="zeile"><input id="akhi-ki-schluessel" type="password" autocomplete="off" placeholder="Einfügen"><button class="knopf klein zart">Verbinden</button></form>
+          <p class="klein-text leise">Auf dem Laptop geht es auch ganz ohne Schlüssel mit der lokalen KI („Lokale KI installieren“ im A&amp;T-Ordner).</p>
+          </details>
+        </div>
+        <p id="akhi-du" class="akhi-du"></p>
+        <div id="akhi-aktionen" class="aktionen"></div>
+        <div id="akhi-antwort" class="akhi-antwort md"></div>
+        <div id="akhi-feedback" class="akhi-feedback versteckt"><span class="leise klein-text">War das hilfreich?</span> <button type="button" class="mini" data-gut="1" title="Gut">👍</button><button type="button" class="mini" data-gut="0" title="Nicht gut">👎</button></div>
+        <form id="akhi-form" class="akhi-form">
+          <button type="button" id="akhi-mikro" class="rund" title="Sprechen">🎙</button>
+          <input id="akhi-eingabe" placeholder="Frag Akhi … oder sag „Hey Akhi“" autocomplete="off">
+          <button class="rund senden" title="Senden">➤</button>
+        </form>
+        <div class="akhi-schnell">
+          <button type="button" class="chip" data-akhi-frage="Baue mit mir mein automatisiertes Cashflow-System: Frag kurz nach meinem Stand, rechne mein Ziel rückwärts und lege die nächsten 5 Schritte als Aufgaben an.">Mein Cashflow-System</button>
+          <button type="button" class="chip" data-akhi-frage="Erstelle mir einen vollständigen Businessplan für meine Idee. Frag mich zuerst kurz nach der Idee, wenn du sie nicht kennst.">Businessplan</button>
+          <button type="button" class="chip" data-akhi-frage="Erstelle mir einen Marketingplan für die nächsten 30 Tage mit Inhalten pro Woche und speichere ihn als Dokument.">Marketingplan 30 Tage</button>
+          <button type="button" class="chip" data-akhi-frage="Wie verdiene ich mit Digistore24 Geld, halal und Schritt für Schritt?">Digistore24</button>
+          <button type="button" class="chip" data-akhi-frage="Wie starte ich mit Reselling in der Schweiz mit 200 CHF? Erstelle mir auch eine Checkliste.">Reselling starten</button>
+          <button type="button" class="chip" data-akhi-frage="Welche KI-Werkzeuge und Konnektoren brauche ich für ein kleines Online-Business und wie verbinde ich sie?">KI-Systeme</button>
+          <button type="button" class="chip" data-akhi-frage="Plane meine Woche: Teile meine Aufgaben in Bereiche und lege die 5 wichtigsten nächsten Schritte an.">Woche planen</button>
+        </div>
+        <section id="akhi-arbeit" class="akhi-panel akhi-arbeit versteckt"></section>
+      </main>
+
+      <aside class="akhi-panel akhi-rechts">
+        <h3>Module</h3>
+        <div id="akhi-module" class="akhi-module"></div>
+        <h3>Dokumente</h3>
+        <label class="knopf klein zart akhi-hochladen">📎 Datei hochladen (PDF, Word, Text)<input id="akhi-datei" type="file" multiple accept=".pdf,.docx,.odt,.txt,.md,.csv,.json,.html,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"></label>
+        <ul id="akhi-dokumente" class="liste akhi-liste"></ul>
+        <h3>Checklisten</h3>
+        <ul id="akhi-checklisten" class="liste akhi-liste"></ul>
+        <h3>Aufgaben nach Bereichen</h3>
+        <ul id="akhi-aufgaben" class="liste akhi-liste"></ul>
+      </aside>
+    </div>
+  </div>
+
+  <script src="js/daten.js"></script>
+  <script src="js/speicher.js"></script>
+  <script src="js/halal-welt.js"></script>
+  <script src="js/depot.js"></script>
+  <script src="js/yuh.js"></script>
+  <script src="js/ki.js"></script>
+  <script src="js/gemini.js"></script>
+  <script src="js/lokal.js"></script>
+  <script src="js/stimme.js"></script>
+  <script src="js/einrichtung.js"></script>
+  <script src="js/neuigkeiten.js"></script>
+  <script src="js/wissen.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/import.js"></script>
+  <script src="js/rat.js"></script>
+  <script src="js/lernen.js"></script>
+  <script src="js/akhi.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
