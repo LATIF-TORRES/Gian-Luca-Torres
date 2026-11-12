@@ -107,11 +107,37 @@ function basisSichern() {
   } catch (e) {}
 }
 var SPEICHER_PROBLEM = null;
+// Schutz, wenn A&T mehrmals offen ist (zwei Fenster, Tab im Hintergrund, angehaltene App auf dem Handy):
+// Jede Speicherung bekommt eine Kennung. Hat inzwischen ein anderes Fenster gespeichert, überschreibt
+// dieses Fenster die neueren Daten nicht mit seinem alten Stand, sondern lädt sie neu.
+var REV_SCHLUESSEL = SPEICHER_SCHLUESSEL + "-rev";
+var MEINE_REV = (function () { try { return localStorage.getItem(REV_SCHLUESSEL); } catch (e) { return null; } })();
+var NEU_LADEN = false;
+function fremdGespeichert() {
+  try { var r = localStorage.getItem(REV_SCHLUESSEL); return r !== null && r !== MEINE_REV; } catch (e) { return false; }
+}
+function neuLaden() {
+  if (NEU_LADEN) return;
+  NEU_LADEN = true;
+  location.reload();
+}
+try {
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && fremdGespeichert()) neuLaden(); });
+  window.addEventListener("pageshow", function (ev) { if (ev.persisted && fremdGespeichert()) neuLaden(); });
+} catch (e) {}
 function speichern() {
+  if (NEU_LADEN) return false;
+  if (fremdGespeichert()) {
+    // Im Hintergrund nichts überschreiben; sichtbar: neuen Stand laden.
+    if (!document.hidden) neuLaden();
+    return false;
+  }
   basisSichern();
   for (var versuch = 0; versuch < 12; versuch++) {
     try {
       localStorage.setItem(SPEICHER_SCHLUESSEL, speicherText());
+      MEINE_REV = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      try { localStorage.setItem(REV_SCHLUESSEL, MEINE_REV); } catch (e) {}
       SPEICHER_PROBLEM = null;
       return true;
     } catch (e) {

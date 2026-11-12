@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "5.9"; // muss mit version.json übereinstimmen
+var APP_VERSION = "5.10"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "Schutz, wenn A&T mehrmals offen ist", text: "War A&T in zwei Fenstern offen oder lief eine alte Instanz im Hintergrund weiter, konnte diese mit ihrem alten Stand deine neueren Daten überschreiben, im schlimmsten Fall mit dem Stand vor der Einrichtung. Jetzt speichert ein Fenster im Hintergrund nichts mehr, wenn ein anderes inzwischen gespeichert hat, und lädt beim Öffnen den neuesten Stand." },
   { titel: "Fehler behoben: Daten gingen verloren", text: "A&T hat bei jedem Speichern die ganze Aktienliste und den Hintergrund jeder Frage mitgespeichert. Wurde der Browser-Speicher voll, ging Neues ohne Meldung verloren, auch Schlüssel. Jetzt braucht A&T rund fünfmal weniger Platz, kürzt bei Bedarf zuerst alte Gespräche und sichert Einstellungen, Schlüssel und Freischaltung zusätzlich getrennt. Fehlen die Hauptdaten, holt A&T sie von dort zurück." },
   { titel: "Schneller zurück nach einem Datenverlust", text: "Musst du A&T neu einrichten, tippst du jetzt schon auf der ersten Seite auf „Sicherung laden“ und alles ist wieder da: Schlüssel, Gespräche, Gedächtnis. Alle 14 Tage erinnert dich A&T an eine neue Sicherung. Mach sie unter Ich → Daten mit „Mit Schlüsseln“ und leg die Datei in dein Google Drive." },
   { titel: "A&T lernt jeden Tag dazu", text: "Neu hat A&T ein Gedächtnis wie Claude: Einmal am Tag liest es deine neuen Gespräche und merkt sich selbst neue Fakten über dich, Regeln, wie du unterstützt werden willst, und einen kurzen Rückblick. So weiss es morgen noch, woran ihr heute gearbeitet habt. Mit 👍 und 👎 unter jeder Antwort bringst du ihm bei, was gut ist; bei 👎 schreibst du kurz, was besser sein soll, und das gilt ab sofort. Alles siehst und löschst du unter Ich → „Was A&T über dich weiss“." },
