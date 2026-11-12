@@ -408,3 +408,13 @@ body[data-tab="chat"] .akhi-start { top: 12px; bottom: auto; right: 16px; width:
 .akhi-feedback { display: flex; gap: 8px; align-items: center; justify-content: center; margin: -4px 0 6px; }
 .akhi-feedback .mini, .blasen-knoepfe .mini { font-size: 1rem; }
 .blasen-knoepfe .gewaehlt { opacity: 1; transform: scale(1.15); }
+
+/* Vorschläge der KI als Knöpfe unter der Antwort */
+.vorschlaege { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.vorschlag { font: inherit; font-size: .85rem; text-align: left; line-height: 1.3; padding: 7px 12px; border-radius: 999px; cursor: pointer;
+  background: var(--flaeche2); color: var(--text); border: 1px solid var(--gold); max-width: 100%; }
+.vorschlag::before { content: "→ "; color: var(--gold); }
+.vorschlag:hover, .vorschlag:focus-visible { border-color: var(--gold2); outline: none; }
+#akhi .vorschlag { background: rgba(79, 209, 232, .08); color: #e6f6ff; border-color: rgba(79, 209, 232, .6); }
+#akhi .vorschlag::before { color: #4fd1e8; }
+#akhi .vorschlag:hover, #akhi .vorschlag:focus-visible { border-color: #4fd1e8; background: rgba(79, 209, 232, .16); }

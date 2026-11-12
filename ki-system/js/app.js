@@ -301,7 +301,9 @@
     if (b.wer === "ich") return "<div class='blase ich'>" + esc(b.text).replace(/\n/g, "<br>") + "</div>";
     var html = "<div class='blase ki'>";
     if (b.aktionen && b.aktionen.length) html += "<div class='aktionen'>" + b.aktionen.map(function (a) { return "<span>" + esc(a) + "</span>"; }).join("") + "</div>";
-    html += "<div class='md'>" + md(b.text) + "</div>";
+    var vs = vorschlaegeTrennen(b.text);
+    html += "<div class='md'>" + md(vs.text) + "</div>";
+    if (vs.vorschlaege.length) html += "<div class='vorschlaege'>" + vs.vorschlaege.map(function (x) { return "<button type='button' class='vorschlag' data-text='" + esc(x) + "'>" + esc(x) + "</button>"; }).join("") + "</div>";
     if (b.quellen && b.quellen.length) {
       html += "<details class='quellen'><summary>Quellen (" + b.quellen.length + ")</summary><ol>" +
         b.quellen.slice(0, 12).map(function (q) { return "<li><a href='" + esc(q.url) + "' target='_blank' rel='noopener'>" + esc(q.title) + "</a></li>"; }).join("") + "</ol></details>";
@@ -332,6 +334,9 @@
     } else {
       v.innerHTML = anzeigeAus(c.nachrichten).map(blaseHtml).join("");
     }
+    v.querySelectorAll(".vorschlag").forEach(function (btn) {
+      btn.onclick = function () { if (!laeuft) fragen(btn.getAttribute("data-text")); };
+    });
     v.querySelectorAll(".vorlesen").forEach(function (btn) {
       btn.onclick = function () { Stimme.vorlesen(btn.closest(".blase").querySelector(".md").innerText); };
     });
@@ -386,7 +391,7 @@
     if (!c.nachrichten.length) { c.titel = text.length > 40 ? text.slice(0, 40) + "…" : text; chatWahlFuellen(); }
     var modus = MODI[$("#modus").value] || MODI.stratege;
     var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + modus.auftrag + "\n" + kontextFuerKi() + (typeof wissenKontext === "function" ? wissenKontext(text) : "") +
-      (typeof BUSINESS_STANDARD !== "undefined" && /businessplan|marketingplan|konzept|finanzplan/i.test(text) ? "\n" + BUSINESS_STANDARD : "") +
+      (typeof planStandardsFuer === "function" && planStandardsFuer(text) ? "\n" + planStandardsFuer(text) : "") +
       (e.websuche ? "" : "\nNutze diesmal keine Web-Suche.") + "\n</kontext>";
     // Endet der Verlauf schon mit einer Nutzer-Nachricht (z. B. nach einem Abbruch), dort anhängen:
     // Beide Anbieter erwarten abwechselnd Nutzer und KI.
@@ -429,7 +434,7 @@
         geplant = true;
         requestAnimationFrame(function () {
           geplant = false;
-          live.querySelector(".md").innerHTML = md(gesamt);
+          live.querySelector(".md").innerHTML = md(vorschlaegeTrennen(gesamt).text);
           v.scrollTop = v.scrollHeight;
         });
       },
@@ -447,7 +452,7 @@
         aufraeumen();
         verlaufZeigen();
         heuteZeigen();
-        if (Z.einstellungen.vorlesen && gesamt) Stimme.vorlesen(gesamt);
+        if (Z.einstellungen.vorlesen && gesamt) Stimme.vorlesen(vorschlaegeTrennen(gesamt).text);
       },
       fehler: function (t) {
         laeuft = null;

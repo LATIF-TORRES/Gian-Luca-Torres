@@ -275,6 +275,7 @@ function kontextFuerKi() {
   }
   if (typeof lernKontext === "function") { var lk = lernKontext(); if (lk) teile.push(lk); }
   if (istBesitzer() && typeof depotKurzFuerKi === "function") teile.push(depotKurzFuerKi());
+  if (typeof planStand === "function") { var ps = planStand(); if (ps) teile.push(ps); }
   var offen = Z.aufgaben.filter(function (a) { return !a.erledigt; });
   if (offen.length) {
     teile.push("Offene Aufgaben:\n" + offen.slice(-15).map(function (a) { return "- " + a.text + (a.wichtig ? " (wichtigste)" : ""); }).join("\n"));

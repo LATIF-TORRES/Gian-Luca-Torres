@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "5.11"; // muss mit version.json übereinstimmen
+var APP_VERSION = "5.12"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "A&T denkt jetzt voraus", text: "Bei jeder Frage überlegt A&T selbst, was dir für dein Ziel noch fehlt, zum Beispiel ein Strategieplan, Businessplan, Marketingplan, Finanzplan, Content-Plan oder Automatisierungsplan, und sagt es dir unter „Was dazu gehört“. Jede Antwort endet mit „Deine nächsten Schritte“ und mit Vorschlägen als Knöpfe: antippen, und A&T legt los. Sag „Mach mir einen kompletten Plan“, dann erstellt A&T alle fehlenden Kernpläne nacheinander, aufeinander abgestimmt. Jeder Plan folgt einem Profi-Standard und geht bei Gratis-KIs durch eine zweite Prüfrunde." },
   { titel: "Gratis-KI auf Profi-Niveau", text: "Mit Gemini nimmt A&T jetzt für wichtige Aufgaben (Businessplan, Strategie, Analyse, Dokumente und alles bei Akhi) automatisch das klügste Gratis-Modell „Pro“. Ist dessen Tageslimit erreicht, geht es mit Flash weiter. Pläne folgen einem Profi-Standard wie bei einer Unternehmensberatung (Zahlen in Tabellen, 3 Szenarien, Break-even, Risiken, Halal-Prüfung, 30-60-90-Tage-Plan). Und jeder Businessplan, Marketingplan und jedes Konzept geht automatisch durch eine zweite Runde: Ein strenger Prüfer rechnet nach, ergänzt Fehlendes und macht alles konkret." },
   { titel: "Schutz, wenn A&T mehrmals offen ist", text: "War A&T in zwei Fenstern offen oder lief eine alte Instanz im Hintergrund weiter, konnte diese mit ihrem alten Stand deine neueren Daten überschreiben, im schlimmsten Fall mit dem Stand vor der Einrichtung. Jetzt speichert ein Fenster im Hintergrund nichts mehr, wenn ein anderes inzwischen gespeichert hat, und lädt beim Öffnen den neuesten Stand." },
   { titel: "Fehler behoben: Daten gingen verloren", text: "A&T hat bei jedem Speichern die ganze Aktienliste und den Hintergrund jeder Frage mitgespeichert. Wurde der Browser-Speicher voll, ging Neues ohne Meldung verloren, auch Schlüssel. Jetzt braucht A&T rund fünfmal weniger Platz, kürzt bei Bedarf zuerst alte Gespräche und sichert Einstellungen, Schlüssel und Freischaltung zusätzlich getrennt. Fehlen die Hauptdaten, holt A&T sie von dort zurück." },

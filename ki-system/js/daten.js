@@ -169,6 +169,103 @@ var SCHNELLSTART = [
 ];
 
 /* Kurze Erinnerung, die jeder Frage beiliegt (auch in älteren Gesprächen). */
+// Vorschläge der KI („>> …“ am Ende einer Antwort) werden in der App als Knöpfe angezeigt.
+function vorschlaegeTrennen(t) {
+  var v = [];
+  var rest = String(t || "").split("\n").filter(function (z) {
+    var m = z.match(/^\s*(?:&gt;&gt;|>>)\s*(.+?)\s*$/);
+    if (!m) return true;
+    var x = m[1].replace(/^[„"*]+|[“"*]+$/g, "").trim();
+    if (x && v.length < 4 && v.indexOf(x) === -1) v.push(x.slice(0, 160));
+    return false;
+  }).join("\n").replace(/\s+$/, "");
+  return { text: rest, vorschlaege: v };
+}
+
+// Profi-Standards für Pläne, wie bei einer guten Unternehmensberatung. Passend zur Frage wird
+// der Standard mitgegeben, und die zweite Prüfrunde misst jeden Plan daran.
+var PLAN_STANDARDS = [
+  { art: "Businessplan", re: /business-?plan|geschäftsplan|gesch(ä|ae)ftsidee.*plan|firma gr(ü|ue)nden|gr(ü|ue)ndung/i, punkte: [
+    "Zusammenfassung in 5 Sätzen: Angebot, Zielgruppe, Preis, Ziel-Einnahmen, erster Schritt.",
+    "Problem und Zielgruppe: konkrete Person (Alter, Ort, Bedürfnis), geschätzte Marktgrösse in der Schweiz mit Rechenweg.",
+    "Angebot und Preis: was genau, Preis in CHF, warum dieser Preis, Upsell oder Abo für wiederkehrende Einnahmen.",
+    "Wettbewerb: 3 echte Alternativen mit Preis und Schwäche; der eigene Vorteil in einem Satz.",
+    "Marketing und Verkauf: 2 bis 3 Kanäle mit Budget, Kosten pro Kunde und erwarteter Abschlussquote.",
+    "Zahlen als Tabellen: Startkosten, Fixkosten pro Monat, Deckungsbeitrag pro Verkauf, Break-even (Stück und Monat), 12-Monats-Plan in 3 Szenarien (vorsichtig, realistisch, gut).",
+    "Automatisierung: welche Schritte ohne die Person laufen (Werkzeuge mit Namen und Kosten), damit der Cashflow regelmässig wird.",
+    "Risiken: die 5 grössten mit Gegenmassnahme.",
+    "Halal-Prüfung: Produkt, Finanzierung (kein Zins), Zahlungsanbieter, Verträge.",
+    "Recht und Steuern Schweiz: Rechtsform, AHV, MWST-Grenze, Bewilligungen (mit Hinweis, dass Gebühren sich ändern können).",
+    "30-60-90-Tage-Plan mit messbaren Zielen und dem ersten Schritt für heute."] },
+  { art: "Marketingplan", re: /marketing|werbung|kunden gewinnen|mehr kunden|reichweite|funnel|verkaufen.*online|sichtbar/i, punkte: [
+    "Zielgruppe als konkrete Persona: wer, wo online, welches Problem, welche Einwände.",
+    "Positionierung: ein Satz, warum genau dieses Angebot; Kernbotschaft und 3 Nutzenversprechen.",
+    "Funnel mit Zahlen: Besucher → Kontakt (Lead-Magnet) → Kauf → Wiederkauf, je Stufe erwartete Quote und Rechenweg bis zum Monatsziel.",
+    "Kanäle: 2 bis 3 priorisiert, je Budget, Aufwand pro Woche, Kosten pro Kunde und Kennzahl.",
+    "Content-Plan für 4 Wochen als Tabelle (Tag, Kanal, Thema, Format, Aufruf zum Angebot).",
+    "E-Mail- und Nachfass-Automatisierung mit Werkzeug-Namen (z. B. Begrüssungsfolge, Warenkorb, Bewertung).",
+    "Budget und Kennzahlen-Tabelle (Reichweite, Klickrate, Kontakte, Abschlussquote, Kosten pro Kunde, Kundenwert).",
+    "Halal und ehrlich: keine Täuschung, keine falsche Verknappung, Nasheed statt Musik.",
+    "Umsetzung: was in Woche 1 bis 4 passiert, erster Schritt heute."] },
+  { art: "Strategieplan", re: /strategie|wie komme ich|wie erreiche ich|ziel erreichen|langfristig|skalier|wachsen|n(ä|ae)chste stufe|weiterkommen|plan b/i, punkte: [
+    "Ziel: Vision in 3 Jahren und messbares 12-Monats-Ziel (Einnahmen pro Monat, davon wiederkehrend).",
+    "Ist-Stand: Fähigkeiten, Zeit pro Woche, Startkapital, vorhandene Kunden und Kanäle, Engpass.",
+    "SWOT-Tabelle (Stärken, Schwächen, Chancen, Risiken), kurz und konkret.",
+    "3 Strategie-Optionen als Tabelle bewertet (Halal-Ampel, Startkosten, Zeit bis zum ersten Geld, Einkommen nach 12 Monaten, Risiko, Automatisierbarkeit).",
+    "Gewählter Weg mit Begründung; was bewusst NICHT gemacht wird.",
+    "Meilensteine pro Quartal mit Kennzahl.",
+    "Wochenroutine: welche festen Blöcke pro Woche wofür.",
+    "Risiken und Plan B.",
+    "Erster Schritt heute und die 3 Schritte dieser Woche."] },
+  { art: "Finanzplan", re: /finanzplan|finanzen|budget|liquidit|kalkul|break-?even|wie viel (geld|kapital)|startkapital|umsatzplan|gewinn/i, punkte: [
+    "Startkapital und Herkunft (eigenes Geld, Partner mit Gewinnbeteiligung; kein Zins-Kredit).",
+    "Startkosten-Tabelle und Fixkosten pro Monat.",
+    "Preis, variable Kosten und Deckungsbeitrag pro Verkauf mit Rechenweg.",
+    "Umsatz- und Gewinnplan 12 Monate in 3 Szenarien als Tabelle.",
+    "Liquiditätsplan Monat für Monat: wann ist das Geld knapp, was dann.",
+    "Break-even in Stück und Monaten.",
+    "Rücklagen: Steuern (20 bis 30 % des Gewinns), AHV, Notreserve; Zakat-Hinweis.",
+    "Kennzahlen, die jeden Monat geprüft werden, und Schwellen zum Handeln."] },
+  { art: "Content-Plan", re: /content|social media|instagram|tiktok|youtube|posts|reels|videos? (planen|machen)/i, punkte: [
+    "Plattformen mit Begründung und Häufigkeit.",
+    "3 bis 4 Themen-Säulen passend zum Angebot.",
+    "Wochenplan für 4 Wochen als Tabelle (Tag, Plattform, Thema, Format, Hook, Aufruf zum Angebot).",
+    "10 fertige Hooks (erste Sätze).",
+    "Produktion mit wenig Zeit: Vorlagen, Werkzeuge mit Namen, Mehrfachverwertung, Planung im Voraus.",
+    "Weg vom Inhalt zum Geld: Link, Lead-Magnet, Angebot.",
+    "Kennzahlen und wann ein Format gestrichen wird.",
+    "Halal: Nasheed, Stimme oder Naturgeräusche statt Musik; keine unpassenden Inhalte."] },
+  { art: "Automatisierungsplan", re: /automatis|passiv|ohne mich|zapier|make\.com|n8n|system bauen|weniger arbeit/i, punkte: [
+    "Ablauf-Landkarte: Kunde findet → fragt an → kauft → bekommt Leistung → kommt wieder; je Schritt heute manuell oder automatisch.",
+    "Je Schritt das Werkzeug mit Name und Kosten pro Monat, Auslöser → Aktion.",
+    "Reihenfolge: zuerst, was am meisten Zeit spart oder Umsatz bringt; Zeitersparnis in Stunden pro Woche.",
+    "Gesamtkosten der Werkzeuge pro Monat und ab wann es sich lohnt.",
+    "Kontrolle: welche Kennzahl und welche Warnung zeigt, dass etwas nicht läuft.",
+    "Erste Automatisierung, die heute in unter 1 Stunde steht."] }
+];
+function planStandardText(art) {
+  var s = PLAN_STANDARDS.filter(function (x) { return x.art === art; })[0];
+  if (!s) return "";
+  return "PROFI-STANDARD " + s.art + " (alle Punkte, in dieser Reihenfolge):\n" + s.punkte.map(function (p, i) { return (i + 1) + ". " + p; }).join("\n") +
+    "\nVor dem Abgeben selbst prüfen: Stimmen alle Summen und Rechenwege? Sind Annahmen als Annahmen gekennzeichnet? Passt alles zu Zeit, Startkapital und Ziel der Person? Ist jeder Schritt so konkret, dass sie sofort loslegen kann?";
+}
+// Passende Standards zur Frage (höchstens 2), damit der Kontext schlank bleibt.
+function planStandardsFuer(text) {
+  var t = String(text || "");
+  return PLAN_STANDARDS.filter(function (s) { return s.re.test(t); }).slice(0, 2).map(function (s) { return planStandardText(s.art); }).join("\n\n");
+}
+var KERN_PLAENE = ["Strategieplan", "Businessplan", "Marketingplan", "Finanzplan"];
+// Welche Pläne gibt es schon, welche fehlen? Damit die KI vorausdenken kann.
+function planStand() {
+  var dok = Z.dokumente || [];
+  var vorhanden = KERN_PLAENE.filter(function (a) { return dok.some(function (d) { return d.art === a || new RegExp(a.replace("plan", ""), "i").test(d.titel) && /plan/i.test(d.titel); }); });
+  var teile = [];
+  if (dok.length) teile.push("Vorhandene Dokumente der Person (neueste zuletzt):\n" + dok.slice(-12).map(function (d) { return "- " + d.titel + " (" + (d.art || "Text") + ", " + (d.datum || "") + ")"; }).join("\n"));
+  var fehlen = KERN_PLAENE.filter(function (a) { return vorhanden.indexOf(a) === -1; });
+  if (fehlen.length) teile.push("Noch fehlende Kernpläne: " + fehlen.join(", ") + ".");
+  return teile.join("\n");
+}
+
 var HALAL_ERINNERUNG = "Halal-Modus: Schlage nur islamisch erlaubte Wege vor. Keine Zinsen und kein Zinseszins (Riba), kein Glücksspiel (Maysir), keine übermässige Unsicherheit (Gharar), keine verbotenen Branchen. Biete bei Verbotenem immer eine erlaubte Alternative an. Antworte direkt und vollständig, ohne unnötige Warnhinweise. Fordere nie auf, für unerlaubte Einnahmen etwas zu bezahlen oder zu spenden (keine „Reinigung“). Sadaqa nur als freiwilligen Vorschlag erwähnen, nie als Pflicht oder Abzug.";
 
 var DEPOT_AUFTRAG = [
@@ -222,6 +319,9 @@ function grundauftrag(kiName) {
     "11. Business-orientiert: Denk bei jeder Frage an Einnahmen. Zeig, wie aus einer Idee ein wiederkehrender Cashflow wird: Angebot, Kanal zu den Kunden, Preis, Automatisierung (Werkzeuge mit Namen), Kennzahl. Bevorzuge Modelle, die sich automatisieren und skalieren lassen (digitale Produkte, Abos, Mitgliedschaften, Affiliate mit eigenen Inhalten, Vermietung, Dienstleistungen mit Vorlagen und Automatisierung, Handel mit System).",
     "12. Qualität: Vermeide die typischen Fehler von KI-Assistenten. Nichts erfinden (keine falschen Zahlen, Gesetze, Quellen, Werkzeug-Funktionen); veraltetes Wissen als solches kennzeichnen; keine Floskeln, kein Moralisieren, keine endlosen Listen ohne Priorität; widersprich der Person, wenn sie sich irrt; rechne nach. Lieber 3 starke, priorisierte Schritte als 15 schwache.",
     "13. Musik: Schlag für Videos, Werbung und Inhalte nie Musik vor, sondern Nasheed (ohne Instrumente), Stimme, Sprecher oder Naturgeräusche.",
-    "14. Form: Antworte auf Deutsch mit Schweizer Rechtschreibung (ss statt ß), kurz und klar, mit Überschriften oder Listen, wenn es hilft. Ende mit „Nächster Schritt:“ und genau einer Handlung, die dem Cashflow-Ziel dient."
+    "14. Form: Antworte auf Deutsch mit Schweizer Rechtschreibung (ss statt ß), kurz und klar, mit Überschriften oder Listen, wenn es hilft. Ende wie in Regel 16 beschrieben.",
+    "15. Vorausdenken wie ein persönlicher Berater: Überleg bei jeder Frage still, welches grössere Ziel dahinter steht und was der Person dafür noch fehlt, auch wenn sie nicht danach fragt. Prüf dazu ihren Stand im Kontext (Profil, Gedächtnis, Monatsziel, vorhandene Pläne und Dokumente, offene Aufgaben, Zahlen). Fehlt etwas Wichtiges (z. B. Strategieplan, Businessplan, Marketingplan, Finanzplan, Content-Plan, Automatisierungsplan, klares Angebot oder Preis), nenne es nach der eigentlichen Antwort im Abschnitt „Was dazu gehört“: höchstens 3 Punkte, wichtigster zuerst, je ein Satz warum. Biete an, den wichtigsten sofort zu erstellen. Wiederhole nicht, was schon vorhanden ist. Bei Smalltalk oder einer reinen Faktenfrage lässt du diesen Abschnitt weg.",
+    "16. Ende jeder Antwort (ausser bei Smalltalk): Abschnitt „Deine nächsten Schritte“ mit 1 bis 3 nummerierten, konkreten Schritten (was, womit, bis wann), der erste machbar heute und auf das Monatsziel ausgerichtet. Danach als letzte Zeilen 2 oder 3 Vorschläge, was die Person dich als Nächstes fragen oder erstellen lassen kann, jede auf einer eigenen Zeile und genau in dieser Form: >> Erstelle mir den Marketingplan für meinen Sneaker-Shop. Diese Zeilen erscheinen in der App als Knöpfe, darum kurz (höchstens 12 Wörter), in der Ich-Form der Person und ohne weiteren Text danach.",
+    "17. Will die Person einen kompletten Plan („mach mir alles“, „kompletter Plan“, „ich will starten“), erstelle mit dokument_erstellen nacheinander die fehlenden Kernpläne in dieser Reihenfolge: Strategieplan, Businessplan, Marketingplan, Finanzplan. Jeder vollständig nach seinem Profi-Standard, aufeinander abgestimmt (gleiche Zahlen, gleiche Zielgruppe). Danach eine kurze Übersicht, wie sie zusammenhängen."
   ]).join("\n");
 }

@@ -5,23 +5,8 @@
  * Nutzt dieselbe KI wie der Mentor (lokal, Gemini oder Claude).
  */
 
-// Qualitätsstandard für Pläne und Dokumente, wie bei einer guten Unternehmensberatung.
-// Gilt für jede KI; damit liefert auch eine Gratis-KI Ergebnisse auf hohem Niveau.
-var BUSINESS_STANDARD = [
-  "PROFI-STANDARD für Businesspläne, Marketingpläne und Konzepte (immer vollständig):",
-  "1. Zusammenfassung in 5 Sätzen: Angebot, Zielgruppe, Preis, Ziel-Einnahmen, erster Schritt.",
-  "2. Problem und Zielgruppe: konkrete Person (Alter, Ort, Bedürfnis), geschätzte Marktgrösse in der Schweiz mit Rechenweg.",
-  "3. Angebot und Preis: was genau, Preis in CHF, warum dieser Preis, Upsell oder Abo für wiederkehrende Einnahmen.",
-  "4. Wettbewerb: 3 echte Alternativen mit Preis und Schwäche; der eigene Vorteil in einem Satz.",
-  "5. Marketing und Verkauf: 2 bis 3 Kanäle mit Budget, Kosten pro Kunde und erwarteter Abschlussquote.",
-  "6. Zahlen als Tabellen: Startkosten, Fixkosten pro Monat, Deckungsbeitrag pro Verkauf, Break-even (Stück und Monat), 12-Monats-Plan in 3 Szenarien (vorsichtig, realistisch, gut). Jede Zahl nachrechnen, Rechenweg zeigen, Annahmen als Annahme kennzeichnen.",
-  "7. Automatisierung: welche Schritte laufen ohne die Person (Werkzeuge mit Namen und Kosten), damit der Cashflow regelmässig wird.",
-  "8. Risiken: die 5 grössten mit Gegenmassnahme.",
-  "9. Halal-Prüfung: Produkt, Finanzierung (kein Zins), Zahlungsanbieter, Verträge.",
-  "10. Recht und Steuern Schweiz: Rechtsform, AHV, MWST-Grenze, Bewilligungen (mit Hinweis, dass Gebühren sich ändern können).",
-  "11. 30-60-90-Tage-Plan mit messbaren Zielen und dem ersten Schritt für heute.",
-  "Vor dem Abgeben selbst prüfen: Stimmen alle Summen? Passt der Plan zu Zeit und Startkapital der Person? Ist jeder Schritt konkret genug, dass sie sofort loslegen kann?"
-].join("\n");
+// Profi-Standard für Businesspläne (die übrigen Standards stehen in daten.js, PLAN_STANDARDS).
+var BUSINESS_STANDARD = planStandardText("Businessplan");
 
 var AKHI_AUFTRAG = [
   "Rolle: Du bist AKHI, der persönliche Business-Assistent von A&T, wie Jarvis: ein erfahrener, ruhiger, loyaler Bruder mit tiefem Wissen in Strategie, Finanzen, Marketing, Verkauf, Social Media, E-Commerce, Reselling, Digistore24, Affiliate, KI-Werkzeugen, Automatisierung (Zapier, Make, n8n, Schnittstellen, Webhooks, MCP-Konnektoren), Gründung und Steuern in der Schweiz und islamischem Wirtschaftsrecht.",
@@ -31,7 +16,7 @@ var AKHI_AUFTRAG = [
   "Werkzeuge: wissen_nachschlagen für Grundlagen aus der Bibliothek (Themen: " + (typeof wissenThemen === "function" ? wissenThemen() : "") + "). " +
   "dokument_erstellen, wenn die Person einen Plan, ein Konzept, ein Formular, eine Vorlage, einen Vertragsentwurf, einen Text oder ein PDF will: vollständig, gut gegliedert in Markdown, druckfertig. " +
   "checkliste_erstellen für Abläufe zum Abhaken. aufgabe_anlegen mit Bereich für konkrete nächste Schritte. merken für Bleibendes über die Person.",
-  BUSINESS_STANDARD,
+  "Pläne erstellst du immer nach dem passenden PROFI-STANDARD (Strategieplan, Businessplan, Marketingplan, Finanzplan, Content-Plan, Automatisierungsplan). Steht der Standard nicht im Kontext, halte dich trotzdem an diese Gliederung: Ziel, Ist-Stand, Zahlen in Tabellen mit Rechenweg, konkrete Werkzeuge und Kosten, Risiken, Halal-Prüfung, Zeitplan mit erstem Schritt heute.",
   "Sag nach einem Werkzeug kurz, was du angelegt hast und wo es steht (im Akhi-Dashboard unter Dokumente, Checklisten oder Aufgaben)."
 ].join("\n");
 
@@ -47,7 +32,7 @@ var AKHI_WERKZEUGE = [
     description: "Speichert ein fertiges Dokument (Businessplan, Marketingplan, Formular, Vorlage, Konzept, Angebot, Skript) für die Person. Sie kann es im Akhi-Dashboard lesen und als PDF speichern. Inhalt vollständig in Markdown mit Überschriften, Listen und Tabellen.",
     input_schema: { type: "object", properties: {
       titel: { type: "string", description: "Titel des Dokuments" },
-      art: { type: "string", enum: ["Businessplan", "Marketingplan", "Formular", "Vorlage", "Konzept", "Anleitung", "Text"], description: "Art" },
+      art: { type: "string", enum: ["Businessplan", "Strategieplan", "Marketingplan", "Finanzplan", "Content-Plan", "Automatisierungsplan", "Formular", "Vorlage", "Konzept", "Anleitung", "Text"], description: "Art" },
       inhalt: { type: "string", description: "Vollständiger Inhalt in Markdown" }
     }, required: ["titel", "art", "inhalt"], additionalProperties: false },
     eager_input_streaming: true
@@ -70,6 +55,9 @@ function akhiDaten() {
   return Z;
 }
 
+// Zur Frage passende Plan-Standards für den Kontext
+function planZusatz(text) { var p = planStandardsFuer(text); return p ? "\n" + p : ""; }
+
 function dokumentSpeichern(titel, art, inhalt, verbessert) {
   Z.dokumente.push({ id: neueId(), titel: titel.slice(0, 120), art: art || "Text", inhalt: inhalt, datum: heuteISO() });
   if (Z.dokumente.length > 60) Z.dokumente.shift();
@@ -79,13 +67,13 @@ function dokumentSpeichern(titel, art, inhalt, verbessert) {
 }
 function dokumentPruefen(art, inhalt) {
   var a = Z.einstellungen.anbieter;
-  return a !== "claude" && /Businessplan|Marketingplan|Konzept/.test(art || "") && inhalt.length > 600 && typeof kiEinfach === "function";
+  return a !== "claude" && /plan|Plan|Konzept/.test(art || "") && inhalt.length > 600 && typeof kiEinfach === "function";
 }
 async function dokumentVerbessern(titel, art, inhalt) {
   var system = "Du bist ein strenger Prüfer: erfahrener Investor, Schweizer Treuhänder und Scharia-Berater in einer Person. Du verbesserst Geschäftsdokumente, bis sie auf dem Niveau einer Top-Unternehmensberatung sind. Schweizer Rechtschreibung (ss statt ß), Beträge in CHF.";
   var auftrag = "Prüfe diesen Entwurf (" + (art || "Dokument") + " „" + titel + "“) Punkt für Punkt gegen den Standard unten. " +
     "Rechne jede Zahl nach und korrigiere Fehler. Ergänze fehlende Teile. Mach vage Stellen konkret (Namen von Werkzeugen, Preise, Zeitplan). Streiche Floskeln. Behalte, was gut ist.\n\n" +
-    BUSINESS_STANDARD + "\n\nGib NUR das vollständige, verbesserte Dokument in Markdown zurück, ohne Vorbemerkung und ohne Kommentar.\n\n--- ENTWURF ---\n" + inhalt.slice(0, 40000);
+    (planStandardText(art) || BUSINESS_STANDARD) + "\n\nGib NUR das vollständige, verbesserte Dokument in Markdown zurück, ohne Vorbemerkung und ohne Kommentar.\n\n--- ENTWURF ---\n" + inhalt.slice(0, 40000);
   try {
     var text = await Promise.race([kiEinfach(system, auftrag), new Promise(function (r) { setTimeout(function () { r(""); }, 120000); })]);
     text = String(text || "").replace(/^\s*```(?:markdown|md)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
@@ -402,7 +390,7 @@ var Akhi = (function () {
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     var c = akhiChat();
     c.qualitaet = "hoch";
-    var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + AKHI_AUFTRAG + "\n" + kontextFuerKi() + wissenKontext(String(text).split("<rat_der_kis>")[0]) + "\n</kontext>";
+    var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + AKHI_AUFTRAG + "\n" + kontextFuerKi() + wissenKontext(String(text).split("<rat_der_kis>")[0]) + planZusatz(String(text).split("<rat_der_kis>")[0]) + "\n</kontext>";
     // Abgebrochene Frage am Ende entfernen (Anbieter erwarten abwechselnd Person und KI)
     var letzte = c.nachrichten[c.nachrichten.length - 1];
     if (letzte && letzte.role === "user") c.nachrichten.pop();
@@ -416,7 +404,7 @@ var Akhi = (function () {
     setZustand("denkt");
     var gesamt = "";
     laeuft = antwortHolen(c, {
-      text: function (d) { gesamt += d; $("#akhi-antwort").innerHTML = md(gesamt); },
+      text: function (d) { gesamt += d; $("#akhi-antwort").innerHTML = md(vorschlaegeTrennen(gesamt).text); },
       status: function (s) { setZustand("denkt", s); },
       quelle: function () {},
       werkzeug: function (name, erg) { var sp = document.createElement("span"); sp.textContent = erg; $("#akhi-aktionen").appendChild(sp); zeichnen(); },
@@ -426,7 +414,10 @@ var Akhi = (function () {
   }
   var letzteFrage = "", letzteAntwort = "";
   function antwortZeigen(text, fehler) {
-    $("#akhi-antwort").innerHTML = md(text);
+    var vs = vorschlaegeTrennen(text);
+    text = vs.text;
+    $("#akhi-antwort").innerHTML = md(text) + (vs.vorschlaege.length ? "<div class='vorschlaege'>" + vs.vorschlaege.map(function (x) { return "<button type='button' class='vorschlag' data-text='" + esc(x) + "'>" + esc(x) + "</button>"; }).join("") + "</div>" : "");
+    $("#akhi-antwort").querySelectorAll(".vorschlag").forEach(function (b) { b.onclick = function () { if (!laeuft) { gespraech = false; fragen(b.getAttribute("data-text")); } }; });
     letzteAntwort = fehler ? "" : text;
     $("#akhi-feedback").classList.toggle("versteckt", !letzteAntwort || !letzteFrage);
     var sprech = akhiSprechteil(text);
