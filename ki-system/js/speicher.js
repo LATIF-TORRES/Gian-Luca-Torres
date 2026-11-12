@@ -47,6 +47,8 @@ var Z = (function laden() {
           (z.einstellungen.name || z.einstellungen.schluessel || z.einstellungen.geminiSchluessel)) z.einstellungen.eingerichtet = true;
       // Die frühere Buchungsart „Reinigung“ gibt es nicht mehr: als normale Ausgabe behalten.
       z.buchungen.forEach(function (b) { if (b.art === "reinigung") b.art = "aus"; });
+      // Früher wurde automatisch „Flash-Lite“ fest eingetragen. Jetzt wählt A&T je nach Aufgabe selbst.
+      if (!z.einstellungen.geminiAutoNeu) { if (/lite/i.test(z.einstellungen.geminiModell || "")) z.einstellungen.geminiModell = ""; z.einstellungen.geminiAutoNeu = true; }
       if (z.einstellungen.kiName === "TORRES") z.einstellungen.kiName = STANDARD_NAME; // alter Arbeitstitel
     }
   } catch (e) {

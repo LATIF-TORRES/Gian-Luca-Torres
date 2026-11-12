@@ -5,6 +5,24 @@
  * Nutzt dieselbe KI wie der Mentor (lokal, Gemini oder Claude).
  */
 
+// Qualitätsstandard für Pläne und Dokumente, wie bei einer guten Unternehmensberatung.
+// Gilt für jede KI; damit liefert auch eine Gratis-KI Ergebnisse auf hohem Niveau.
+var BUSINESS_STANDARD = [
+  "PROFI-STANDARD für Businesspläne, Marketingpläne und Konzepte (immer vollständig):",
+  "1. Zusammenfassung in 5 Sätzen: Angebot, Zielgruppe, Preis, Ziel-Einnahmen, erster Schritt.",
+  "2. Problem und Zielgruppe: konkrete Person (Alter, Ort, Bedürfnis), geschätzte Marktgrösse in der Schweiz mit Rechenweg.",
+  "3. Angebot und Preis: was genau, Preis in CHF, warum dieser Preis, Upsell oder Abo für wiederkehrende Einnahmen.",
+  "4. Wettbewerb: 3 echte Alternativen mit Preis und Schwäche; der eigene Vorteil in einem Satz.",
+  "5. Marketing und Verkauf: 2 bis 3 Kanäle mit Budget, Kosten pro Kunde und erwarteter Abschlussquote.",
+  "6. Zahlen als Tabellen: Startkosten, Fixkosten pro Monat, Deckungsbeitrag pro Verkauf, Break-even (Stück und Monat), 12-Monats-Plan in 3 Szenarien (vorsichtig, realistisch, gut). Jede Zahl nachrechnen, Rechenweg zeigen, Annahmen als Annahme kennzeichnen.",
+  "7. Automatisierung: welche Schritte laufen ohne die Person (Werkzeuge mit Namen und Kosten), damit der Cashflow regelmässig wird.",
+  "8. Risiken: die 5 grössten mit Gegenmassnahme.",
+  "9. Halal-Prüfung: Produkt, Finanzierung (kein Zins), Zahlungsanbieter, Verträge.",
+  "10. Recht und Steuern Schweiz: Rechtsform, AHV, MWST-Grenze, Bewilligungen (mit Hinweis, dass Gebühren sich ändern können).",
+  "11. 30-60-90-Tage-Plan mit messbaren Zielen und dem ersten Schritt für heute.",
+  "Vor dem Abgeben selbst prüfen: Stimmen alle Summen? Passt der Plan zu Zeit und Startkapital der Person? Ist jeder Schritt konkret genug, dass sie sofort loslegen kann?"
+].join("\n");
+
 var AKHI_AUFTRAG = [
   "Rolle: Du bist AKHI, der persönliche Business-Assistent von A&T, wie Jarvis: ein erfahrener, ruhiger, loyaler Bruder mit tiefem Wissen in Strategie, Finanzen, Marketing, Verkauf, Social Media, E-Commerce, Reselling, Digistore24, Affiliate, KI-Werkzeugen, Automatisierung (Zapier, Make, n8n, Schnittstellen, Webhooks, MCP-Konnektoren), Gründung und Steuern in der Schweiz und islamischem Wirtschaftsrecht.",
   "MISSION: Führe die Person zu einem regelmässigen, automatisierten Cashflow. Beantworte genau die gestellte Frage zuerst und konkret; danach zeig in einem Satz, wie es auf den Cashflow einzahlt. Fehlt dir ihr Stand (Angebot, Kanal, Einnahmen, Zeit), frag einmal gezielt nach oder triff eine genannte Annahme. Im Zweifel: Modul „cashflow“ nachschlagen.",
@@ -13,6 +31,7 @@ var AKHI_AUFTRAG = [
   "Werkzeuge: wissen_nachschlagen für Grundlagen aus der Bibliothek (Themen: " + (typeof wissenThemen === "function" ? wissenThemen() : "") + "). " +
   "dokument_erstellen, wenn die Person einen Plan, ein Konzept, ein Formular, eine Vorlage, einen Vertragsentwurf, einen Text oder ein PDF will: vollständig, gut gegliedert in Markdown, druckfertig. " +
   "checkliste_erstellen für Abläufe zum Abhaken. aufgabe_anlegen mit Bereich für konkrete nächste Schritte. merken für Bleibendes über die Person.",
+  BUSINESS_STANDARD,
   "Sag nach einem Werkzeug kurz, was du angelegt hast und wo es steht (im Akhi-Dashboard unter Dokumente, Checklisten oder Aufgaben)."
 ].join("\n");
 
@@ -51,6 +70,30 @@ function akhiDaten() {
   return Z;
 }
 
+function dokumentSpeichern(titel, art, inhalt, verbessert) {
+  Z.dokumente.push({ id: neueId(), titel: titel.slice(0, 120), art: art || "Text", inhalt: inhalt, datum: heuteISO() });
+  if (Z.dokumente.length > 60) Z.dokumente.shift();
+  speichern();
+  if (typeof Akhi !== "undefined") Akhi.neuZeichnen();
+  return { text: "Dokument „" + titel + "“ gespeichert" + (verbessert ? ", in einer zweiten Runde geprüft und verbessert" : "") + " (Akhi → Dokumente, dort auch als PDF)." };
+}
+function dokumentPruefen(art, inhalt) {
+  var a = Z.einstellungen.anbieter;
+  return a !== "claude" && /Businessplan|Marketingplan|Konzept/.test(art || "") && inhalt.length > 600 && typeof kiEinfach === "function";
+}
+async function dokumentVerbessern(titel, art, inhalt) {
+  var system = "Du bist ein strenger Prüfer: erfahrener Investor, Schweizer Treuhänder und Scharia-Berater in einer Person. Du verbesserst Geschäftsdokumente, bis sie auf dem Niveau einer Top-Unternehmensberatung sind. Schweizer Rechtschreibung (ss statt ß), Beträge in CHF.";
+  var auftrag = "Prüfe diesen Entwurf (" + (art || "Dokument") + " „" + titel + "“) Punkt für Punkt gegen den Standard unten. " +
+    "Rechne jede Zahl nach und korrigiere Fehler. Ergänze fehlende Teile. Mach vage Stellen konkret (Namen von Werkzeugen, Preise, Zeitplan). Streiche Floskeln. Behalte, was gut ist.\n\n" +
+    BUSINESS_STANDARD + "\n\nGib NUR das vollständige, verbesserte Dokument in Markdown zurück, ohne Vorbemerkung und ohne Kommentar.\n\n--- ENTWURF ---\n" + inhalt.slice(0, 40000);
+  try {
+    var text = await Promise.race([kiEinfach(system, auftrag), new Promise(function (r) { setTimeout(function () { r(""); }, 120000); })]);
+    text = String(text || "").replace(/^\s*```(?:markdown|md)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    if (text.length < inhalt.length * 0.6 || !/[#|]/.test(text)) return null;
+    return text;
+  } catch (e) { return null; }
+}
+
 function akhiWerkzeug(name, input) {
   akhiDaten();
   if (name === "wissen_nachschlagen") {
@@ -60,11 +103,13 @@ function akhiWerkzeug(name, input) {
   if (name === "dokument_erstellen") {
     var titel = String(input.titel || "").trim(), inhalt = String(input.inhalt || "").trim();
     if (!titel || !inhalt) return { fehler: true, text: "Titel und Inhalt fehlen." };
-    Z.dokumente.push({ id: neueId(), titel: titel.slice(0, 120), art: input.art || "Text", inhalt: inhalt, datum: heuteISO() });
-    if (Z.dokumente.length > 60) Z.dokumente.shift();
-    speichern();
-    if (typeof Akhi !== "undefined") Akhi.neuZeichnen();
-    return { text: "Dokument „" + titel + "“ gespeichert (Akhi → Dokumente, dort auch als PDF)." };
+    // Gratis-KIs bekommen eine zweite Prüfrunde: ein strenger Prüfer verbessert den Entwurf.
+    if (dokumentPruefen(input.art, inhalt)) {
+      return dokumentVerbessern(titel, input.art, inhalt).then(function (besser) {
+        return dokumentSpeichern(titel, input.art, besser || inhalt, !!besser);
+      });
+    }
+    return dokumentSpeichern(titel, input.art, inhalt, false);
   }
   if (name === "checkliste_erstellen") {
     var punkte = (Array.isArray(input.punkte) ? input.punkte : String(input.punkte || "").split(/\n|;/)).map(function (p) { return String(p).replace(/^[-*\d.\s\[\]]+/, "").trim(); }).filter(Boolean);
@@ -356,6 +401,7 @@ var Akhi = (function () {
     if (!hatSchluessel()) { zeichnen(); $("#akhi-ki-hinweis").scrollIntoView({ behavior: "smooth", block: "center" }); antwortZeigen("Ich brauche zuerst eine KI-Verbindung. Verbinde sie einmal oben, das dauert etwa 2 Minuten und ist kostenlos.", true); return; }
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     var c = akhiChat();
+    c.qualitaet = "hoch";
     var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + AKHI_AUFTRAG + "\n" + kontextFuerKi() + wissenKontext(String(text).split("<rat_der_kis>")[0]) + "\n</kontext>";
     // Abgebrochene Frage am Ende entfernen (Anbieter erwarten abwechselnd Person und KI)
     var letzte = c.nachrichten[c.nachrichten.length - 1];

@@ -30,7 +30,7 @@ async function geminiModelleLaden(schluessel) {
   var liste = (daten.models || []).filter(function (m) {
     var n = m.name.toLowerCase();
     return (m.supportedGenerationMethods || []).indexOf("generateContent") !== -1 &&
-      n.indexOf("flash") !== -1 &&
+      (n.indexOf("flash") !== -1 || n.indexOf("pro") !== -1) &&
       !/image|tts|audio|live|embed|vision|thinking-exp|robotics|computer/.test(n);
   }).map(function (m) {
     var v = (m.name.match(/(\d+(?:\.\d+)?)/) || [0, "0"])[1];
@@ -39,6 +39,7 @@ async function geminiModelleLaden(schluessel) {
       titel: m.displayName || m.name,
       version: parseFloat(v),
       lite: /lite/i.test(m.name),
+      pro: /pro/i.test(m.name) && !/flash/i.test(m.name),
       vorschau: /preview|exp/i.test(m.name),
       latest: /latest/i.test(m.name)
     };
@@ -50,11 +51,18 @@ async function geminiModelleLaden(schluessel) {
   return liste;
 }
 
-// Standard: neuestes stabiles „Flash-Lite“ (meist die meisten Gratis-Anfragen pro Tag).
-function geminiStandardModell(liste) {
-  var stabil = liste.filter(function (m) { return !m.vorschau; });
-  var basis = stabil.length ? stabil : liste;
-  return (basis.filter(function (m) { return m.lite; })[0] || basis[0] || {}).id || "";
+// Standard: leer = automatisch. A&T wählt dann je nach Aufgabe das passende Modell (siehe geminiKandidaten).
+function geminiStandardModell(liste) { return ""; }
+
+// Stufen: Pro = klügstes Gratis-Modell (wenige Anfragen pro Tag), Flash = schnell und gut, Lite = am meisten Anfragen.
+function geminiStufe(m) { return m.pro ? 0 : (m.lite ? 2 : 1); }
+// Schwere Aufgaben (Businessplan, Strategie, Dokumente, lange Fragen) bekommen das klügste Modell.
+var SCHWER_RE = /businessplan|business-plan|marketingplan|strategie|konzept|analyse|analysier|kalkul|rechne|finanzplan|budget|investor|vertrag|dokument|pdf|prüfe|verbesser|plan für|plan fuer|swot|preis|cashflow/i;
+function geminiSchwer(chat) {
+  if (chat && chat.qualitaet === "hoch") return true;
+  var n = chat && chat.nachrichten, letzte = n && n[n.length - 1];
+  var t = letzte && Array.isArray(letzte.parts) ? letzte.parts.map(function (p) { return p.text || ""; }).filter(function (x) { return x.indexOf("<kontext>") !== 0; }).join(" ") : "";
+  return t.length > 300 || SCHWER_RE.test(t);
 }
 
 // Gespeicherte Nachrichten ohne interne Felder (z. B. _quellen) an Gemini schicken.
@@ -153,15 +161,17 @@ function geminiErschoepftMerken(id) {
 
 var _geminiListe = null;
 // Reihenfolge der Modelle: gewähltes zuerst, dann stabile, dann Vorschau; heute erschöpfte ans Ende.
-async function geminiKandidaten(e) {
+async function geminiKandidaten(e, schwer) {
   if (!_geminiListe || !_geminiListe.length) {
     try { _geminiListe = await geminiModelleLaden(e.geminiSchluessel); } catch (f) {
       if (f.message === "schluessel") throw Object.assign(new Error("API key not valid"), { status: 400 });
       _geminiListe = [];
     }
   }
-  if (!e.geminiModell && _geminiListe.length) { e.geminiModell = geminiStandardModell(_geminiListe); speichern(); }
-  var ids = _geminiListe.filter(function (m) { return !m.vorschau; }).concat(_geminiListe.filter(function (m) { return m.vorschau; }))
+  var folge = schwer ? [0, 1, 2] : [1, 2, 0];
+  var nachStufe = function (a, b) { return folge.indexOf(geminiStufe(a)) - folge.indexOf(geminiStufe(b)); };
+  var ids = _geminiListe.filter(function (m) { return !m.vorschau; }).sort(nachStufe)
+    .concat(_geminiListe.filter(function (m) { return m.vorschau; }).sort(nachStufe))
     .map(function (m) { return m.id; });
   var liste = [e.geminiModell].concat(ids).filter(function (id, i, a) { return id && a.indexOf(id) === i; });
   // Modelle ohne Gratis-Kontingent nie mehr versuchen (ausser es gibt sonst keine).
@@ -171,6 +181,14 @@ async function geminiKandidaten(e) {
   var leer = e.geminiErschoepft && e.geminiErschoepft.datum === heuteISO() ? e.geminiErschoepft.ids : [];
   liste = liste.filter(function (id) { return leer.indexOf(id) === -1; }).concat(liste.filter(function (id) { return leer.indexOf(id) !== -1; }));
   return liste.slice(0, 6);
+}
+
+// Neuere Modelle (ab 2.5) denken vor der Antwort; das Denken zählt mit. Darum mehr Platz, damit nichts abgeschnitten wird.
+function geminiMaxTokens(modell, schwer) {
+  var m = (_geminiListe || []).filter(function (x) { return x.id === modell; })[0];
+  var v = m ? m.version : parseFloat((String(modell).match(/(\d+(?:\.\d+)?)/) || [0, "0"])[1]);
+  if (!(v >= 2.5)) return 8192;
+  return schwer ? 32768 : 16384;
 }
 
 // Prüft einen Schlüssel. Gibt die Zahl der nutzbaren Modelle zurück.
@@ -187,9 +205,11 @@ function antwortGemini(chat, cb) {
   (async function () {
     var e = Z.einstellungen;
     try {
-      var kandidaten = await geminiKandidaten(e);
+      var schwer = geminiSchwer(chat);
+      var kandidaten = await geminiKandidaten(e, schwer);
       if (!kandidaten.length) throw Object.assign(new Error("Kein passendes Modell gefunden."), { status: 404 });
       var nr = 0, modell = kandidaten[0];
+      if (schwer && cb.status) cb.status("denkt gründlich nach (" + modell + ") …");
       // Web-Suche nur, wenn sie für dieses Konto schon einmal ging (sie kann ein eigenes Limit haben).
       var mitSuche = e.websuche !== false && e.geminiSucheOk !== false;
       var gewartet = {}, versuche = 0;
@@ -199,7 +219,7 @@ function antwortGemini(chat, cb) {
           systemInstruction: { parts: [{ text: chat.system }] },
           contents: geminiVerlauf(chat.nachrichten),
           tools: [{ functionDeclarations: geminiFunktionen() }].concat(mitSuche ? [{ google_search: {} }] : []),
-          generationConfig: { maxOutputTokens: 8192 }
+          generationConfig: { maxOutputTokens: geminiMaxTokens(modell, schwer) }
         };
         var erg;
         try {

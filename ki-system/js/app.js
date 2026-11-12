@@ -386,6 +386,7 @@
     if (!c.nachrichten.length) { c.titel = text.length > 40 ? text.slice(0, 40) + "…" : text; chatWahlFuellen(); }
     var modus = MODI[$("#modus").value] || MODI.stratege;
     var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + modus.auftrag + "\n" + kontextFuerKi() + (typeof wissenKontext === "function" ? wissenKontext(text) : "") +
+      (typeof BUSINESS_STANDARD !== "undefined" && /businessplan|marketingplan|konzept|finanzplan/i.test(text) ? "\n" + BUSINESS_STANDARD : "") +
       (e.websuche ? "" : "\nNutze diesmal keine Web-Suche.") + "\n</kontext>";
     // Endet der Verlauf schon mit einer Nutzer-Nachricht (z. B. nach einem Abbruch), dort anhängen:
     // Beide Anbieter erwarten abwechselnd Nutzer und KI.
@@ -678,14 +679,13 @@
     var knopf = this;
     geminiModelleLaden(k).then(function (liste) {
       var sel = $("#e-gemini-modell");
-      sel.innerHTML = "<option value=''>Automatisch wählen</option>";
+      sel.innerHTML = "<option value=''>Automatisch: klügstes Modell für wichtige Aufgaben (empfohlen)</option>";
       liste.forEach(function (m) {
         var o = document.createElement("option");
         o.value = m.id;
-        o.textContent = m.titel + (m.lite ? " · mehr Gratis-Anfragen" : " · klüger") + (m.vorschau ? " · Vorschau" : "");
+        o.textContent = m.titel + (m.pro ? " · am klügsten, wenige Gratis-Anfragen" : m.lite ? " · mehr Gratis-Anfragen" : " · schnell und gut") + (m.vorschau ? " · Vorschau" : "");
         sel.appendChild(o);
       });
-      if (!Z.einstellungen.geminiModell) Z.einstellungen.geminiModell = geminiStandardModell(liste);
       geminiOption(Z.einstellungen.geminiModell);
       sel.value = Z.einstellungen.geminiModell;
       speichern();

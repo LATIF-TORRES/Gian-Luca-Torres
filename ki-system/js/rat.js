@@ -68,11 +68,22 @@ async function ratClaude(text, system) {
 }
 
 async function ratGemini(text, system) {
-  var e = Z.einstellungen, modell = e.geminiModell || "gemini-2.5-flash";
-  var r = await fetch(GEMINI_URL + "models/" + encodeURIComponent(modell) + ":generateContent?key=" + encodeURIComponent(e.geminiSchluessel), {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ systemInstruction: { parts: [{ text: system || ratSystem() }] }, contents: [{ role: "user", parts: [{ text: text }] }] })
-  });
+  var e = Z.einstellungen, kandidaten = ["gemini-2.5-flash"];
+  // Klügstes verfügbares Modell zuerst; ist sein Gratis-Limit erreicht, das nächste.
+  try { kandidaten = await geminiKandidaten(e, true); } catch (f) { if (f.status === 400) throw new Error("Gemini-Schlüssel stimmt nicht"); }
+  if (!kandidaten.length) kandidaten = ["gemini-2.5-flash"];
+  var r, modell;
+  for (var i = 0; i < Math.min(3, kandidaten.length); i++) {
+    modell = kandidaten[i];
+    r = await fetch(GEMINI_URL + "models/" + encodeURIComponent(modell) + ":generateContent?key=" + encodeURIComponent(e.geminiSchluessel), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: system || ratSystem() }] }, contents: [{ role: "user", parts: [{ text: text }] }],
+        generationConfig: { maxOutputTokens: geminiMaxTokens(modell, true) } })
+    });
+    if (r.ok) break;
+    if (r.status === 429) geminiErschoepftMerken(modell);
+    if ([429, 404, 503].indexOf(r.status) === -1) break;
+  }
   if (!r.ok) throw new Error(r.status === 429 ? "Gemini-Tageslimit erreicht" : "Gemini antwortet nicht (" + r.status + ")");
   var d = await r.json(), teile = (((d.candidates || [])[0] || {}).content || {}).parts || [];
   return teile.map(function (x) { return x.text || ""; }).join("");
