@@ -47,7 +47,7 @@ var Stimme = (function () {
         if (i !== -1 && (stelle === -1 || i < stelle)) { stelle = i; laenge = w.length; }
       });
       // „Hey Akhi“ öffnet das Akhi-Dashboard
-      var akhi = klein.match(/\b(?:hey|hei|hi|ey|he)[\s,]+(?:akhi|achi|aki|akki|akhie|ahi|acki)\b/);
+      var akhi = klein.match(/\b(?:hey|hei|hi|ey|he)[\s,]+(?:akhi|achi|aki|akki|akhie|ahi|acki|achie|akhy|aky|archi|archie|ahki)\b/);
       if (akhi && typeof Akhi !== "undefined" && (stelle === -1 || akhi.index <= stelle)) {
         Akhi.weck(t.slice(akhi.index + akhi[0].length).replace(/^[\s,.:!?]+/, "").trim());
         return;

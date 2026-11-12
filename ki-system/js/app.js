@@ -387,6 +387,7 @@
       toast("Neues Gespräch mit " + ({ claude: "Claude", gemini: "Gemini", lokal: "der lokalen KI" })[e.anbieter] + ".");
     }
     c = aktiverChat(true);
+    auftragAktuell(c, e.kiName || STANDARD_NAME);
     if (!c.nachrichten.length) c.anbieter = e.anbieter;
     if (!c.nachrichten.length) { c.titel = text.length > 40 ? text.slice(0, 40) + "…" : text; chatWahlFuellen(); }
     var modus = MODI[$("#modus").value] || MODI.stratege;

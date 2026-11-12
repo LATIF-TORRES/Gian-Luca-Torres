@@ -173,13 +173,40 @@ function akhiStimme() {
   return { stimme: alle[0] || null, tiefer: true }; // keine Männerstimme installiert: tiefer sprechen
 }
 // Spricht nur den gesprochenen Teil (bis zur ersten Liste oder Überschrift, höchstens ~700 Zeichen).
-function akhiSprechteil(text) {
-  var t = String(text || "").replace(/```[\s\S]*?```/g, " ");
-  var stop = t.search(/\n\s*(#|[-*] |\d+\. |\|)/);
+function sprechSauber(t) {
+  return String(t || "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/[#*_>`|]/g, " ").replace(/\s+/g, " ").trim();
+}
+// Listenpunkte eines Abschnitts (z. B. „Was dazu gehört“) aus einer Markdown-Antwort holen
+function abschnittPunkte(t, kopf) {
+  var zeilen = String(t || "").split("\n"), drin = false, punkte = [];
+  for (var i = 0; i < zeilen.length; i++) {
+    var z = zeilen[i];
+    if (/^\s*(#{1,4}\s|\*\*[^*]+\*\*\s*:?\s*$)/.test(z)) { drin = kopf.test(z); continue; }
+    if (drin) { var m = z.match(/^\s*(?:[-*]|\d+\.)\s+(.+)/); if (m) punkte.push(m[1]); }
+  }
+  return punkte;
+}
+// Was Akhi laut sagt: die direkte Antwort, dazu kurz, was noch fehlt, der nächste Schritt und die Vorschläge.
+// Der vollständige Text steht immer auch auf dem Bildschirm.
+function akhiSprechteil(text, vorschlaege) {
+  var roh = String(text || "").replace(/```[\s\S]*?```/g, " ");
+  var t = roh, stop = t.search(/\n\s*(#|[-*] |\d+\. |\||\*\*[^*]+\*\*\s*:?\s*\n)/);
   if (stop > 40) t = t.slice(0, stop);
-  t = t.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/[#*_>`|]/g, " ").replace(/\s+/g, " ").trim();
+  t = sprechSauber(t);
   if (t.length > 700) { var ende = t.lastIndexOf(".", 700); t = t.slice(0, ende > 200 ? ende + 1 : 700); }
-  return t;
+  var teile = [t];
+  var fehlt = abschnittPunkte(roh, /dazu geh(ö|oe)rt|was (dir )?noch fehlt/i).slice(0, 3).map(function (p) {
+    var fett = p.match(/^\*\*([^*]+?)\*\*/);
+    return sprechSauber(fett ? fett[1] : p.split(/[.:–-]\s/)[0]).replace(/[:.]$/, "");
+  }).filter(Boolean);
+  if (fehlt.length) teile.push("Dazu gehört noch: " + (fehlt.length > 1 ? fehlt.slice(0, -1).join(", ") + " und " + fehlt[fehlt.length - 1] : fehlt[0]) + ".");
+  var schritte = abschnittPunkte(roh, /n(ä|ae)chste[nr]? schritt/i);
+  if (schritte.length) { var s1 = sprechSauber(schritte[0]); if (s1.length > 220) s1 = s1.slice(0, s1.lastIndexOf(" ", 220)) + " …"; teile.push("Dein nächster Schritt: " + s1.replace(/[.]?$/, ".")); }
+  if (vorschlaege && vorschlaege.length) {
+    teile.push("Du kannst zum Beispiel sagen: " + vorschlaege.slice(0, 3).map(function (v) { return "„" + sprechSauber(v).replace(/[.!]$/, "") + "“"; }).join(", oder ") +
+      ". Oder sag einfach Ja, dann mache ich das Erste.");
+  }
+  return teile.filter(Boolean).join(" ");
 }
 function akhiSprechen(text, fertig) {
   if (!("speechSynthesis" in window) || !text) { if (fertig) fertig(); return; }
@@ -365,6 +392,7 @@ var Akhi = (function () {
     if (!c || c.anbieter !== e.anbieter || c.nachrichten.length > 40) {
       c = Z.akhiChat = { id: "akhi", anbieter: e.anbieter, modus: "akhi", system: grundauftrag("Akhi"), nachrichten: [], kosten: 0, titel: "Akhi" };
     }
+    auftragAktuell(c, "Akhi");
     return c;
   }
   async function fragen(text) {
@@ -420,7 +448,7 @@ var Akhi = (function () {
     $("#akhi-antwort").querySelectorAll(".vorschlag").forEach(function (b) { b.onclick = function () { if (!laeuft) { gespraech = false; fragen(b.getAttribute("data-text")); } }; });
     letzteAntwort = fehler ? "" : text;
     $("#akhi-feedback").classList.toggle("versteckt", !letzteAntwort || !letzteFrage);
-    var sprech = akhiSprechteil(text);
+    var sprech = akhiSprechteil(text, fehler ? [] : vs.vorschlaege);
     if (!sprech) { setZustand("bereit"); return; }
     setZustand("spricht");
     akhiSprechen(sprech, function () {

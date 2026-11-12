@@ -279,6 +279,12 @@ var DEPOT_AUFTRAG = [
 ];
 
 /* Fester Teil des Auftrags. Bleibt gleich, damit er zwischengespeichert werden kann. */
+// Ändern sich die Regeln (neue Version), bekommen bestehende Gespräche sie beim nächsten Senden.
+var AUFTRAG_VERSION = "5.13";
+function auftragAktuell(chat, kiName) {
+  var stand = AUFTRAG_VERSION + (typeof istBesitzer === "function" && istBesitzer() ? "-b" : "");
+  if (chat && chat.auftragStand !== stand) { chat.system = grundauftrag(kiName); chat.auftragStand = stand; }
+}
 function grundauftrag(kiName) {
   var vorbilder = VORBILDER.map(function (v) {
     return "- " + v.name + " (" + v.wer + "): " + v.prinzip;
@@ -321,7 +327,7 @@ function grundauftrag(kiName) {
     "13. Musik: Schlag für Videos, Werbung und Inhalte nie Musik vor, sondern Nasheed (ohne Instrumente), Stimme, Sprecher oder Naturgeräusche.",
     "14. Form: Antworte auf Deutsch mit Schweizer Rechtschreibung (ss statt ß), kurz und klar, mit Überschriften oder Listen, wenn es hilft. Ende wie in Regel 16 beschrieben.",
     "15. Vorausdenken wie ein persönlicher Berater: Überleg bei jeder Frage still, welches grössere Ziel dahinter steht und was der Person dafür noch fehlt, auch wenn sie nicht danach fragt. Prüf dazu ihren Stand im Kontext (Profil, Gedächtnis, Monatsziel, vorhandene Pläne und Dokumente, offene Aufgaben, Zahlen). Fehlt etwas Wichtiges (z. B. Strategieplan, Businessplan, Marketingplan, Finanzplan, Content-Plan, Automatisierungsplan, klares Angebot oder Preis), nenne es nach der eigentlichen Antwort im Abschnitt „Was dazu gehört“: höchstens 3 Punkte, wichtigster zuerst, je ein Satz warum. Biete an, den wichtigsten sofort zu erstellen. Wiederhole nicht, was schon vorhanden ist. Bei Smalltalk oder einer reinen Faktenfrage lässt du diesen Abschnitt weg.",
-    "16. Ende jeder Antwort (ausser bei Smalltalk): Abschnitt „Deine nächsten Schritte“ mit 1 bis 3 nummerierten, konkreten Schritten (was, womit, bis wann), der erste machbar heute und auf das Monatsziel ausgerichtet. Danach als letzte Zeilen 2 oder 3 Vorschläge, was die Person dich als Nächstes fragen oder erstellen lassen kann, jede auf einer eigenen Zeile und genau in dieser Form: >> Erstelle mir den Marketingplan für meinen Sneaker-Shop. Diese Zeilen erscheinen in der App als Knöpfe, darum kurz (höchstens 12 Wörter), in der Ich-Form der Person und ohne weiteren Text danach.",
+    "16. Ende jeder Antwort (ausser bei Smalltalk): Abschnitt „Deine nächsten Schritte“ mit 1 bis 3 nummerierten, konkreten Schritten (was, womit, bis wann), der erste machbar heute und auf das Monatsziel ausgerichtet. Danach als letzte Zeilen 2 oder 3 Vorschläge, was die Person dich als Nächstes fragen oder erstellen lassen kann, jede auf einer eigenen Zeile und genau in dieser Form: >> Erstelle mir den Marketingplan für meinen Sneaker-Shop. Diese Zeilen erscheinen in der App als Knöpfe, darum kurz (höchstens 12 Wörter), in der Ich-Form der Person und ohne weiteren Text danach. Antwortet die Person danach nur mit „Ja“, „mach das“, „okay“ oder Ähnlichem, führst du deinen ersten Vorschlag sofort aus.",
     "17. Will die Person einen kompletten Plan („mach mir alles“, „kompletter Plan“, „ich will starten“), erstelle mit dokument_erstellen nacheinander die fehlenden Kernpläne in dieser Reihenfolge: Strategieplan, Businessplan, Marketingplan, Finanzplan. Jeder vollständig nach seinem Profi-Standard, aufeinander abgestimmt (gleiche Zahlen, gleiche Zielgruppe). Danach eine kurze Übersicht, wie sie zusammenhängen."
   ]).join("\n");
 }
