@@ -653,7 +653,7 @@
   function lokalOption(id) {
     var sel = $("#e-lokal-modell");
     if (id && !Array.prototype.some.call(sel.options, function (o) { return o.value === id; })) {
-      var o = document.createElement("option"); o.value = id; o.textContent = id; sel.appendChild(o);
+      var o = document.createElement("option"); o.value = id; o.textContent = /^hermes/i.test(id) ? id + " · Hermes (Nous Research)" : id; sel.appendChild(o);
     }
   }
   // Prüft, ob Ollama läuft, und füllt die Modellliste.
@@ -664,15 +664,24 @@
       if (p.ok && p.modelle.length) {
         p.modelle.forEach(lokalOption);
         if (!Z.einstellungen.lokalModell) { Z.einstellungen.lokalModell = p.modell; speichern(); }
+        // Hermes neu installiert: einmal automatisch als lokales Modell übernehmen.
+        var hermes = p.modelle.filter(function (m) { return /^hermes/i.test(m); })[0];
+        if (hermes && !Z.einstellungen.hermesUebernommen) {
+          Z.einstellungen.hermesUebernommen = true;
+          Z.einstellungen.lokalModell = lokalStandardModell(p.modelle);
+          speichern();
+          toast(Z.einstellungen.anbieter === "lokal" ? "Hermes gefunden: A&T nutzt jetzt Hermes als lokale KI." : "Hermes gefunden. Unter „Ich“ → KI-Anbieter → „Lokal“ antwortet A&T mit Hermes; im „Rat der KIs“ ist Hermes schon dabei.");
+        }
         $("#e-lokal-modell").value = Z.einstellungen.lokalModell;
         st.className = "klein-text plus";
-        st.textContent = "✓ Lokale KI läuft. Modelle: " + p.modelle.join(", ") + ". Unbegrenzt und kostenlos.";
+        st.textContent = "✓ Lokale KI läuft. Modelle: " + p.modelle.join(", ") + ". Unbegrenzt und kostenlos." +
+          (p.modelle.some(function (m) { return /^hermes/i.test(m); }) ? "" : " Für Hermes: Doppelklick auf „Hermes installieren.cmd“ im A&T-Ordner.");
       } else if (p.ok) {
         st.className = "klein-text minus";
-        st.textContent = "Ollama läuft, aber es ist noch kein Modell geladen. Starte „Lokale KI installieren.cmd“.";
+        st.textContent = "Ollama läuft, aber es ist noch kein Modell geladen. Starte „Lokale KI installieren.cmd“ oder „Hermes installieren.cmd“.";
       } else {
         st.className = "klein-text minus";
-        st.textContent = "Keine lokale KI gefunden. Unter Windows: Doppelklick auf „Lokale KI installieren.cmd“. Ist sie schon installiert, öffne Ollama im Startmenü.";
+        st.textContent = "Keine lokale KI gefunden. Unter Windows: Doppelklick auf „Lokale KI installieren.cmd“ oder für Hermes auf „Hermes installieren.cmd“. Ist sie schon installiert, öffne Ollama im Startmenü.";
       }
       return p;
     });

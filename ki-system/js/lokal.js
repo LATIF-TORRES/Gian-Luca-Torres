@@ -2,7 +2,8 @@
 
 var OLLAMA_URL = "http://127.0.0.1:11434";
 // Bevorzugte Modelle (das erste vorhandene wird genommen). Alle können Werkzeuge nutzen.
-var LOKAL_BEVORZUGT = ["qwen3:14b", "qwen3:8b", "qwen3:4b", "qwen3", "qwen2.5:7b", "llama3.1:8b", "qwen2.5:3b", "llama3.2"];
+// Hermes (Nous Research) zuerst: wer es installiert, will es nutzen.
+var LOKAL_BEVORZUGT = ["hermes3:8b", "hermes3:3b", "hermes3", "qwen3:14b", "qwen3:8b", "qwen3:4b", "qwen3", "qwen2.5:7b", "llama3.1:8b", "qwen2.5:3b", "llama3.2"];
 
 async function lokalModelle(wartezeit) {
   var steuerung = new AbortController();

@@ -1,4 +1,6 @@
 # Lokale KI fuer A und T einrichten: Ollama installieren, Zugriff erlauben, Modell laden.
+# Mit -Art hermes wird das freie Modell Hermes (Nous Research) geladen.
+param([string]$Art = 'standard')
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -24,7 +26,9 @@ try {
   Write-Host 'Die KI laeuft danach auf diesem PC: kostenlos, ohne Limit, ohne Konto.'
 
   $ramGB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB)
-  if ($ramGB -ge 30) { $modell = 'qwen3:14b'; $groesse = 'etwa 9 GB' } elseif ($ramGB -ge 14) { $modell = 'qwen3:8b'; $groesse = 'etwa 5 GB' } else { $modell = 'qwen3:4b'; $groesse = 'etwa 2.5 GB' }
+  if ($Art -eq 'hermes') {
+    if ($ramGB -ge 14) { $modell = 'hermes3:8b'; $groesse = 'etwa 5 GB' } else { $modell = 'hermes3:3b'; $groesse = 'etwa 2 GB' }
+  } elseif ($ramGB -ge 30) { $modell = 'qwen3:14b'; $groesse = 'etwa 9 GB' } elseif ($ramGB -ge 14) { $modell = 'qwen3:8b'; $groesse = 'etwa 5 GB' } else { $modell = 'qwen3:4b'; $groesse = 'etwa 2.5 GB' }
   Write-Host ("Arbeitsspeicher: " + $ramGB + " GB. Gewaehltes Modell: " + $modell + " (" + $groesse + ").")
   if ($ramGB -lt 8) { Write-Host 'Hinweis: Mit weniger als 8 GB Arbeitsspeicher antwortet die KI langsam.' -ForegroundColor DarkYellow }
 

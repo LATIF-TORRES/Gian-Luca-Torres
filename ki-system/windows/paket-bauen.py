@@ -49,7 +49,7 @@ def main():
     os.makedirs(os.path.dirname(ZIEL), exist_ok=True)
     wurzel = "A-und-T/"
     with zipfile.ZipFile(ZIEL, "w", zipfile.ZIP_DEFLATED) as zf:
-        for name in ["A-und-T starten.cmd", "Installieren.cmd", "Lokale KI installieren.cmd", "LIESMICH.txt"]:
+        for name in ["A-und-T starten.cmd", "Installieren.cmd", "Lokale KI installieren.cmd", "Hermes installieren.cmd", "LIESMICH.txt"]:
             zf.write(os.path.join(HIER, name), wurzel + name)
         for name in APP_DATEIEN:
             zf.write(os.path.join(KI, name), wurzel + "app/" + name)

@@ -388,6 +388,8 @@ body.akhi-offen { overflow: hidden; }
 
 /* Im Mentor liegt unten das Eingabefeld: AKHI-Knopf darüber, damit er „Senden“ nicht verdeckt */
 body[data-tab="chat"] .akhi-start { top: 12px; bottom: auto; right: 16px; width: 50px; height: 50px; font-size: .58rem; }
+/* Breitere Bildschirme: Reiter stehen in der Kopfzeile, rechts Platz für den Knopf lassen, damit „Ich“ frei bleibt */
+@media (min-width: 561px) { body[data-tab="chat"] .kopf { padding-right: 84px; } }
 
 /* Speichern als … / Hochladen */
 .export-wahl { width: auto; max-width: 100%; padding: 6px 10px; border-radius: 999px; font-size: .82rem; }

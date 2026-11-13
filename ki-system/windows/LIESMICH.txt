@@ -23,6 +23,13 @@ Gut ist ein PC mit 16 GB Arbeitsspeicher. Mit 8 GB geht es auch, nur langsamer.
 Damit A&T die KI erreicht, erlaubt das Skript den Zugriff auf Ollama
 aus dem Browser (Einstellung OLLAMA_ORIGINS).
 
+HERMES (FREIES KI-MODELL VON NOUS RESEARCH)
+
+Doppelklick auf "Hermes installieren.cmd". Das richtet Ollama ein (falls noch
+nicht da) und laedt Hermes 3 (einmalig 2 bis 5 GB). A&T nimmt Hermes danach
+automatisch als lokale KI. Unter "Ich" -> KI-Anbieter -> Lokal kannst du
+jederzeit zwischen Hermes und den anderen lokalen Modellen wechseln.
+
 WARUM WINDOWS NACHFRAGT
 
 Die Dateien kommen aus dem Internet und sind nicht von Microsoft signiert.
