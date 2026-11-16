@@ -207,7 +207,8 @@ function akhiSprechteil(text, vorschlaege) {
     return sprechSauber(fett ? fett[1] : p.split(/[.:–-]\s/)[0]).replace(/[:.]$/, "");
   }).filter(Boolean);
   if (fehlt.length) teile.push("Dazu gehört noch: " + (fehlt.length > 1 ? fehlt.slice(0, -1).join(", ") + " und " + fehlt[fehlt.length - 1] : fehlt[0]) + ".");
-  var schritte = abschnittPunkte(roh, /n(ä|ae)chste[nr]? schritt/i);
+  // Rückfragen („Nenne mir …“) sind keine Schritte: nicht als „nächster Schritt“ vorlesen
+  var schritte = abschnittPunkte(roh, /n(ä|ae)chste[nr]? schritt/i).filter(function (x) { return !/^\W*(nenne?r?|nenn|sag|erz(ä|ae)hl|teile?|schreib|schick|gib) (mir|uns)\b/i.test(sprechSauber(x)); });
   if (schritte.length) { var s1 = sprechSauber(schritte[0]); if (s1.length > 220) s1 = s1.slice(0, s1.lastIndexOf(" ", 220)) + " …"; var zeit = s1.match(/^(heute|morgen|jetzt|sofort|diese woche|bis [^:]{2,20})\s*:\s*(.+)$/i);
     teile.push(zeit ? "Dein nächster Schritt " + (/^bis /i.test(zeit[1]) ? zeit[1].charAt(0).toLowerCase() + zeit[1].slice(1) : zeit[1].toLowerCase()) + ": " + zeit[2].replace(/[.]?$/, ".")
       : "Dein nächster Schritt: " + s1.replace(/[.]?$/, ".")); }
