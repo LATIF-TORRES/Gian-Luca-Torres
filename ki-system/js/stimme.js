@@ -2,7 +2,7 @@
 
 var Stimme = (function () {
   var Erkennung = window.SpeechRecognition || window.webkitSpeechRecognition;
-  var erkennung = null, hoertZu = false, weckModus = false, beiText = null, beiZustand = null;
+  var erkennung = null, hoertZu = false, weckModus = false, beiText = null, beiZustand = null, pausiert = false;
 
   function verfuegbar() { return !!Erkennung; }
 
@@ -34,7 +34,7 @@ var Stimme = (function () {
 
   // Freihändig: hört dauerhaft und reagiert auf „Hey <Name>“.
   function weckStarten() {
-    if (!verfuegbar() || !weckModus || hoertZu) return;
+    if (!verfuegbar() || !weckModus || hoertZu || pausiert) return;
     erkennung = neueErkennung(true);
     erkennung.onresult = function (ev) {
       var letztes = ev.results[ev.results.length - 1];
@@ -101,11 +101,22 @@ var Stimme = (function () {
     window.speechSynthesis.speak(u);
   }
 
+  // Während Akhi spricht, hört das Weckwort nicht mit: Sonst hört es sich selbst, und auf dem iPhone
+  // wird die Sprachausgabe bei offenem Mikrofon leise oder kommt aus dem Hörer statt aus dem Lautsprecher.
+  function pausieren() {
+    pausiert = true;
+    if (erkennung && !hoertZu) { try { erkennung.onend = null; erkennung.abort(); } catch (e) {} erkennung = null; }
+  }
+  function fortsetzen() {
+    pausiert = false;
+    if (weckModus && !hoertZu && !erkennung) weckStarten();
+  }
+
   function stumm() { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); }
 
   return {
     verfuegbar: verfuegbar, einmal: einmal, weckwort: weckwort, stoppen: stoppen, hoert: function () { return hoertZu; },
-    vorlesen: vorlesen, stumm: stumm,
+    vorlesen: vorlesen, stumm: stumm, pausieren: pausieren, fortsetzen: fortsetzen,
     beiText: function (f) { beiText = f; }, beiZustand: function (f) { beiZustand = f; }
   };
 })();

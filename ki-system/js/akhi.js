@@ -11,6 +11,7 @@ var BUSINESS_STANDARD = planStandardText("Businessplan");
 var AKHI_AUFTRAG = [
   "Rolle: Du bist AKHI, der persönliche Business-Assistent von A&T, wie Jarvis: ein erfahrener, ruhiger, loyaler Bruder mit tiefem Wissen in Strategie, Finanzen, Marketing, Verkauf, Social Media, E-Commerce, Reselling, Digistore24, Affiliate, KI-Werkzeugen, Automatisierung (Zapier, Make, n8n, Schnittstellen, Webhooks, MCP-Konnektoren), Gründung und Steuern in der Schweiz und islamischem Wirtschaftsrecht.",
   "MISSION: Führe die Person zu einem regelmässigen, automatisierten Cashflow. Beantworte genau die gestellte Frage zuerst und konkret; danach zeig in einem Satz, wie es auf den Cashflow einzahlt. Fehlt dir ihr Stand (Angebot, Kanal, Einnahmen, Zeit), frag einmal gezielt nach oder triff eine genannte Annahme. Im Zweifel: Modul „cashflow“ nachschlagen.",
+  "SPRACHE: Schreib fehlerfreies Deutsch mit Schweizer Rechtschreibung (ss statt ß): richtige Grammatik, Gross- und Kleinschreibung, Kommas, ganze Sätze, keine unnötigen englischen Wörter. Lies jede Antwort vor dem Senden einmal auf Fehler durch. Die gesprochenen Sätze müssen sich laut vorgelesen natürlich anhören: keine Abkürzungen wie „z. B.“ oder „ca.“, Zahlen und Beträge so, wie man sie sagt (z. B. „2000 Franken“).",
   "Du wirst oft per Stimme benutzt: Beginne jede Antwort mit 1 bis 3 kurzen, gesprochenen Sätzen ohne Aufzählungszeichen und ohne Markdown, die direkt antworten. Danach, durch eine Leerzeile getrennt, bei Bedarf Details als klare Schritte.",
   "Sei konkret wie ein Unternehmensberater: Zahlen, Werkzeuge mit Namen, Kosten, Zeitplan, nächster Schritt. Keine Floskeln. Wenn Wissen veraltet sein könnte (Gebühren, Gesetze), sag es in einem Halbsatz.",
   "Werkzeuge: wissen_nachschlagen für Grundlagen aus der Bibliothek (Themen: " + (typeof wissenThemen === "function" ? wissenThemen() : "") + "). " +
@@ -173,8 +174,14 @@ function akhiStimme() {
   return { stimme: alle[0] || null, tiefer: true }; // keine Männerstimme installiert: tiefer sprechen
 }
 // Spricht nur den gesprochenen Teil (bis zur ersten Liste oder Überschrift, höchstens ~700 Zeichen).
+// Abkürzungen so, wie man sie spricht
+var SPRECH_ERSATZ = [[/\bz\.\s?B\./g, "zum Beispiel"], [/\bca\./g, "etwa"], [/\bMin\./g, "Minuten"], [/\bStd\./g, "Stunden"], [/\busw\./g, "und so weiter"],
+  [/\bd\.\s?h\./g, "das heisst"], [/\binkl\./g, "inklusive"], [/\bexkl\./g, "exklusive"], [/\bMio\./g, "Millionen"], [/\bMrd\./g, "Milliarden"], [/\bbzw\./g, "beziehungsweise"],
+  [/\bCHF\b/g, "Franken"], [/\bFr\.\s?(?=\d)/g, "Franken "], [/(\d)\s?%/g, "$1 Prozent"], [/(\d)'(\d{3})/g, "$1$2"], [/→/g, ", dann "], [/\s&\s/g, " und "]];
 function sprechSauber(t) {
-  return String(t || "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/[#*_>`|]/g, " ").replace(/\s+/g, " ").trim();
+  var x = String(t || "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/[#*_>`|]/g, " ");
+  SPRECH_ERSATZ.forEach(function (r) { x = x.replace(r[0], r[1]); });
+  return x.replace(/\(\s*/g, ", ").replace(/\s*\)/g, ",").replace(/,\s*([.,!?])/g, "$1").replace(/\s+/g, " ").replace(/\s+([.,!?])/g, "$1").trim();
 }
 // Listenpunkte eines Abschnitts (z. B. „Was dazu gehört“) aus einer Markdown-Antwort holen
 function abschnittPunkte(t, kopf) {
@@ -201,25 +208,74 @@ function akhiSprechteil(text, vorschlaege) {
   }).filter(Boolean);
   if (fehlt.length) teile.push("Dazu gehört noch: " + (fehlt.length > 1 ? fehlt.slice(0, -1).join(", ") + " und " + fehlt[fehlt.length - 1] : fehlt[0]) + ".");
   var schritte = abschnittPunkte(roh, /n(ä|ae)chste[nr]? schritt/i);
-  if (schritte.length) { var s1 = sprechSauber(schritte[0]); if (s1.length > 220) s1 = s1.slice(0, s1.lastIndexOf(" ", 220)) + " …"; teile.push("Dein nächster Schritt: " + s1.replace(/[.]?$/, ".")); }
+  if (schritte.length) { var s1 = sprechSauber(schritte[0]); if (s1.length > 220) s1 = s1.slice(0, s1.lastIndexOf(" ", 220)) + " …"; var zeit = s1.match(/^(heute|morgen|jetzt|sofort|diese woche|bis [^:]{2,20})\s*:\s*(.+)$/i);
+    teile.push(zeit ? "Dein nächster Schritt " + (/^bis /i.test(zeit[1]) ? zeit[1].charAt(0).toLowerCase() + zeit[1].slice(1) : zeit[1].toLowerCase()) + ": " + zeit[2].replace(/[.]?$/, ".")
+      : "Dein nächster Schritt: " + s1.replace(/[.]?$/, ".")); }
   if (vorschlaege && vorschlaege.length) {
     teile.push("Du kannst zum Beispiel sagen: " + vorschlaege.slice(0, 3).map(function (v) { return "„" + sprechSauber(v).replace(/[.!]$/, "") + "“"; }).join(", oder ") +
       ". Oder sag einfach Ja, dann mache ich das Erste.");
   }
   return teile.filter(Boolean).join(" ");
 }
+// iPhone und iPad: Safari spricht nur, wenn die Sprachausgabe einmal bei einem Tippen gestartet wurde.
+// Darum beim ersten Tippen irgendwo in A&T einmal lautlos „sprechen“. Danach darf Akhi jederzeit reden.
+var _akhiSpracheFrei = false;
+function akhiSprachFreigabe() {
+  if (_akhiSpracheFrei || !("speechSynthesis" in window)) return;
+  _akhiSpracheFrei = true;
+  try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; u.lang = "de-DE"; speechSynthesis.speak(u); } catch (e) {}
+}
+try {
+  ["touchend", "click", "keydown"].forEach(function (art) { document.addEventListener(art, akhiSprachFreigabe, true); });
+} catch (e) {}
+
+// Text in kurze Stücke an Satzgrenzen teilen: Lange Ausgaben brechen manche Browser sonst ab (z. B. Chrome nach ~15 Sekunden).
+function sprechStuecke(text) {
+  var saetze = String(text || "").match(/[^.!?…]+[.!?…]*[“"»]?\s*/g) || [String(text || "")];
+  var stuecke = [], akt = "";
+  saetze.forEach(function (s) {
+    if ((akt + s).length > 200 && akt) { stuecke.push(akt.trim()); akt = ""; }
+    while (s.length > 240) { var cut = s.lastIndexOf(",", 220); if (cut < 80) cut = s.lastIndexOf(" ", 220); if (cut < 80) cut = 220; stuecke.push(s.slice(0, cut + 1).trim()); s = s.slice(cut + 1); }
+    akt += s;
+  });
+  if (akt.trim()) stuecke.push(akt.trim());
+  return stuecke.filter(Boolean);
+}
+var _akhiSprechNr = 0;
 function akhiSprechen(text, fertig) {
   if (!("speechSynthesis" in window) || !text) { if (fertig) fertig(); return; }
+  var nr = ++_akhiSprechNr;
   speechSynthesis.cancel();
-  var s = akhiStimme(), u = new SpeechSynthesisUtterance(text);
-  u.lang = (s.stimme && s.stimme.lang) || "de-DE";
-  if (s.stimme) u.voice = s.stimme;
-  u.pitch = s.tiefer ? 0.7 : 0.95; u.rate = 1.02;
-  var fertigEinmal = false, ende = function () { if (!fertigEinmal) { fertigEinmal = true; if (fertig) fertig(); } };
-  u.onend = ende; u.onerror = ende;
-  speechSynthesis.speak(u);
-  // Manche Browser melden das Ende nicht: Sicherheitszeit nach Textlänge
-  setTimeout(function () { if (!speechSynthesis.speaking) ende(); }, Math.max(4000, text.length * 90));
+  var s = akhiStimme(), stuecke = sprechStuecke(text), i = 0;
+  if (typeof Stimme !== "undefined" && Stimme.pausieren) Stimme.pausieren();
+  var fertigEinmal = false, ende = function () {
+    if (fertigEinmal) return;
+    fertigEinmal = true;
+    if (fertig) fertig();
+    // Weckwort wieder einschalten (ausser Akhi hört im Gesprächsmodus gleich selbst zu)
+    if (typeof Stimme !== "undefined" && Stimme.fortsetzen) setTimeout(function () { if (nr === _akhiSprechNr) Stimme.fortsetzen(); }, 600);
+  };
+  function weiter() {
+    if (nr !== _akhiSprechNr || fertigEinmal) return;
+    if (i >= stuecke.length) return ende();
+    var stueck = stuecke[i], meins = ++i;
+    var u = new SpeechSynthesisUtterance(stueck);
+    u.lang = (s.stimme && s.stimme.lang) || "de-DE";
+    if (s.stimme) u.voice = s.stimme;
+    u.pitch = s.tiefer ? 0.7 : 0.95; u.rate = 1.02; u.volume = 1;
+    u.onend = function () { if (meins === i) weiter(); };
+    u.onerror = function (ev) {
+      if (nr !== _akhiSprechNr) return;
+      if (ev && (ev.error === "interrupted" || ev.error === "canceled")) return ende(); // abgebrochen: nicht weiter
+      if (meins === i) weiter();
+    };
+    speechSynthesis.speak(u);
+    if (speechSynthesis.paused) speechSynthesis.resume();
+    // Manche Browser melden das Ende nicht: Sicherheitszeit nach Länge des Stücks
+    setTimeout(function () { if (meins === i && nr === _akhiSprechNr && !speechSynthesis.speaking) weiter(); }, Math.max(3500, stueck.length * 95));
+  }
+  // Direkt nach cancel() verschluckt Safari das nächste speak(): kurz warten.
+  setTimeout(weiter, 80);
 }
 
 /* ---------- Dashboard ---------- */
@@ -426,7 +482,7 @@ var Akhi = (function () {
     else if (c.anbieter === "lokal") c.nachrichten.push({ role: "user", content: kontext + "\n\n" + text, _anzeige: text });
     else c.nachrichten.push({ role: "user", content: [{ type: "text", text: kontext }, { type: "text", text: text }] });
     letzteFrage = String(text).split("<rat_der_kis>")[0].slice(0, 300); $("#akhi-feedback").classList.add("versteckt");
-    if (!vorAktion) $("#akhi-du").textContent = "„" + text.slice(0, 200) + (text.length > 200 ? " …" : "") + "“";
+    if (!vorAktion) $("#akhi-du").textContent = "„" + (text.charAt(0).toUpperCase() + text.slice(1)).slice(0, 200) + (text.length > 200 ? " …" : "") + "“";
     $("#akhi-aktionen").innerHTML = "";
     if (vorAktion) $("#akhi-aktionen").appendChild(vorAktion);
     setZustand("denkt");
