@@ -224,6 +224,18 @@ function akhiSprachFreigabe() {
   if (_akhiSpracheFrei || !("speechSynthesis" in window)) return;
   _akhiSpracheFrei = true;
   try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; u.lang = "de-DE"; speechSynthesis.speak(u); } catch (e) {}
+  // Kurzer stiller Ton über ein Audio-Element: Damit stellt Safari auf „Wiedergabe“ um,
+  // und Ton kommt bei vielen iPhones auch bei eingeschaltetem Stumm-Schalter aus dem Lautsprecher.
+  try { var a = new Audio(stilleWav()); a.setAttribute("playsinline", ""); a.volume = 0.01; var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+}
+function stilleWav() {
+  var n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+  var s = function (o, t) { for (var i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+  s(0, "RIFF"); v.setUint32(4, 36 + n, true); s(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); s(36, "data"); v.setUint32(40, n, true);
+  for (var i = 0; i < n; i++) b[44 + i] = 128;
+  var bin = ""; for (var j = 0; j < b.length; j++) bin += String.fromCharCode(b[j]);
+  return "data:audio/wav;base64," + btoa(bin);
 }
 try {
   ["touchend", "click", "keydown"].forEach(function (art) { document.addEventListener(art, akhiSprachFreigabe, true); });
@@ -248,6 +260,7 @@ function akhiSprechen(text, fertig) {
   speechSynthesis.cancel();
   var s = akhiStimme(), stuecke = sprechStuecke(text), i = 0;
   if (typeof Stimme !== "undefined" && Stimme.pausieren) Stimme.pausieren();
+  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
   var fertigEinmal = false, ende = function () {
     if (fertigEinmal) return;
     fertigEinmal = true;
@@ -305,6 +318,9 @@ var Akhi = (function () {
   function schliessen() {
     gespraech = false;
     if ("speechSynthesis" in window) speechSynthesis.cancel();
+    // Hört Akhi gerade zu: aufhören und wieder nur auf „Hey Akhi“ warten
+    if (typeof Stimme !== "undefined" && Stimme.hoert()) { Stimme.stoppen(); if (Stimme.fortsetzen) Stimme.fortsetzen(); }
+    if (zustand === "hoert") setZustand("bereit");
     $("#akhi").classList.add("versteckt");
     document.body.classList.remove("akhi-offen");
     try { sessionStorage.removeItem("aundt-akhi"); } catch (e) {}
@@ -454,6 +470,11 @@ var Akhi = (function () {
   async function fragen(text) {
     text = String(text || "").trim();
     if (!text || laeuft) return;
+    var weckTreffer = typeof AKHI_WECK_RE !== "undefined" && text.toLowerCase().match(AKHI_WECK_RE);
+    if (weckTreffer && weckTreffer.index <= 2) {
+      text = text.slice(weckTreffer.index + weckTreffer[0].length).replace(/^[\s,.:!?]+/, "").trim();
+      if (text.length < 3) { gespraech = true; antwortZeigen("Ja, Akhi hier. Wie kann ich helfen?", false); return; }
+    }
     // Rat der KIs: zuerst alle verfügbaren KIs fragen, dann die beste Antwort zusammenführen
     if (Z.einstellungen.akhiRat && typeof ratFragen === "function" && ratTeilnehmer().length >= 2 && text.length > 12 && hatSchluessel()) {
       laeuft = { stoppen: function () {} };

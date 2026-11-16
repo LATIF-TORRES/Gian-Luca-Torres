@@ -1,10 +1,14 @@
 /* Sprechen und Zuhören mit den Bordmitteln des Browsers (keine Downloads nötig). */
 
+// „Hey Akhi“ und das, was die Spracherkennung oft daraus macht (z. B. „Hey Achim“, „Hey Archie“)
+var AKHI_WECK_RE = /\b(?:hey|hei|hi|ey|he|hallo)[\s,]+(?:akhi|achi|aki|akki|akhie|ahi|acki|achie|akhy|aky|archi|archie|ahki|achim|akim|ahim|aki m|akhim)\b/;
+
 var Stimme = (function () {
   var Erkennung = window.SpeechRecognition || window.webkitSpeechRecognition;
   var erkennung = null, hoertZu = false, weckModus = false, beiText = null, beiZustand = null, pausiert = false;
 
   function verfuegbar() { return !!Erkennung; }
+  function audioSitzung(art) { try { if (navigator.audioSession) navigator.audioSession.type = art; } catch (e) {} }
 
   function neueErkennung(dauerhaft) {
     var r = new Erkennung();
@@ -29,6 +33,7 @@ var Stimme = (function () {
       if (ev.error === "not-allowed") fertig(null, "Bitte erlaube das Mikrofon für diese Seite.");
     };
     erkennung.onend = function () { hoertZu = false; zustand(); if (weckModus) weckStarten(); };
+    audioSitzung("auto");
     try { erkennung.start(); } catch (e) { hoertZu = false; zustand(); }
   }
 
@@ -47,7 +52,7 @@ var Stimme = (function () {
         if (i !== -1 && (stelle === -1 || i < stelle)) { stelle = i; laenge = w.length; }
       });
       // „Hey Akhi“ öffnet das Akhi-Dashboard
-      var akhi = klein.match(/\b(?:hey|hei|hi|ey|he)[\s,]+(?:akhi|achi|aki|akki|akhie|ahi|acki|achie|akhy|aky|archi|archie|ahki)\b/);
+      var akhi = klein.match(AKHI_WECK_RE);
       if (akhi && typeof Akhi !== "undefined" && (stelle === -1 || akhi.index <= stelle)) {
         Akhi.weck(t.slice(akhi.index + akhi[0].length).replace(/^[\s,.:!?]+/, "").trim());
         return;
@@ -57,6 +62,7 @@ var Stimme = (function () {
       if (beiText) beiText(rest, true);
     };
     erkennung.onend = function () { if (weckModus && !hoertZu) setTimeout(weckStarten, 400); };
+    audioSitzung("auto");
     try { erkennung.start(); } catch (e) { /* läuft schon */ }
   }
 

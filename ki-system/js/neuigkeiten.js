@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "5.15"; // muss mit version.json übereinstimmen
+var APP_VERSION = "5.16"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { titel: "Akhi versteht dich besser", text: "Versteht die Spracherkennung „Hey Achim“ oder „Hey Archie“ statt „Hey Akhi“, reagiert Akhi trotzdem. Sagst du nur „Hey Akhi“, antwortet er sofort „Ja, Akhi hier“ und hört zu, statt eine lange Antwort zu schreiben. Auf dem iPhone versucht A&T jetzt, auch bei eingeschaltetem Stumm-Schalter über den Lautsprecher zu sprechen. Hörst du trotzdem nichts, schalte den Stumm-Schalter aus." },
   { titel: "Akhi spricht zuverlässiger", text: "Auf dem iPhone blieb Akhi oft stumm, weil Safari Sprache erst nach einem Tippen erlaubt. Jetzt schaltet A&T die Stimme beim ersten Tippen frei, und Akhi liest lange Antworten Stück für Stück vor, damit nichts abbricht. Falls du trotzdem nichts hörst: Lautstärke hochdrehen und auf dem iPhone den Stumm-Schalter an der Seite ausschalten. Akhi achtet ausserdem strenger auf fehlerfreies Deutsch." },
   { titel: "Hermes als lokale KI", text: "Neu kannst du Hermes 3 von Nous Research als lokale KI auf deinem PC nutzen: kostenlos, ohne Limit, ohne Konto, deine Fragen bleiben auf dem PC. Doppelklick auf „Hermes installieren.cmd“ im A&T-Ordner, A&T findet Hermes danach selbst. Unter „Ich“ → KI-Anbieter → „Lokal“ antwortet A&T mit Hermes, und im „Rat der KIs“ ist Hermes mit dabei. Hermes läuft nur auf dem PC, nicht auf dem Handy." },
   { titel: "Akhi sagt dir alles auch laut", text: "Sag „Hey Akhi, mach mir …“ oder stell einfach eine Frage: Akhi antwortet mit Stimme und Text. Laut sagt er dir die Antwort, was dir noch fehlt, deinen nächsten Schritt und was du ihm als Nächstes sagen kannst. Sag dann einfach „Ja“, und er macht das Erste. Auf dem Bildschirm steht alles ausführlich, mit Vorschlägen zum Antippen. Ausserdem bekommen bestehende Gespräche nach einem Update jetzt sofort die neuen Regeln." },
