@@ -100,26 +100,27 @@ function yuhBestaetigen(id, anzahl, kurs) {
   if (!v || v.status !== "offen") return "Vorschlag nicht mehr offen.";
   anzahl = Math.floor(Number(anzahl) * 10000) / 10000; kurs = Number(kurs);
   if (!(anzahl > 0) || !(kurs > 0)) return "Anzahl und Kurs müssen grösser als 0 sein.";
-  var wert = Math.round(anzahl * kurs * 100) / 100;
+  var wert = Math.round(anzahl * kurs * 100) / 100, gebuehr = Math.round(wert * gebuehrSatz() * 100) / 100; // geschätzte Bankgebühr (Depot → Einstellungen)
   if (v.seite === "kauf") {
     var p = y.positionen[v.symbol] || { anzahl: 0, einstand: 0, seit: heuteISO() };
-    p.einstand = (p.einstand * p.anzahl + wert) / (p.anzahl + anzahl);
+    p.einstand = (p.einstand * p.anzahl + wert + gebuehr) / (p.anzahl + anzahl);
     p.anzahl = Math.round((p.anzahl + anzahl) * 10000) / 10000;
-    p.hoch = Math.max(p.hoch || 0, kurs); p.teilVerkauft = false; p.signal = null;
+    p.hoch = kurs; p.teilVerkauft = false; p.signal = null; // Höchstkurs neu: sonst sofortiger Stop nach Nachkauf
+    p.stopBasis = Math.min(p.einstand, kurs); // Stop vom tieferen Wert aus (Nachkauf im Minus)
     y.positionen[v.symbol] = p;
-    y.bargeld = Math.max(0, Math.round((y.bargeld - wert) * 100) / 100);
+    y.bargeld = Math.max(0, Math.round((y.bargeld - wert - gebuehr) * 100) / 100);
   } else {
     var q = y.positionen[v.symbol];
     if (!q) return "Diese Position ist nicht mehr eingetragen.";
     anzahl = Math.min(anzahl, q.anzahl);
-    var ergebnis = Math.round((kurs - q.einstand) * anzahl * 100) / 100;
+    var ergebnis = Math.round(((kurs - q.einstand) * anzahl - gebuehr) * 100) / 100; // nach Gebühren
     y.verlauf.push({ zeit: new Date().toISOString(), symbol: v.symbol, anzahl: anzahl, einstand: q.einstand, verkauf: kurs, ergebnis: ergebnis, grund: v.grund });
     if (y.verlauf.length > 200) y.verlauf.shift();
     q.anzahl = Math.round((q.anzahl - anzahl) * 10000) / 10000;
     if (v.grund.indexOf("Gewinnziel") === 0) q.teilVerkauft = true;
     q.signal = null;
     if (q.anzahl <= 0.00005) delete y.positionen[v.symbol];
-    y.bargeld = Math.round((y.bargeld + wert) * 100) / 100;
+    y.bargeld = Math.round((y.bargeld + wert - gebuehr) * 100) / 100;
   }
   v.status = "erledigt"; v.ausgefuehrt = { anzahl: anzahl, kurs: kurs };
   speichern();

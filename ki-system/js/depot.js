@@ -50,7 +50,7 @@ var BRANCHE_PRUEFEN = /beverage|media|hotel|restaurant|leisure|entertainment|foo
 
 function leeresDepot() {
   return { start: 10000, bargeld: 10000, positionen: {}, orders: [], halalListe: [], offen: [],
-    tageslimit: 500, finnhubSchluessel: "", hinweisGesehen: false };
+    tageslimit: 500, finnhubSchluessel: "", hinweisGesehen: false, gebuehr: 0.5 };
 }
 function depot() {
   if (!Z.depot || typeof Z.depot !== "object") Z.depot = leeresDepot();
@@ -58,6 +58,8 @@ function depot() {
   Object.keys(leer).forEach(function (k) { if (d[k] === undefined) d[k] = leer[k]; });
   return d;
 }
+// Gebühr pro Order in % (wie bei einer echten Bank; im Depot unter Einstellungen anpassbar)
+function gebuehrSatz() { var g = Number(depot().gebuehr); return (isFinite(g) && g >= 0 ? g : 0.5) / 100; }
 function usd(n) {
   var x = Number(n) || 0;
   return (x < -0.004 ? "−" : "") + "$" + Math.abs(x).toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -97,6 +99,7 @@ async function finnhubTesten() {
   var q = await finnhub("quote?symbol=AAPL");
   if (!q || !(q.c > 0)) throw new Error("Finnhub antwortet, liefert aber keinen Kurs. Versuch es in einer Minute nochmal.");
   FINNHUB_STATUS.fehler = null; FINNHUB_STATUS.ok = Date.now();
+  FINNHUB_STATUS.stand = q.t ? q.t * 1000 : 0; // Zeit des letzten Kurses: zeigt, ob die Börse wirklich handelt
   return "Schlüssel funktioniert: Apple kostet gerade " + usd(q.c) + ".";
 }
 async function finnhub(pfad) {
@@ -125,7 +128,7 @@ async function kursHolen(symbol, frisch) {
   var q = await finnhub("quote?symbol=" + encodeURIComponent(symbol));
   if (!q || !(q.c > 0)) { var e0 = new Error("Kein Kurs für „" + symbol + "“ gefunden (Finnhub liefert für dieses Kürzel nichts)."); e0.art = "zugriff"; throw e0; }
   FINNHUB_STATUS.fehler = null; FINNHUB_STATUS.ok = Date.now();
-  c = { symbol: symbol, kurs: q.c, aenderung: q.dp, hoch: q.h, tief: q.l, vortag: q.pc, zeit: Date.now() };
+  c = { symbol: symbol, kurs: q.c, aenderung: q.dp, hoch: q.h, tief: q.l, vortag: q.pc, zeit: Date.now(), stand: q.t ? q.t * 1000 : 0 };
   schwankungMerken(symbol, q);
   _kursCache[symbol] = c;
   return c;
@@ -163,8 +166,8 @@ function begrenzt(x, min, max) { return Math.min(max, Math.max(min, x)); }
 // Individuelle Schutzwerte einer Aktie (alles in %).
 function schutzWerte(symbol) {
   var a = autoEinstellungen(), v = schwankung(symbol);
-  var abstand = begrenzt(1.5 * v, 1.5, Math.max(1.5, a.stop));   // Start-Stop unter dem Kaufkurs
-  var nachziehen = begrenzt(v, 1.2, abstand);                    // Abstand zum Höchstkurs
+  var abstand = begrenzt(1.5 * v, 2, Math.max(2, a.stop));       // Start-Stop unter dem Kaufkurs: ausserhalb des üblichen Tagesrauschens
+  var nachziehen = begrenzt(1.2 * v, 1.5, abstand);              // Abstand zum Höchstkurs
   var ziel = Math.max(a.ziel, 2.5 * abstand);                    // Gewinnziel: Hälfte sichern
   return { schwankung: v, abstand: abstand, nachziehen: nachziehen, ziel: ziel };
 }
@@ -390,6 +393,81 @@ function heuteAutomatisch() {
     .reduce(function (s, o) { return s + o.wert; }, 0);
 }
 
+/* ---------- Risiko: Positionsgrösse, Verlust-Bremse ---------- */
+
+var RISIKO_PRO_TRADE = 0.01;
+var VERGLEICH_ETF = "SPUS"; // SP Funds S&P 500 Sharia Industry Exclusions ETF: Massstab „einfach halten“ // höchstens 1 % des Depots darf bei einem Trade bis zum Stop verloren gehen
+// Depotwert ohne neue Kursabfragen (letzter bekannter Kurs, sonst Einstand)
+function depotWertSchaetzung() {
+  var d = depot();
+  return d.bargeld + Object.keys(d.positionen).reduce(function (s, k) {
+    var p = d.positionen[k], c = _kursCache[k];
+    return s + (c ? c.kurs : p.einstand) * p.anzahl;
+  }, 0);
+}
+// Grösster sinnvoller Kauf: höchstens 20 % des Geldes und so, dass ein Stop höchstens 1 % des Depots kostet.
+// Bewegte Aktien bekommen damit einen weiteren Stop, aber eine kleinere Position.
+function maxKaufWert(symbol, geld, gesamt) {
+  var w = schutzWerte(symbol);
+  return Math.max(0, Math.min(geld * 0.2, gesamt * RISIKO_PRO_TRADE / (w.abstand / 100)) / (1 + gebuehrSatz()));
+}
+// Passt die Anzahl an die Grenze an (statt die Order abzulehnen). Gibt {anzahl, angepasst, text} zurück.
+function anzahlNachRisiko(symbol, kurs, anzahl, geld, gesamt) {
+  var max = maxKaufWert(symbol, geld, gesamt);
+  if (kurs * anzahl <= max + 0.01) return { anzahl: anzahl, angepasst: false };
+  var neu = Math.floor(max / kurs * 10000) / 10000;
+  return { anzahl: neu, angepasst: true, text: "Anzahl an die Risiko-Grenze angepasst: " + anzahlText(neu) + " statt " + anzahlText(anzahl) + " Stück (höchstens " + usd(max) + ", Stop etwa " + schutzWerte(symbol).abstand.toFixed(1) + " % unter dem Kauf, Risiko höchstens 1 % des Depots)." };
+}
+// Verlust-Bremse: nach 2 Verlust-Trades oder −2 % an einem Tag keine neuen selbstständigen Käufe mehr.
+function verlustBremse() {
+  var heute = heuteISO(), b = handelsBilanz(), tag = b.alle.filter(function (t) { return t.zeit.slice(0, 10) === heute; });
+  var verluste = tag.filter(function (t) { return t.gewinn < 0; }).length, summe = tag.reduce(function (s, t) { return s + t.gewinn; }, 0);
+  if (verluste >= 2) return "Verlust-Bremse: heute schon " + verluste + " Trades mit Verlust. Für heute keine neuen Käufe, nur Schutz der Positionen.";
+  if (summe < -0.02 * Math.max(depot().start, 1)) return "Verlust-Bremse: heute " + usd(summe) + " (mehr als 2 % des Startkapitals). Für heute keine neuen Käufe.";
+  return null;
+}
+
+/* ---------- Bilanz: was haben die Trades wirklich gebracht? ---------- */
+
+// Rechnet alle Orders der Reihe nach nach (auch alte Verkäufe ohne gespeichertes Ergebnis).
+function handelsBilanz() {
+  var pos = {}, alle = [], gebuehren = 0;
+  depot().orders.forEach(function (o) {
+    var p = pos[o.symbol] || (pos[o.symbol] = { anzahl: 0, einstand: 0, quelle: null, seit: null });
+    gebuehren += o.gebuehr || 0;
+    if (o.seite === "kauf") {
+      p.einstand = (p.einstand * p.anzahl + o.wert + (o.gebuehr || 0)) / (p.anzahl + o.anzahl);
+      p.anzahl += o.anzahl; p.quelle = p.quelle || o.quelle; p.seit = p.seit || o.zeit;
+    } else {
+      var g = o.gewinn !== undefined ? o.gewinn : (p.anzahl > 0 ? Math.round(((o.kurs - p.einstand) * o.anzahl - (o.gebuehr || 0)) * 100) / 100 : null);
+      if (g !== null) alle.push({ symbol: o.symbol, gewinn: g, zeit: o.zeit, seit: p.seit, auto: p.quelle === "auto" || p.quelle === "ki", grund: o.begruendung || "",
+        prozent: p.einstand > 0 ? (o.kurs / p.einstand - 1) * 100 : 0 });
+      p.anzahl -= o.anzahl;
+      if (p.anzahl <= 0.00005) pos[o.symbol] = { anzahl: 0, einstand: 0, quelle: null, seit: null };
+    }
+  });
+  function werte(liste) {
+    var gew = liste.filter(function (t) { return t.gewinn > 0; }), verl = liste.filter(function (t) { return t.gewinn <= 0; });
+    var sg = gew.reduce(function (s, t) { return s + t.gewinn; }, 0), sv = verl.reduce(function (s, t) { return s + t.gewinn; }, 0);
+    return { anzahl: liste.length, gewinner: gew.length, verlierer: verl.length, quote: liste.length ? gew.length / liste.length * 100 : 0,
+      summe: sg + sv, schnittGewinn: gew.length ? sg / gew.length : 0, schnittVerlust: verl.length ? sv / verl.length : 0,
+      faktor: sv < 0 ? sg / -sv : (sg > 0 ? Infinity : 0) };
+  }
+  return { alle: alle, gesamt: werte(alle), auto: werte(alle.filter(function (t) { return t.auto; })), gebuehren: gebuehren };
+}
+function faktorText(f) { return f === Infinity ? "∞" : f.toFixed(2); }
+// Kurz für die KI: so lernt sie aus den eigenen Trades
+function bilanzFuerKi() {
+  var b = handelsBilanz(), a = b.auto;
+  if (!a.anzahl) return "Deine Bilanz: noch keine abgeschlossenen selbstständigen Trades.";
+  var letzte = b.alle.filter(function (t) { return t.auto; }).slice(-6).map(function (t) {
+    return t.symbol + " " + (t.gewinn >= 0 ? "+" : "") + usd(t.gewinn) + " (" + (t.prozent >= 0 ? "+" : "") + t.prozent.toFixed(1) + " %, " + (t.grund || "").slice(0, 40) + ")";
+  }).join("; ");
+  return "Deine Bilanz bei selbstständigen Trades: " + a.anzahl + " abgeschlossen, Trefferquote " + a.quote.toFixed(0) + " %, Summe " + usd(a.summe) +
+    ", Ø Gewinn " + usd(a.schnittGewinn) + ", Ø Verlust " + usd(a.schnittVerlust) + ", Profit-Faktor " + faktorText(a.faktor) + " (über 1 = Gewinn). Letzte: " + letzte +
+    ". Lerne daraus: Wiederhole, was funktioniert hat, und meide Muster, die Verlust gebracht haben.";
+}
+
 // Prüft alle festen Regeln. Gibt einen Fehlertext zurück oder null.
 function orderRegeln(symbol, seite, anzahl, kurs) {
   var d = depot();
@@ -400,29 +478,38 @@ function orderRegeln(symbol, seite, anzahl, kurs) {
   if (!(anzahl > 0)) return "Anzahl muss grösser als 0 sein (Bruchteile wie 0.25 sind erlaubt).";
   if (kurs * anzahl < 1) return "Eine Order muss mindestens 1 $ wert sein.";
   var wert = kurs * anzahl;
-  if (seite === "kauf" && wert > d.bargeld + 0.005) return "Nicht genug Geld: " + usd(wert) + " nötig, " + usd(d.bargeld) + " vorhanden. Kauf auf Kredit (Hebel) ist nicht erlaubt.";
+  if (seite === "kauf" && wert * (1 + gebuehrSatz()) > d.bargeld + 0.005) return "Nicht genug Geld: " + usd(wert * (1 + gebuehrSatz())) + " nötig (mit Gebühr), " + usd(d.bargeld) + " vorhanden. Kauf auf Kredit (Hebel) ist nicht erlaubt.";
   var pos = d.positionen[symbol];
   if (seite === "verkauf" && (!pos || pos.anzahl < anzahl)) return "Du besitzt nur " + (pos ? pos.anzahl : 0) + " " + symbol + ". Leerverkäufe sind nicht erlaubt.";
   return null;
 }
 
 function orderBuchen(symbol, seite, anzahl, kurs, quelle, begruendung) {
-  var d = depot(), wert = Math.round(kurs * anzahl * 100) / 100;
+  var d = depot(), wert = Math.round(kurs * anzahl * 100) / 100, gebuehr = Math.round(wert * gebuehrSatz() * 100) / 100, gewinn;
   var pos = d.positionen[symbol] || { anzahl: 0, einstand: 0 };
   if (seite === "kauf") {
-    pos.einstand = (pos.einstand * pos.anzahl + wert) / (pos.anzahl + anzahl);
-    pos.anzahl += anzahl;
-    pos.hoch = Math.max(pos.hoch || 0, kurs);
+    // Einstand mit Gebühr: so zeigt das Ergebnis, was wirklich übrig bleibt
+    pos.einstand = (pos.einstand * pos.anzahl + wert + gebuehr) / (pos.anzahl + anzahl);
+    pos.anzahl = Math.round((pos.anzahl + anzahl) * 10000) / 10000;
+    // Höchstkurs beim (Nach-)Kauf neu setzen. Sonst liegt der nachziehende Stop über dem Kurs
+    // (alter Höchstkurs) und die Position wird sofort mit Verlust verkauft.
+    pos.hoch = kurs;
+    // Start-Stop vom tieferen Wert aus: Wer im Minus nachkauft, hat einen Einstand über dem Kurs.
+    // Vom Einstand aus läge der Stop dann über dem Kurs und würde sofort verkaufen.
+    pos.stopBasis = Math.min(pos.einstand, kurs);
+    pos.seit = pos.seit || new Date().toISOString();
     pos.teilVerkauft = false;
     delete pos.stopKurs;
-    d.bargeld -= wert;
+    d.bargeld -= wert + gebuehr;
   } else {
-    pos.anzahl -= anzahl;
-    d.bargeld += wert;
+    gewinn = Math.round(((kurs - pos.einstand) * anzahl - gebuehr) * 100) / 100;
+    pos.anzahl = Math.round((pos.anzahl - anzahl) * 10000) / 10000;
+    d.bargeld += wert - gebuehr;
   }
   d.bargeld = Math.round(d.bargeld * 100) / 100;
-  if (pos.anzahl > 0) d.positionen[symbol] = pos; else delete d.positionen[symbol];
-  var o = { id: neueId(), zeit: new Date().toISOString(), symbol: symbol, seite: seite, anzahl: anzahl, kurs: kurs, wert: wert, quelle: quelle, begruendung: begruendung || "" };
+  if (pos.anzahl > 0.00005) d.positionen[symbol] = pos; else delete d.positionen[symbol];
+  var o = { id: neueId(), zeit: new Date().toISOString(), symbol: symbol, seite: seite, anzahl: anzahl, kurs: kurs, wert: wert, gebuehr: gebuehr, quelle: quelle, begruendung: begruendung || "" };
+  if (gewinn !== undefined) { o.gewinn = gewinn; o.einstand = Math.round(pos.einstand * 10000) / 10000; }
   d.orders.push(o);
   if (d.orders.length > 500) d.orders.shift();
   speichern();
@@ -445,7 +532,8 @@ async function orderAufgeben(symbol, seite, anzahl, quelle, begruendung) {
     return { text: "Order über dem Tageslimit (" + usd(d.tageslimit) + "): " + seite + " " + anzahl + " " + symbol + " zu etwa " + usd(k.kurs) + " wartet im Depot auf die Freigabe der Person. Nicht ausgeführt." };
   }
   var o = orderBuchen(symbol, seite, anzahl, k.kurs, quelle, begruendung);
-  return { text: "Übungs-Depot: " + (seite === "kauf" ? "Gekauft " : "Verkauft ") + anzahl + " " + symbol + " zu " + usd(o.kurs) + " = " + usd(o.wert) + ". Bargeld jetzt " + usd(depot().bargeld) + "." };
+  return { text: "Übungs-Depot: " + (seite === "kauf" ? "Gekauft " : "Verkauft ") + anzahlText(anzahl) + " " + symbol + " zu " + usd(o.kurs) + " = " + usd(o.wert) +
+    (o.gebuehr ? " (Gebühr " + usd(o.gebuehr) + ")" : "") + (o.gewinn !== undefined ? ", Ergebnis " + (o.gewinn >= 0 ? "+" : "") + usd(o.gewinn) : "") + ". Bargeld jetzt " + usd(depot().bargeld) + "." };
 }
 
 async function depotText() {
@@ -545,7 +633,7 @@ var DEPOT_WERKZEUGE = [
   },
   {
     name: "kandidaten_scannen",
-    description: "Liefert die Aktien der Halal-Liste mit der meisten Bewegung heute (Tagesänderung und Tagesspanne), mit Kurs. Nutze das, um Handelschancen zu finden, statt alle Aktien einzeln abzufragen.",
+    description: "Liefert Kauf-Kandidaten der Halal-Liste mit Kraft: heute im Plus und nahe am Tageshoch (mit Tagesänderung, Spanne, Lage im Tagesbereich und dem Stop, den das Programm setzen würde) sowie die Marktbreite. Nutze das, um Handelschancen zu finden, statt alle Aktien einzeln abzufragen.",
     input_schema: { type: "object", properties: { anzahl: { type: "integer", description: "Wie viele Kandidaten (3 bis 20)" } }, required: ["anzahl"], additionalProperties: false },
     eager_input_streaming: true
   },
@@ -618,9 +706,12 @@ async function depotWerkzeug(name, input) {
       var liste = kandidaten(n);
       if (!liste.length) {
         if (!depot().finnhubSchluessel) return { fehler: true, text: "Kein Finnhub-Schlüssel eingetragen (Depot → Einstellungen). Ohne ihn gibt es keine Kurse." };
+        if (scannerFrisch().length) return { text: "Gerade keine Aktie mit Kraft (im Plus und nahe am Tageshoch) unter " + scannerFrisch().length + " geprüften. Keine gute Kaufgelegenheit: abwarten." };
         return { fehler: true, text: "Keine Kursdaten. Grund: " + (FINNHUB_STATUS.fehler || "unbekannt (Finnhub hat keine Kurse geliefert)") };
       }
-      return { text: "Aktien mit der meisten Bewegung (" + scannerFrisch().length + " von " + mitKursAnzahl() + " Aktien mit Kurs geprüft):\n" + kandidatenText(liste) };
+      var br = marktBreite();
+      return { text: "Kauf-Kandidaten mit Kraft (im Plus, nahe am Tageshoch; " + scannerFrisch().length + " von " + mitKursAnzahl() + " Aktien mit Kurs geprüft" +
+        (br !== null ? "; Markt: " + Math.round(br * 100) + " % der Aktien im Plus" : "") + "):\n" + kandidatenText(liste) };
     }
     if (name === "depot_anzeigen") return { text: input.mit_kursen === false ? depotKurzFuerKi() : await depotText() };
     if (name === "order_aufgeben") {
@@ -633,8 +724,17 @@ async function depotWerkzeug(name, input) {
           if (input.seite === "kauf" && yuhVorschlaegeHeute("auto") >= aY.maxTrades) return { fehler: true, text: "Höchstzahl Kaufvorschläge für heute (" + aY.maxTrades + ") erreicht." };
           if (input.seite === "kauf" && zvY > 0 && zvY < aY.zuversicht) return { fehler: true, text: "Zuversicht " + zvY + "/10 liegt unter der eingestellten Mindest-Zuversicht von " + aY.zuversicht + "/10. Kein Vorschlag." };
         }
-        var rY = await yuhVorschlag(input.symbol, input.seite, Number(input.anzahl), input.begruendung, zvY || null, AUTO.laeuft ? "auto" : "ki");
+        var anzahlY = Number(input.anzahl), hinweisY = "";
+        if (input.seite === "kauf") {
+          if (AUTO.laeuft) { var bremseY = verlustBremse(); if (bremseY) return { fehler: true, text: bremseY }; }
+          var yy = yuh(), kY = await kursHolen(input.symbol);
+          var gesamtY = yy.bargeld + Object.keys(yy.positionen).reduce(function (s, k) { var q = yy.positionen[k]; return s + (q.letzterKurs || q.einstand) * q.anzahl; }, 0);
+          var arY = anzahlNachRisiko(symbolSauber(input.symbol), kY.kurs, anzahlY, yy.bargeld, gesamtY);
+          if (arY.angepasst) { if (arY.anzahl * kY.kurs < 1) return { fehler: true, text: "Zu wenig Yuh-Geld für eine sinnvolle Position mit Stop." }; anzahlY = arY.anzahl; hinweisY = arY.text + " "; }
+        }
+        var rY = await yuhVorschlag(input.symbol, input.seite, anzahlY, input.begruendung, zvY || null, AUTO.laeuft ? "auto" : "ki");
         if (!rY.fehler && AUTO.laeuft) AUTO.orders++;
+        if (!rY.fehler) rY.text = hinweisY + rY.text;
         return rY;
       }
       if (!AUTO.laeuft) return await orderAufgeben(input.symbol, input.seite, Number(input.anzahl), "ki", input.begruendung);
@@ -644,12 +744,24 @@ async function depotWerkzeug(name, input) {
       if (autoTradesHeute() >= a.maxTrades) return { fehler: true, text: "Höchstzahl selbstständiger Trades für heute (" + a.maxTrades + ") erreicht." };
       var zv = parseInt(input.zuversicht, 10);
       if (input.seite === "kauf" && zv > 0 && zv < a.zuversicht) return { fehler: true, text: "Zuversicht " + zv + "/10 liegt unter der eingestellten Mindest-Zuversicht von " + a.zuversicht + "/10. Keine Order." };
+      var anzahlAuto = Number(input.anzahl), hinweis = "";
       if (input.seite === "kauf") {
+        var bremse = verlustBremse();
+        if (bremse) return { fehler: true, text: bremse };
+        var symA = symbolSauber(input.symbol), heuteA = heuteISO();
+        if (depot().orders.some(function (o) { return o.symbol === symA && o.seite === "kauf" && o.quelle === "auto" && o.zeit.slice(0, 10) === heuteA; }))
+          return { fehler: true, text: symA + " wurde heute schon selbstständig gekauft. Nicht zweimal dieselbe Aktie am selben Tag." };
         var kk = await kursHolen(input.symbol);
-        if (kk.kurs * Number(input.anzahl) > depot().bargeld * 0.2 + 0.01) return { fehler: true, text: "Zu gross: Selbstständig höchstens 20 % des Bargelds pro Order (" + usd(depot().bargeld * 0.2) + "). Nimm eine kleinere Anzahl (Bruchteile erlaubt)." };
+        var vorhanden = depot().positionen[symA];
+        if (vorhanden && kk.kurs < vorhanden.einstand) return { fehler: true, text: symA + " liegt im Depot im Minus (Einstand " + usd(vorhanden.einstand) + ", Kurs " + usd(kk.kurs) + "). Verluste werden nicht verbilligt." };
+        var ar = anzahlNachRisiko(symbolSauber(input.symbol), kk.kurs, anzahlAuto, depot().bargeld, depotWertSchaetzung());
+        if (ar.angepasst) {
+          if (ar.anzahl * kk.kurs < 1) return { fehler: true, text: "Zu wenig Geld für eine sinnvolle Position mit Stop." };
+          anzahlAuto = ar.anzahl; hinweis = ar.text + " ";
+        }
       }
-      var r = await orderAufgeben(input.symbol, input.seite, Number(input.anzahl), "auto", "[Auto, Zuversicht " + (zv || "?") + "/10] " + (input.begruendung || ""));
-      if (!r.fehler) AUTO.orders++;
+      var r = await orderAufgeben(input.symbol, input.seite, anzahlAuto, "auto", "[Auto, Zuversicht " + (zv || "?") + "/10] " + (input.begruendung || ""));
+      if (!r.fehler) { AUTO.orders++; r.text = hinweis + r.text; }
       return r;
     }
     if (name === "ueberweisung_vorbereiten") return ueberweisungVorbereiten(input.empfaenger, input.iban, input.betrag, input.waehrung, input.zweck);
@@ -677,7 +789,9 @@ async function scannerSchritt(anzahl) {
       try {
         var k = await kursHolen(s, true);
         SCANNER.daten[s] = { kurs: k.kurs, aenderung: Number(k.aenderung) || 0,
-          spanne: k.vortag > 0 ? (k.hoch - k.tief) / k.vortag * 100 : 0, zeit: Date.now() };
+          spanne: k.vortag > 0 ? (k.hoch - k.tief) / k.vortag * 100 : 0,
+          lage: k.hoch > k.tief ? (k.kurs - k.tief) / (k.hoch - k.tief) : 0.5, // 1 = am Tageshoch, 0 = am Tagestief
+          zeit: Date.now() };
       } catch (e) {
         if (e.art === "zugriff") { SCANNER.ohneKurs[s] = true; continue; } // z. B. ausserbörsliche ADRs: künftig überspringen
         if (e.art === "limit") break;
@@ -695,17 +809,27 @@ function scannerFrisch() {
   var jetzt = Date.now();
   return Object.keys(SCANNER.daten).filter(function (s) { return aufHalalListe(s) && jetzt - SCANNER.daten[s].zeit < 45 * 60000; });
 }
-// Punkte: Tagesänderung (Richtung egal) und Tagesspanne zählen. Mehr Bewegung = mehr Chancen (und mehr Risiko).
+// Kauf-Kandidaten: Aktien mit Kraft (im Plus und nahe am Tageshoch). Früher zählte nur Bewegung, egal in welche
+// Richtung: Dann landeten auch fallende Aktien („fallendes Messer“) und überhitzte Sprünge oben, die oft gleich wieder fallen.
 function kandidaten(n) {
   return scannerFrisch().map(function (s) {
-    var x = SCANNER.daten[s];
-    return { symbol: s, kurs: x.kurs, aenderung: x.aenderung, spanne: x.spanne, punkte: Math.abs(x.aenderung) * 0.6 + x.spanne * 0.4 };
-  }).sort(function (a, b) { return b.punkte - a.punkte; }).slice(0, n || 10);
+    var x = SCANNER.daten[s], ae = x.aenderung, lage = x.lage === undefined ? 0.5 : x.lage;
+    var punkte = Math.min(ae, 8) * (0.4 + 0.6 * lage) - Math.max(0, ae - 12) * 0.5 - Math.max(0, x.spanne - 12) * 0.2;
+    return { symbol: s, kurs: x.kurs, aenderung: ae, spanne: x.spanne, lage: lage, punkte: punkte };
+  }).filter(function (k) { return k.aenderung > 0.3 && k.aenderung <= 12 && k.lage >= 0.5; })
+    .sort(function (a, b) { return b.punkte - a.punkte; }).slice(0, n || 10);
+}
+// Marktbreite: Anteil der geprüften Aktien im Plus. Unter 35 % ist der Markt schwach.
+function marktBreite() {
+  var f = scannerFrisch();
+  if (f.length < 40) return null;
+  return f.filter(function (s) { return SCANNER.daten[s].aenderung > 0; }).length / f.length;
 }
 function kandidatenText(liste) {
   return liste.map(function (k) {
     var l = landVon(k.symbol);
-    return k.symbol + (l !== "US" ? " (" + landName(l) + ")" : "") + ": " + usd(k.kurs) + ", heute " + (k.aenderung >= 0 ? "+" : "") + k.aenderung.toFixed(2) + " %, Tagesspanne " + k.spanne.toFixed(1) + " %";
+    return k.symbol + (l !== "US" ? " (" + landName(l) + ")" : "") + ": " + usd(k.kurs) + ", heute " + (k.aenderung >= 0 ? "+" : "") + k.aenderung.toFixed(2) + " %, Tagesspanne " + k.spanne.toFixed(1) +
+      " %, Lage im Tagesbereich " + Math.round((k.lage === undefined ? 0.5 : k.lage) * 100) + " % (100 = Tageshoch), Stop wäre etwa " + schutzWerte(k.symbol).abstand.toFixed(1) + " %";
   }).join("\n");
 }
 
@@ -716,8 +840,10 @@ var AUTO = { laeuft: false, orders: 0, letzteRegel: 0 };
 function autoEinstellungen() {
   var d = depot();
   if (!d.auto) d.auto = {};
-  var std = { an: false, intervall: 30, stop: 3, ziel: 8, maxTrades: 3, zuversicht: 5, letzte: 0, protokoll: [], schutzVersion: 2 };
+  var std = { an: false, intervall: 30, stop: 5, ziel: 8, maxTrades: 3, zuversicht: 5, letzte: 0, protokoll: [], schutzVersion: 3 };
   if (d.auto.ziel === 5 && !d.auto.schutzVersion) d.auto.ziel = 8; // alter Standard → neuer Standard
+  // Version 3: Stops richten sich nach der Schwankung; 3 % war für bewegte Aktien zu eng (Stop im normalen Tagesrauschen)
+  if (d.auto.schutzVersion && d.auto.schutzVersion < 3) { if (d.auto.stop === 3) d.auto.stop = 5; d.auto.schutzVersion = 3; }
   if (d.auto.zuversicht === undefined) d.auto.zuversicht = 5; // Wunsch des Besitzers: mutiger handeln
   Object.keys(std).forEach(function (k) { if (d.auto[k] === undefined) d.auto[k] = std[k]; });
   return d.auto;
@@ -735,6 +861,12 @@ function boerseOffen(jetzt) {
   var min = (Number(teile.hour) % 24) * 60 + Number(teile.minute);
   return min >= 570 && min < 960;
 }
+function boerseMinutenBisSchluss(jetzt) {
+  var teile = {};
+  new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hour12: false })
+    .formatToParts(jetzt || new Date()).forEach(function (t) { teile[t.type] = t.value; });
+  return 960 - ((Number(teile.hour) % 24) * 60 + Number(teile.minute));
+}
 function autoNotiz(text) {
   var a = autoEinstellungen();
   a.protokoll.push({ zeit: new Date().toISOString(), text: text });
@@ -749,11 +881,12 @@ function autoNotiz(text) {
 //  4. Gewinnziel: Hälfte verkaufen, Rest läuft mit halbem Abstand weiter
 function stopBerechnen(symbol, p) {
   var w = schutzWerte(symbol);
-  var hoch = Math.max(p.hoch || p.einstand, p.einstand);
-  var stop = p.einstand * (1 - w.abstand / 100);
+  var basis = p.stopBasis || p.einstand;
+  var hoch = Math.max(p.hoch || basis, basis);
+  var stop = basis * (1 - w.abstand / 100);
   var abstandNach = p.teilVerkauft ? w.nachziehen / 2 : w.nachziehen;
   stop = Math.max(stop, hoch * (1 - abstandNach / 100));
-  if (hoch >= p.einstand * (1 + w.abstand / 100)) stop = Math.max(stop, p.einstand * 1.002); // +0,2 % deckt Gebühren
+  if (hoch >= p.einstand * (1 + w.abstand / 100)) stop = Math.max(stop, p.einstand * (1 + gebuehrSatz() + 0.001)); // Einstand enthält die Kaufgebühr; dazu die Verkaufsgebühr
   return { stop: Math.round(stop * 100) / 100, werte: w, abstandNach: abstandNach };
 }
 
@@ -794,12 +927,14 @@ async function regelnPruefen() {
 function autoFrage() {
   var a = autoEinstellungen();
   return "Selbstständige Handelsrunde (" + new Date().toLocaleString("de-CH") + "). " +
-    "Hol mit kandidaten_scannen die 10 Aktien der Halal-Liste mit der meisten Bewegung (nur Aktien mit Kurs an der US-Börse, auch ausländische Firmen), prüfe Interessantes mit kurs_abfragen und schau mit depot_anzeigen ins Depot. " +
+    "Hol mit kandidaten_scannen die Kauf-Kandidaten (Aktien der Halal-Liste mit Kraft: im Plus, nahe am Tageshoch), prüfe Interessantes mit kurs_abfragen und schau mit depot_anzeigen ins Depot. " +
+    "Regeln für gute Trades: Kauf nur mit dem Trend (Aktie im Plus, Kurs im oberen Teil der Tagesspanne). Kein Kauf von Aktien, die heute stark fallen, und keine Aktie, die heute schon mehr als 12 % gestiegen ist (überhitzt). Nicht nachkaufen, was im Depot im Minus liegt. Nicht zweimal dieselbe Aktie am selben Tag. In der letzten halben Stunde vor Börsenschluss (ab 21:30 Schweizer Zeit) keine neuen Käufe. " +
+    bilanzFuerKi() + " " +
     "Bruchteile sind erlaubt: Bei wenig Geld rechnest du anzahl = Betrag ÷ Kurs. " +
     "Handle, wenn deine Zuversicht mindestens " + a.zuversicht + " von 10 ist und es einen konkreten Grund aus den Kursdaten gibt" +
     (a.zuversicht <= 6 ? " (die Person will bewusst mutiger handeln: nutze auch mittlere Chancen, statt nur abzuwarten)" : "") + ". " +
-    "Darunter: keine Order. Höchstens eine Order, höchstens 20 % des Bargelds (prüft auch das Programm). Gib im Feld zuversicht deine ehrliche Einschätzung an. " +
-    "Das Programm schützt jede Position selbst: individueller Stop nach Schwankung (höchstens " + a.stop + " % Verlust), nachziehender Stop, ab " + a.ziel + " % Gewinn wird die Hälfte gesichert. " +
+    "Darunter: keine Order. Höchstens eine Order. Die Grösse passt das Programm an (höchstens 20 % des Bargelds und höchstens 1 % des Depots Risiko bis zum Stop). Gib im Feld zuversicht deine ehrliche Einschätzung an. " +
+    "Das Programm schützt jede Position selbst: individueller Stop nach Schwankung (höchstens " + a.stop + " % Verlust), nachziehender Stop, ab " + a.ziel + " % Gewinn (bei bewegten Aktien mehr) wird die Hälfte gesichert. Jede Order kostet " + (gebuehrSatz() * 100).toFixed(2) + " % Gebühr: Kleine Gewinne lohnen sich darum nicht. " +
     "Willst du handeln, rufst du ZUERST order_aufgeben auf (konkretes Kürzel, Anzahl). Nur Hinschreiben führt keine Order aus. " +
     (typeof yuhAn === "function" && yuhAn() ? "ECHTGELD-MODUS (Yuh): Deine Order wird der Person als Vorschlag geschickt, sie kauft selbst in Yuh. Rechne mit dem Yuh-Geld (" + usd(yuh().bargeld) + "), höchstens 20 % davon. " : "") +
     "Schreib zum Schluss genau eine Zeile: „Entscheidung: Kauf KÜRZEL für x $ | Zuversicht: x/10 | Grund: …“ oder „Entscheidung: Keine Order | Zuversicht: x/10 | Grund: …“.";
@@ -817,7 +952,15 @@ async function autoRunde(test) {
     if (!depot().halalListe.length) { autoNotiz("Übersprungen: Halal-Liste ist leer."); return; }
     // Erst prüfen, ob Finnhub Kurse liefert. Sonst die Runde sparen (die KI würde nur „keine Daten“ melden).
     try { await finnhubTesten(); } catch (fx) { autoNotiz("Übersprungen, keine Kurse: " + fx.message); return; }
+    // Feiertag: Die Uhr sagt „offen“, aber die Kurse sind alt. Dann nicht mit veralteten Kursen handeln.
+    if (!test && FINNHUB_STATUS.stand && Date.now() - FINNHUB_STATUS.stand > 2 * 3600000) { autoNotiz("Übersprungen: Die Kurse sind nicht aktuell (Börse heute wohl geschlossen, z. B. Feiertag)."); return; }
     await regelnPruefen();
+    var bremse0 = verlustBremse();
+    if (bremse0) { autoNotiz(bremse0); return; }
+    // Marktfilter: Ist der ganze Markt schwach, verlieren auch gute Aktien meist. Dann keine neuen Käufe.
+    var breite = marktBreite();
+    if (breite !== null && breite < 0.3) { autoNotiz("Markt heute schwach (nur " + Math.round(breite * 100) + " % der Aktien im Plus): keine neuen Käufe, Positionen sind geschützt."); return; }
+    if (!test && boerseMinutenBisSchluss() < 30) { autoNotiz("Weniger als 30 Minuten bis Börsenschluss: keine neuen Käufe mehr heute."); return; }
     if ((typeof yuhAn === "function" && yuhAn() ? yuhVorschlaegeHeute("auto") : autoTradesHeute()) >= a.maxTrades) { autoNotiz("Höchstzahl Trades für heute erreicht. Nur Stop-Loss und Gewinnziel geprüft."); return; }
     if (!hatSchluessel()) { autoNotiz("Übersprungen: keine KI verbunden."); return; }
     var e = Z.einstellungen;
@@ -899,7 +1042,7 @@ var Depot = (function () {
   var kurse = {};
 
   async function kurseLaden() {
-    var syms = Object.keys(depot().positionen).concat(depot().offen.map(function (o) { return o.symbol; }));
+    var syms = Object.keys(depot().positionen).concat(depot().offen.map(function (o) { return o.symbol; })).concat([VERGLEICH_ETF]);
     for (var i = 0; i < syms.length; i++) {
       try { kurse[syms[i]] = (await kursHolen(syms[i])).kurs; } catch (e) { }
     }
@@ -910,11 +1053,13 @@ var Depot = (function () {
     $("#depot-hinweis").classList.toggle("versteckt", d.hinweisGesehen);
     $("#d-finnhub").value = d.finnhubSchluessel || "";
     $("#d-limit").value = d.tageslimit;
+    $("#d-gebuehr").value = d.gebuehr;
     $("#d-start").value = d.start;
     var wertPos = 0;
     var syms = Object.keys(d.positionen);
     syms.forEach(function (s) { wertPos += (kurse[s] || d.positionen[s].einstand) * d.positionen[s].anzahl; });
     var gesamt = d.bargeld + wertPos, erg = gesamt - d.start;
+    bilanzZeigen(gesamt);
     $("#depot-kacheln").innerHTML =
       "<div class='karte kachel'><div class='leise klein-text'>Gesamtwert (Spielgeld)</div><div class='gross'>" + usd(gesamt) + "</div><div class='leise klein-text'>Start " + usd(d.start) + "</div></div>" +
       "<div class='karte kachel'><div class='leise klein-text'>Ergebnis</div><div class='gross " + (erg >= 0 ? "plus" : "minus") + "'>" + usd(erg) + "</div><div class='leise klein-text'>" + (d.start ? (erg / d.start * 100).toFixed(2).replace("-", "−") + " %" : "") + "</div></div>" +
@@ -1007,6 +1152,34 @@ var Depot = (function () {
   }
   function kurs(s, p) { return kurse[s] || p.einstand; }
 
+  // Bilanz der abgeschlossenen Trades und Vergleich mit einfachem Halten eines Halal-ETF
+  function bilanzZeigen(gesamt) {
+    var d = depot(), b = handelsBilanz(), g = b.gesamt, a = b.auto;
+    var allesGeladen = Object.keys(d.positionen).every(function (s) { return kurse[s]; });
+    if (!d.vergleich && kurse[VERGLEICH_ETF] && allesGeladen) { d.vergleich = { kurs: kurse[VERGLEICH_ETF], wert: gesamt, zeit: new Date().toISOString() }; speichern(); }
+    var zeile = function (t, w, klasse) { return "<li class='buchung'><span class='wachsen'>" + t + "</span><strong class='" + (klasse || "") + "'>" + w + "</strong></li>"; };
+    var html = "";
+    if (!g.anzahl) html += "<p class='leise klein-text'>Noch keine abgeschlossenen Trades. Sobald Aktien verkauft werden (auch per Stop oder Gewinnziel), steht hier, ob es sich lohnt.</p>";
+    else {
+      html += "<ul class='liste'>" +
+        zeile("Abgeschlossene Trades", g.anzahl + " (" + g.gewinner + " mit Gewinn, " + g.verlierer + " mit Verlust)") +
+        zeile("Trefferquote", g.quote.toFixed(0) + " %") +
+        zeile("Ergebnis aller Verkäufe (nach Gebühren)", (g.summe >= 0 ? "+" : "") + usd(g.summe), g.summe >= 0 ? "plus" : "minus") +
+        zeile("Ø Gewinn / Ø Verlust", usd(g.schnittGewinn) + " / " + usd(g.schnittVerlust)) +
+        zeile("Profit-Faktor (über 1 = es lohnt sich)", faktorText(g.faktor), g.faktor >= 1 ? "plus" : "minus") +
+        zeile("Bezahlte Gebühren", usd(b.gebuehren)) +
+        (a.anzahl && a.anzahl !== g.anzahl ? zeile("Davon selbstständig (KI)", a.anzahl + " Trades, " + (a.summe >= 0 ? "+" : "") + usd(a.summe) + ", Profit-Faktor " + faktorText(a.faktor), a.summe >= 0 ? "plus" : "minus") : "") +
+        "</ul>";
+    }
+    if (d.vergleich && kurse[VERGLEICH_ETF]) {
+      var depotProz = (gesamt / d.vergleich.wert - 1) * 100, etfProz = (kurse[VERGLEICH_ETF] / d.vergleich.kurs - 1) * 100;
+      var seit = new Date(d.vergleich.zeit).toLocaleDateString("de-CH");
+      html += "<p class='klein-text'><strong>Vergleich seit " + esc(seit) + ":</strong> Depot " + (depotProz >= 0 ? "+" : "") + depotProz.toFixed(2) + " % · einfach den Halal-ETF " + VERGLEICH_ETF + " halten " + (etfProz >= 0 ? "+" : "") + etfProz.toFixed(2) + " %. " +
+        (Math.abs(depotProz - etfProz) < 0.05 ? "Gleich gut." : depotProz > etfProz ? "Das Handeln schlägt das einfache Halten." : "Einfaches Halten wäre bisher besser gewesen.") + "</p>";
+    } else html += "<p class='leise klein-text'>Der Vergleich mit dem Halal-ETF " + VERGLEICH_ETF + " startet, sobald Kurse geladen sind (Finnhub-Schlüssel nötig).</p>";
+    $("#depot-bilanz").innerHTML = html;
+  }
+
   function verbinden() {
     $("#auto-an").onchange = function () {
       var a = autoEinstellungen();
@@ -1037,10 +1210,11 @@ var Depot = (function () {
     $("#d-finnhub").onchange = function () { var k = finnhubSchluesselSauber(this.value); this.value = k; depot().finnhubSchluessel = k; _kursCache = {}; speichern(); meldung("Finnhub-Schlüssel gespeichert."); schluesselTesten(); aktualisieren(); };
     $("#d-finnhub-test").onclick = schluesselTesten;
     $("#d-limit").onchange = function () { depot().tageslimit = Math.max(0, parseFloat(this.value) || 0); speichern(); zeigen(); };
+    $("#d-gebuehr").onchange = function () { var g = parseFloat(String(this.value).replace(",", ".")); depot().gebuehr = isFinite(g) ? Math.min(5, Math.max(0, g)) : 0.5; speichern(); zeigen(); };
     $("#d-zuruecksetzen").onclick = function () {
       var start = Math.max(100, parseFloat($("#d-start").value) || 10000);
       if (!confirm("Übungs-Depot mit " + usd(start) + " Spielgeld neu starten? Positionen und Orders werden gelöscht, die Halal-Liste bleibt.")) return;
-      var d = depot(); d.start = start; d.bargeld = start; d.positionen = {}; d.orders = []; d.offen = []; speichern(); zeigen();
+      var d = depot(); d.start = start; d.bargeld = start; d.positionen = {}; d.orders = []; d.offen = []; delete d.vergleich; speichern(); zeigen();
     };
     $("#d-aktualisieren").onclick = aktualisieren;
     $("#scanner-jetzt").onclick = async function () {

@@ -1,11 +1,12 @@
 /* Version, „Das ist neu“ für bestehende Kunden und Hinweis auf Updates. */
 
-var APP_VERSION = "5.17"; // muss mit version.json übereinstimmen
+var APP_VERSION = "5.18"; // muss mit version.json übereinstimmen
 // Hier steht die neueste Version. Die Windows-Version prüft das einmal am Tag.
 var VERSION_URL = "https://raw.githubusercontent.com/LATIF-TORRES/Gian-Luca-Torres/claude/epic-hypatia-7apja5/ki-system/version.json";
 var DOWNLOAD_URL = "https://github.com/LATIF-TORRES/Gian-Luca-Torres/raw/claude/epic-hypatia-7apja5/ki-system/download/A-und-T-Windows.zip";
 
 var NEUIGKEITEN = [
+  { besitzer: true, titel: "Depot geprüft und verbessert", text: "Neu im Depot: die Bilanz. Sie zeigt Trefferquote, Ø Gewinn und Ø Verlust, Profit-Faktor (über 1 = es lohnt sich) und den Vergleich mit dem einfachen Halten des Halal-ETF SPUS. Behoben: Nach einem Nachkauf konnte der Stop über dem Kurs liegen und sofort mit Verlust verkaufen. Verbessert: Gebühren werden mitgerechnet (Standard 0,5 % pro Order, unter Einstellungen anpassbar), Stops richten sich nach der Schwankung der Aktie, die Grösse jeder Position so, dass ein Stop höchstens 1 % des Depots kostet. Der Scanner sucht Aktien mit Kraft statt nur Bewegung. Neu sind ausserdem eine Verlust-Bremse (nach 2 Verlusten an einem Tag keine Käufe mehr), ein Marktfilter (schwacher Markt: keine Käufe) und der Feiertags-Check. Die KI sieht jetzt ihre eigene Bilanz und lernt daraus." },
   { titel: "Nächste Schritte sind echte Schritte", text: "„Nenne mir deine Geschäftsidee“ ist kein Schritt. Ab jetzt sind die nächsten Schritte immer konkrete Handlungen, die dich deinem Ziel näherbringen. Was A&T über dich wissen muss, holt es aus deinem Profil und dem Gedächtnis. Auf eine Begrüssung antwortet Akhi kurz und schlägt dir direkt vor, woran ihr heute weiterarbeitet." },
   { titel: "Akhi versteht dich besser", text: "Versteht die Spracherkennung „Hey Achim“ oder „Hey Archie“ statt „Hey Akhi“, reagiert Akhi trotzdem. Sagst du nur „Hey Akhi“, antwortet er sofort „Ja, Akhi hier“ und hört zu, statt eine lange Antwort zu schreiben. Auf dem iPhone versucht A&T jetzt, auch bei eingeschaltetem Stumm-Schalter über den Lautsprecher zu sprechen. Hörst du trotzdem nichts, schalte den Stumm-Schalter aus." },
   { titel: "Akhi spricht zuverlässiger", text: "Auf dem iPhone blieb Akhi oft stumm, weil Safari Sprache erst nach einem Tippen erlaubt. Jetzt schaltet A&T die Stimme beim ersten Tippen frei, und Akhi liest lange Antworten Stück für Stück vor, damit nichts abbricht. Falls du trotzdem nichts hörst: Lautstärke hochdrehen und auf dem iPhone den Stumm-Schalter an der Seite ausschalten. Akhi achtet ausserdem strenger auf fehlerfreies Deutsch." },

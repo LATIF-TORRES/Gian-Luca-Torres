@@ -195,6 +195,11 @@
 
       <div class="raster drei" id="depot-kacheln"></div>
 
+      <div class="karte" id="depot-bilanz-karte">
+        <h2>Bilanz: Bringt das Handeln Gewinn?</h2>
+        <div id="depot-bilanz"></div>
+      </div>
+
       <div class="karte" id="yuh-karte">
         <h2>Echtgeld mit Yuh (halbautomatisch)</h2>
         <p class="leise klein-text">A&amp;T schlägt Käufe und Verkäufe vor. Du gibst sie selbst in der Yuh-App auf und tippst hier auf „Gekauft“ oder „Verkauft“. A&amp;T handelt nie selbst mit deinem Geld. Danach überwacht A&amp;T jede Position (Stop, Gewinnziel) und meldet sich, wenn du verkaufen solltest, solange A&amp;T offen ist.</p>
@@ -302,6 +307,7 @@
           <button class="knopf klein zart" id="d-finnhub-test" type="button">Schlüssel testen</button>
           <p id="d-finnhub-info" class="klein-text leise"></p>
           <label>Tageslimit für automatische Orders (USD) <input id="d-limit" type="number" min="0" step="50"></label>
+          <label>Gebühr pro Order (%) <input id="d-gebuehr" type="number" min="0" max="5" step="0.05"></label>
           <label>Startkapital (Spielgeld, USD) <input id="d-start" type="number" min="100" step="1000"></label>
           <button class="knopf klein rot" id="d-zuruecksetzen" type="button">Depot neu starten</button>
         </div>
