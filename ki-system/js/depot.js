@@ -50,7 +50,7 @@ var BRANCHE_PRUEFEN = /beverage|media|hotel|restaurant|leisure|entertainment|foo
 
 function leeresDepot() {
   return { start: 10000, bargeld: 10000, positionen: {}, orders: [], halalListe: [], offen: [],
-    tageslimit: 500, finnhubSchluessel: "", hinweisGesehen: false, gebuehr: 0.5 };
+    tageslimit: 2000, finnhubSchluessel: "", hinweisGesehen: false, gebuehr: 0.5 };
 }
 function depot() {
   if (!Z.depot || typeof Z.depot !== "object") Z.depot = leeresDepot();
@@ -759,6 +759,15 @@ async function depotWerkzeug(name, input) {
           if (ar.anzahl * kk.kurs < 1) return { fehler: true, text: "Zu wenig Geld für eine sinnvolle Position mit Stop." };
           anzahlAuto = ar.anzahl; hinweis = ar.text + " ";
         }
+        // Rest des Tageslimits: selbstständig nur so viel, dass die Order wirklich ausgeführt wird (statt auf Freigabe zu warten)
+        var rest = depot().tageslimit - heuteAutomatisch();
+        if (rest < 1) return { fehler: true, text: "Tageslimit für automatische Orders (" + usd(depot().tageslimit) + ") ist heute ausgeschöpft." };
+        if (kk.kurs * anzahlAuto > rest) {
+          var neuT = Math.floor(rest / kk.kurs * 10000) / 10000;
+          if (neuT * kk.kurs < 1) return { fehler: true, text: "Tageslimit fast ausgeschöpft: zu wenig für eine Order." };
+          hinweis += "An das verbleibende Tageslimit angepasst: " + anzahlText(neuT) + " Stück (" + usd(neuT * kk.kurs) + " von " + usd(rest) + " übrig). ";
+          anzahlAuto = neuT;
+        }
       }
       var r = await orderAufgeben(input.symbol, input.seite, anzahlAuto, "auto", "[Auto, Zuversicht " + (zv || "?") + "/10] " + (input.begruendung || ""));
       if (!r.fehler) { AUTO.orders++; r.text = hinweis + r.text; }
@@ -964,7 +973,8 @@ async function autoRunde(test) {
     if ((typeof yuhAn === "function" && yuhAn() ? yuhVorschlaegeHeute("auto") : autoTradesHeute()) >= a.maxTrades) { autoNotiz("Höchstzahl Trades für heute erreicht. Nur Stop-Loss und Gewinnziel geprüft."); return; }
     if (!hatSchluessel()) { autoNotiz("Übersprungen: keine KI verbunden."); return; }
     var e = Z.einstellungen;
-    var chat = { id: "auto", anbieter: e.anbieter, modus: "trader", system: grundauftrag(e.kiName || STANDARD_NAME), nachrichten: [], kosten: 0 };
+    // qualitaet „normal“: Gemini nimmt das schnelle Modell. Das kleine Gratis-Kontingent des klügsten Modells bleibt für Pläne.
+    var chat = { id: "auto", anbieter: e.anbieter, modus: "trader", qualitaet: "normal", system: grundauftrag(e.kiName || STANDARD_NAME), nachrichten: [], kosten: 0 };
     var kontext = "<kontext>\n" + HALAL_ERINNERUNG + "\n" + MODI.trader.auftrag + "\n" + kontextFuerKi() + "\n</kontext>";
     var r = await autoFragen(chat, autoFrage(), kontext);
     if (r.fehler) { autoNotiz("Fehler: " + r.fehler); return; }

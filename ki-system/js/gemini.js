@@ -60,6 +60,7 @@ function geminiStufe(m) { return m.pro ? 0 : (m.lite ? 2 : 1); }
 var SCHWER_RE = /businessplan|business-plan|marketingplan|strategie|konzept|analyse|analysier|kalkul|rechne|finanzplan|budget|investor|vertrag|dokument|pdf|prüfe|verbesser|plan für|plan fuer|swot|preis|cashflow/i;
 function geminiSchwer(chat) {
   if (chat && chat.qualitaet === "hoch") return true;
+  if (chat && chat.qualitaet === "normal") return false;
   var n = chat && chat.nachrichten, letzte = n && n[n.length - 1];
   var t = letzte && Array.isArray(letzte.parts) ? letzte.parts.map(function (p) { return p.text || ""; }).filter(function (x) { return x.indexOf("<kontext>") !== 0; }).join(" ") : "";
   return t.length > 300 || SCHWER_RE.test(t);
