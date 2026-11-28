@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Unterrichtsmaterial (Ordner `deutschkurs/` und `mathe/`)
+# Unterrichtsmaterial (Ordner `deutschkurs/`, `franzoesisch/` und `mathe/`)
 
 Gilt für jedes Übungsblatt, jeden Probetest, jedes Lösungsblatt und jedes andere Dokument für Kinder oder Lernende.
 
